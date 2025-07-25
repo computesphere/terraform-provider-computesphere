@@ -35,8 +35,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22.5'
-      - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v4
+      - name: GoLang Lint
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v2.3.0
       - name: vet
