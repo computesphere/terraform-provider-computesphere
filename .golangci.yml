@@ -6,7 +6,6 @@ linters:
     - errcheck
     - exportloopref
     - forcetypeassert
-    - gofmt
     - gosimple
     - ineffassign
     - makezero
@@ -18,4 +17,8 @@ linters:
     - unconvert
     - unparam
     - unused
-    - govet 
+    - govet
+
+formatters:
+  enable:
+    - gofmt 
