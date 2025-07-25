@@ -4,16 +4,13 @@ linters:
   enable:
     - durationcheck
     - errcheck
-    - exportloopref
     - forcetypeassert
-    - gosimple
     - ineffassign
     - makezero
     - misspell
     - nilerr
     - predeclared
     - staticcheck
-    - tenv
     - unconvert
     - unparam
     - unused
@@ -21,4 +18,7 @@ linters:
 
 formatters:
   enable:
-    - gofmt 
+    - gofmt
+
+run:
+  go: '1.22' 
