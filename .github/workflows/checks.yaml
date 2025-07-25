@@ -38,7 +38,7 @@ jobs:
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.59.0
+          version: v1.60.0
       - name: vet
         run: go vet ./...
       - name: lint
