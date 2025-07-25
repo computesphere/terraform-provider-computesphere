@@ -1,3 +1,33 @@
+# =============================================================================
+# ComputeSphere Terraform Provider Makefile
+# =============================================================================
+#
+# This Makefile provides targets for developing and testing the ComputeSphere
+# Terraform provider. It handles local development setup, testing, and cleanup.
+#
+# USAGE:
+#   make [target] [VARIABLE=value]
+#
+# COMMON TARGETS:
+#   all              - Run complete development workflow (setup, format, test, install)
+#   dev-setup        - Set up local development environment (go.mod + terraform.rc)
+#   clean            - Clean up development artifacts (go.mod + terraform.tfvars)
+#   test-acceptance  - Run acceptance tests with environment variables
+#   inject-tfvars    - Inject API credentials into example directories
+#   cleanup-tfvars   - Remove generated terraform.tfvars files
+#
+# ENVIRONMENT VARIABLES:
+#   API_TOKEN        - Your ComputeSphere API token (default: your-api-token-here)
+#   ACCOUNT_ID       - Your ComputeSphere account ID (default: your-account-id-here)
+#   API_URL          - ComputeSphere API URL (default: your-api-url-here)
+#
+# EXAMPLES:
+#   make dev-setup API_TOKEN=abc123 ACCOUNT_ID=xyz789
+#   make test-acceptance API_URL=https://api.computesphere.com
+#   make inject-tfvars API_TOKEN=abc123 ACCOUNT_ID=xyz789 API_URL=https://api.computesphere.com
+#
+# =============================================================================
+
 # Variables (at the top for discoverability)
 EXAMPLE_RESOURCE_DIRS := $(shell find examples/resources -type d -name 'computesphere_*')
 EXAMPLE_DATASOURCE_DIRS := $(shell find examples/data-sources -type d -name 'computesphere_*')
@@ -8,10 +38,18 @@ API_URL := $(if $(API_URL),$(API_URL),your-api-url-here)
 TFVARS_TEMPLATE := utils/terraform.tfvars.template
 TERRAFORMRC_TEMPLATE := utils/terraformrc.template
 
+# =============================================================================
+# MAIN TARGETS
+# =============================================================================
+
 # Main target: run all key steps (default target)
 .PHONY: all
-all: check-deps test-acceptance fmt tidy generate install
-	@echo "Ran test-acceptance, go fmt, go mod tidy, go generate, and go install."
+all: setup-replace check-deps fmt tidy test-acceptance generate install
+	@echo "Ran setup-replace, go fmt, go mod tidy, test-acceptance, go generate, and go install."
+
+# =============================================================================
+# DEPENDENCY MANAGEMENT
+# =============================================================================
 
 # Dependency check (supports macOS, Linux, and Windows)
 .PHONY: check-deps
@@ -27,10 +65,56 @@ check-deps:
 	fi
 	@echo "All required dependencies are installed."
 
-# Testing
+# =============================================================================
+# DEVELOPMENT SETUP
+# =============================================================================
+
+# Add replace directive to go.mod for local development
+.PHONY: setup-replace
+setup-replace:
+	@echo "Setting up local development environment..."
+	@if ! grep -q "replace github.com/computesphere/cli/cs => ../cli/cs" go.mod; then \
+		echo "Adding replace directive to go.mod..."; \
+		echo "" >> go.mod; \
+		echo "replace github.com/computesphere/cli/cs => ../cli/cs" >> go.mod; \
+	else \
+		echo "Replace directive already exists in go.mod"; \
+	fi
+
+# Complete development environment setup
+.PHONY: dev-setup
+dev-setup: setup-replace setup-terraformrc
+
+# =============================================================================
+# CODE QUALITY & BUILD
+# =============================================================================
+
+# Format Go code
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
+# Tidy Go module dependencies
+.PHONY: tidy
+tidy:
+	go mod tidy
+
+# Generate code from templates
+.PHONY: generate
+generate:
+	go generate ./...
+
+# Install the provider binary
+.PHONY: install
+install:
+	go install ./...
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
+# Run acceptance tests with ComputeSphere environment variables
 .PHONY: test-acceptance
-# Acceptance tests
-# (Set your own environment variables or override as needed)
 test-acceptance:
 	@echo "Running acceptance tests with ComputeSphere environment variables..."
 	COMPUTESPHERE_API_URL=$(API_URL) \
@@ -39,27 +123,11 @@ test-acceptance:
 	UPDATE_RECORDINGS=true \
 	go test ./internal/provider/... 
 
-# Formatting
-.PHONY: fmt
-fmt:
-	go fmt ./...
+# =============================================================================
+# EXAMPLE MANAGEMENT
+# =============================================================================
 
-# Dependency management
-.PHONY: tidy
-tidy:
-	go mod tidy
-
-# Code generation
-.PHONY: generate
-generate:
-	go generate ./...
-
-# Install the provider
-.PHONY: install
-install:
-	go install ./...
-
-# Example tfvars injection/cleanup
+# Inject API credentials into example terraform.tfvars files
 .PHONY: inject-tfvars
 inject-tfvars:
 	@for dir in $(EXAMPLE_DIRS); do \
@@ -71,14 +139,41 @@ inject-tfvars:
 	  echo "Injected terraform.tfvars into $$dir"; \
 	done 
 
+# Remove generated terraform.tfvars files from examples
 .PHONY: cleanup-tfvars
 cleanup-tfvars:
 	@find examples/resources -type f -name 'terraform.tfvars' -delete
 	@find examples/data-sources -type f -name 'terraform.tfvars' -delete
 	@echo "Cleaned up all generated terraform.tfvars files in examples." 
 
-.PHONY: dev-setup
-dev-setup:
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+# Remove replace directive from go.mod
+.PHONY: clean-gomod
+clean-gomod:
+	@echo "Cleaning up go.mod..."
+	@if grep -q "replace github.com/computesphere/cli/cs => ../cli/cs" go.mod; then \
+		echo "Removing replace directive from go.mod..."; \
+		sed -i '' '/replace github.com\/computesphere\/cli\/cs => ..\/cli\/cs/d' go.mod; \
+		echo "Replace directive removed from go.mod"; \
+	else \
+		echo "Replace directive not found in go.mod"; \
+	fi
+
+# Clean up all development artifacts
+.PHONY: clean
+clean: clean-gomod cleanup-tfvars
+	@echo "Cleaned up development environment and terraform.tfvars files."
+
+# =============================================================================
+# TERRAFORM CONFIGURATION
+# =============================================================================
+
+# Set up Terraform provider development override in terraform.rc
+.PHONY: setup-terraformrc
+setup-terraformrc:
 	@echo "Setting up local Terraform provider development override..."
 	@GOPATH=$$(go env GOPATH); \
 	if [ -z "$$GOPATH" ]; then \
