@@ -2,9 +2,9 @@
 EXAMPLE_RESOURCE_DIRS := $(shell find examples/resources -type d -name 'computesphere_*')
 EXAMPLE_DATASOURCE_DIRS := $(shell find examples/data-sources -type d -name 'computesphere_*')
 EXAMPLE_DIRS := $(EXAMPLE_RESOURCE_DIRS) $(EXAMPLE_DATASOURCE_DIRS)
-API_TOKEN := $(if $(API_TOKEN),$(API_TOKEN),2CdzGBgvIGADZ9w_ODqRn2FdIBOUgDw5)
-ACCOUNT_ID := $(if $(ACCOUNT_ID),$(ACCOUNT_ID),eb773429-b6be-4faf-86b7-05d2125ce940)
-API_URL := $(if $(API_URL),$(API_URL),api.computesphere.com)
+API_TOKEN := $(if $(API_TOKEN),$(API_TOKEN),your-api-token-here)
+ACCOUNT_ID := $(if $(ACCOUNT_ID),$(ACCOUNT_ID),your-account-id-here)
+API_URL := $(if $(API_URL),$(API_URL),your-api-url-here)
 TFVARS_TEMPLATE := utils/terraform.tfvars.template
 TERRAFORMRC_TEMPLATE := utils/terraformrc.template
 
