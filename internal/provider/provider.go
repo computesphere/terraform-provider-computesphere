@@ -2,9 +2,12 @@ package provider
 
 import (
 	"context"
+	"net/http"
 	"os"
+	"strings"
 
 	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-api/sdk/go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -208,11 +211,57 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 		conf.XAccountID(p.AccountID)
 	}
 	client := cs.NewAPIClient(conf)
+
+	// Build the v2 SDK client alongside the legacy one. Resources whose
+	// domain has landed in openapi/v2/spec.yaml prefer V2Client; the
+	// others keep using Client until their domain migrates.
+	v2Base := v2BaseURL(p.Host)
+	v2Client, v2Err := csv2.NewClientWithResponses(
+		v2Base,
+		csv2.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
+			if p.APIToken != "" {
+				req.Header.Set("Authorization", "Bearer "+p.APIToken)
+			}
+			return nil
+		}),
+	)
+	if v2Err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to initialize v2 API client",
+			v2Err.Error(),
+		)
+		return
+	}
+
 	data := &cstypes.Data{
-		Client: client,
+		Client:    client,
+		V2Client:  v2Client,
+		AccountID: p.AccountID,
 	}
 	resp.DataSourceData = data
 	resp.ResourceData = data
+}
+
+// v2BaseURL normalizes the provider's Host attribute (which points at the
+// v1 API, e.g. https://api.computesphere.com/api/v1) into the v2 base URL
+// (https://api.computesphere.com/api/v2). If Host is empty or doesn't
+// contain a /api/vX suffix the caller's value is returned unchanged so
+// consumers with unusual topologies can point directly at /api/v2.
+func v2BaseURL(host string) string {
+	if host == "" {
+		return ""
+	}
+	// Swap /api/v1 → /api/v2, and /api/v1/ → /api/v2/.
+	swaps := []struct{ old, new string }{
+		{"/api/v1/", "/api/v2/"},
+		{"/api/v1", "/api/v2"},
+	}
+	for _, s := range swaps {
+		if strings.HasSuffix(host, s.old) {
+			return strings.TrimSuffix(host, s.old) + s.new
+		}
+	}
+	return host
 }
 
 func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.Resource {

@@ -69,16 +69,25 @@ check-deps:
 # DEVELOPMENT SETUP
 # =============================================================================
 
-# Add replace directive to go.mod for local development
+# Add replace directives to go.mod for local development.
+# Both the legacy v1 client (cli/cs) and the generated v2 client
+# (computesphere-api/sdk/go) need sibling clones to resolve from
+# module paths until both are published via a registry/tag.
 .PHONY: setup-replace
 setup-replace:
 	@echo "Setting up local development environment..."
 	@if ! grep -q "replace github.com/computesphere/cli/cs => ../cli/cs" go.mod; then \
-		echo "Adding replace directive to go.mod..."; \
+		echo "Adding cli/cs replace directive to go.mod..."; \
 		echo "" >> go.mod; \
 		echo "replace github.com/computesphere/cli/cs => ../cli/cs" >> go.mod; \
 	else \
-		echo "Replace directive already exists in go.mod"; \
+		echo "cli/cs replace directive already exists in go.mod"; \
+	fi
+	@if ! grep -q "replace github.com/computesphere/computesphere-api/sdk/go => ../computesphere-api/sdk/go" go.mod; then \
+		echo "Adding computesphere-api/sdk/go replace directive to go.mod..."; \
+		echo "replace github.com/computesphere/computesphere-api/sdk/go => ../computesphere-api/sdk/go" >> go.mod; \
+	else \
+		echo "computesphere-api/sdk/go replace directive already exists in go.mod"; \
 	fi
 
 # Complete development environment setup
@@ -150,17 +159,19 @@ cleanup-tfvars:
 # CLEANUP
 # =============================================================================
 
-# Remove replace directive from go.mod
+# Remove both replace directives from go.mod
 .PHONY: clean-gomod
 clean-gomod:
 	@echo "Cleaning up go.mod..."
 	@if grep -q "replace github.com/computesphere/cli/cs => ../cli/cs" go.mod; then \
-		echo "Removing replace directive from go.mod..."; \
+		echo "Removing cli/cs replace directive from go.mod..."; \
 		sed -i '' '/replace github.com\/computesphere\/cli\/cs => ..\/cli\/cs/d' go.mod; \
-		echo "Replace directive removed from go.mod"; \
-	else \
-		echo "Replace directive not found in go.mod"; \
 	fi
+	@if grep -q "replace github.com/computesphere/computesphere-api/sdk/go => ../computesphere-api/sdk/go" go.mod; then \
+		echo "Removing computesphere-api/sdk/go replace directive from go.mod..."; \
+		sed -i '' '/replace github.com\/computesphere\/computesphere-api\/sdk\/go => ..\/computesphere-api\/sdk\/go/d' go.mod; \
+	fi
+	@echo "Replace directives removed from go.mod"
 
 # Clean up all development artifacts
 .PHONY: clean
