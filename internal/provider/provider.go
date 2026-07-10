@@ -25,10 +25,8 @@ import (
 	environmentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/resource"
 	guardrailresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/resource"
 	notificationresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/resource"
-	planresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/plan/resource"
 	projectresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/project/resource"
 	serviceresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/service/resource"
-	subscriptionresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/subscription/resource"
 	teamresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/team/resource"
 
 	// Datasource imports
@@ -288,11 +286,9 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		alertresource.NewAlertResource,
 		environmentresource.NewEnvironmentResource,
 		guardrailresource.NewGuardrailResource,
-		planresource.NewPlanResource,
 		projectresource.NewProjectResource,
 		serviceresource.NewServiceResource,
 		apitokenresource.NewApiTokenResource,
-		subscriptionresource.NewSubscriptionResource,
 		teamresource.NewTeamResource,
 	}
 }
