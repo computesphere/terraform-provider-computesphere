@@ -16,18 +16,6 @@ var ProjectDescription = schema.StringAttribute{
 	Computed:    true,
 	Description: "Description of the project.",
 }
-var ProjectPlanName = schema.StringAttribute{
-	Computed:    true,
-	Description: "Name of the plan for the project.",
-}
-var ProjectPlanValue = schema.Int64Attribute{
-	Computed:    true,
-	Description: "Plan value for the project.",
-}
-var ProjectPlanID = schema.StringAttribute{
-	Computed:    true,
-	Description: "Plan ID for the project.",
-}
 var ProjectCreatedAt = schema.StringAttribute{
 	Computed:    true,
 	Description: "Creation timestamp of the project.",
