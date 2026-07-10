@@ -2,15 +2,18 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type GuardrailDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &GuardrailDataSource{}
@@ -28,25 +31,39 @@ func (d *GuardrailDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 type guardrailDataSourceModel struct {
-	ID                   types.String              `tfsdk:"id"`
-	Name                 types.String              `tfsdk:"name"`
-	Description          types.String              `tfsdk:"description"`
-	Effect               types.String              `tfsdk:"effect"`
-	Message              types.String              `tfsdk:"message"`
-	Rules                []map[string]types.String `tfsdk:"rules"`
-	Scope                types.String              `tfsdk:"scope"`
-	Status               types.Bool                `tfsdk:"status"`
-	Type                 types.String              `tfsdk:"type"`
-	AccountID            types.String              `tfsdk:"account_id"`
-	CreatedBy            types.String              `tfsdk:"created_by"`
-	IsPredefinedAssigned types.Bool                `tfsdk:"is_predefined_assigned"`
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Effect      types.String `tfsdk:"effect"`
+	Message     types.String `tfsdk:"message"`
+	Scope       types.String `tfsdk:"scope"`
+	Status      types.Bool   `tfsdk:"status"`
+	Type        types.String `tfsdk:"type"`
+	AccountID            types.String `tfsdk:"account_id"`
+	CreatedBy            types.String `tfsdk:"created_by"`
+	IsPredefinedAssigned types.Bool   `tfsdk:"is_predefined_assigned"`
 }
 
 func (d *GuardrailDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
+}
+
+func (m *guardrailDataSourceModel) apply(g *csv2.Guardrail) {
+	m.ID = types.StringValue(g.Id.String())
+	m.Name = types.StringValue(g.Name)
+	m.Description = types.StringValue(g.Description)
+	m.Effect = types.StringValue(string(g.Effect))
+	m.Message = types.StringValue(g.Message)
+	m.Scope = types.StringValue(string(g.Scope))
+	m.Status = types.BoolValue(g.Status)
+	m.Type = types.StringValue(string(g.Type))
+	m.AccountID = types.StringValue(g.AccountId.String())
+	m.CreatedBy = types.StringValue(g.CreatedBy.String())
+	m.IsPredefinedAssigned = types.BoolValue(g.IsPredefinedAssigned)
 }
 
 func (d *GuardrailDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -55,31 +72,32 @@ func (d *GuardrailDataSource) Read(ctx context.Context, req datasource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := d.client.GuardrailsAPI.GuardrailsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	accountID, err := uuid.Parse(d.accountID)
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
+	}
+	gid, err := uuid.Parse(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid guardrail id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetGuardrailWithResponse(ctx, csv2.GuardrailId(gid), &csv2.GetGuardrailParams{XAccountId: accountID})
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading guardrail", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	g := apiResp.Data
-	state.ID = types.StringValue(g.GetId())
-	state.Name = types.StringValue(g.GetName())
-	state.Description = types.StringValue(g.GetDescription())
-	state.Effect = types.StringValue(g.GetEffect())
-	state.Message = types.StringValue(g.GetMessage())
-	state.Scope = types.StringValue(g.GetScope())
-	state.Status = types.BoolValue(g.GetStatus())
-	state.Type = types.StringValue(g.GetType())
-	state.AccountID = types.StringValue(g.GetAccountId())
-	state.CreatedBy = types.StringValue(g.GetCreatedBy())
-	state.IsPredefinedAssigned = types.BoolValue(g.GetIsPredefinedAssigned())
-	// Rules omitted for brevity; add as needed
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading guardrail", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	state.apply(apiResp.JSON200)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
