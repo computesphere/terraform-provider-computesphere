@@ -62,6 +62,10 @@ type ComputeSphereProvider struct {
 	Host      string
 	APIToken  string
 	AccountID string
+	// HTTPClient, when set, overrides the default HTTP client used by both the
+	// v1 and v2 API clients. Tests inject a go-vcr recorder client here so
+	// cassette replay intercepts outbound requests instead of hitting the API.
+	HTTPClient *http.Client
 }
 
 // ConfigFunc allows for flexible provider construction (for testing/extensibility)
@@ -82,6 +86,14 @@ func WithAPIToken(token string) ConfigFunc {
 func WithAccountID(accountID string) ConfigFunc {
 	return func(p *ComputeSphereProvider) {
 		p.AccountID = accountID
+	}
+}
+
+// WithHTTPClient overrides the HTTP client for both API clients. Used by tests
+// to inject a go-vcr recorder so cassettes can be recorded/replayed.
+func WithHTTPClient(c *http.Client) ConfigFunc {
+	return func(p *ComputeSphereProvider) {
+		p.HTTPClient = c
 	}
 }
 
@@ -210,21 +222,27 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	if p.AccountID != "" {
 		conf.XAccountID(p.AccountID)
 	}
+	if p.HTTPClient != nil {
+		conf.HTTPClient = p.HTTPClient
+	}
 	client := cs.NewAPIClient(conf)
 
 	// Build the v2 SDK client alongside the legacy one. Resources whose
 	// domain has landed in openapi/v2/spec.yaml prefer V2Client; the
 	// others keep using Client until their domain migrates.
 	v2Base := v2BaseURL(p.Host)
-	v2Client, v2Err := csv2.NewClientWithResponses(
-		v2Base,
+	v2Opts := []csv2.ClientOption{
 		csv2.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
 			if p.APIToken != "" {
 				req.Header.Set("Authorization", "Bearer "+p.APIToken)
 			}
 			return nil
 		}),
-	)
+	}
+	if p.HTTPClient != nil {
+		v2Opts = append(v2Opts, csv2.WithHTTPClient(p.HTTPClient))
+	}
+	v2Client, v2Err := csv2.NewClientWithResponses(v2Base, v2Opts...)
 	if v2Err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to initialize v2 API client",
