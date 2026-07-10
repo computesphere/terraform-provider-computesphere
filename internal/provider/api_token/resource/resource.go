@@ -2,9 +2,14 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"time"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
@@ -12,7 +17,8 @@ import (
 )
 
 type ApiTokenResource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ resource.Resource = &ApiTokenResource{}
@@ -31,27 +37,65 @@ func (r *ApiTokenResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = Schema(ctx)
 }
 
+// apiTokenResourceModel drops the v1-only type/accounts/projects attributes; the
+// v2 token exposes account_ids/project_ids (uuid lists) and a single owning
+// account_id.
 type apiTokenResourceModel struct {
 	Name       types.String   `tfsdk:"name"`
 	Scope      types.String   `tfsdk:"scope"`
 	Expiry     types.String   `tfsdk:"expiry"`
-	Type       types.String   `tfsdk:"type"`
-	AccountID  types.String   `tfsdk:"account_id"`
 	AccountIDs []types.String `tfsdk:"account_ids"`
 	ProjectIDs []types.String `tfsdk:"project_ids"`
 	ID         types.String   `tfsdk:"id"`
 	Token      types.String   `tfsdk:"token"`
+	AccountID  types.String   `tfsdk:"account_id"`
 	CreatedAt  types.String   `tfsdk:"created_at"`
 	UserID     types.String   `tfsdk:"user_id"`
-	Accounts   []types.String `tfsdk:"accounts"`
-	Projects   []types.String `tfsdk:"projects"`
 }
 
 func (r *ApiTokenResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	data := cstypes.ConfigureResource(req, resp)
 	if data != nil {
-		r.client = data.Client
+		r.client = data.V2Client
+		r.accountID = data.AccountID
 	}
+}
+
+func uuidStrings(ids []openapi_types.UUID) []types.String {
+	out := make([]types.String, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, types.StringValue(id.String()))
+	}
+	return out
+}
+
+// apply maps the token metadata into state. It never sets Token: the secret is
+// only returned once (at creation) and cannot be re-read.
+func (m *apiTokenResourceModel) apply(t *csv2.APIToken) {
+	m.ID = types.StringValue(t.Id.String())
+	m.Name = types.StringValue(t.Name)
+	m.Scope = types.StringValue(string(t.Scope))
+	m.Expiry = types.StringValue(t.Expiry.Format(time.RFC3339))
+	m.AccountID = types.StringValue(t.AccountId)
+	m.AccountIDs = uuidStrings(t.AccountIds)
+	m.ProjectIDs = uuidStrings(t.ProjectIds)
+	m.CreatedAt = types.StringValue(t.CreatedAt.Format(time.RFC3339))
+	m.UserID = types.StringValue(t.UserId.String())
+}
+
+func parseUUIDList(in []types.String) (*[]openapi_types.UUID, error) {
+	if len(in) == 0 {
+		return nil, nil
+	}
+	out := make([]openapi_types.UUID, 0, len(in))
+	for _, s := range in {
+		id, err := uuid.Parse(s.ValueString())
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return &out, nil
 }
 
 func (r *ApiTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -60,53 +104,48 @@ func (r *ApiTokenResource) Create(ctx context.Context, req resource.CreateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	payload := cs.ModelApiTokenRequestPayload{
-		Name:  &[]string{plan.Name.ValueString()}[0],
-		Scope: &[]string{plan.Scope.ValueString()}[0],
+
+	accountID, err := uuid.Parse(r.accountID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
 	}
-	if !plan.Expiry.IsNull() {
-		expiry := plan.Expiry.ValueString()
-		payload.Expiry = &expiry
+	expiry, err := time.Parse(time.RFC3339, plan.Expiry.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid expiry", "expiry must be an RFC3339 timestamp: "+err.Error())
+		return
 	}
-	if !plan.Type.IsNull() {
-		typeVal := plan.Type.ValueString()
-		payload.Type = &typeVal
+	accountIDs, err := parseUUIDList(plan.AccountIDs)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid account_ids", err.Error())
+		return
 	}
-	if !plan.AccountID.IsNull() {
-		accountID := plan.AccountID.ValueString()
-		payload.AccountId = &accountID
+	projectIDs, err := parseUUIDList(plan.ProjectIDs)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid project_ids", err.Error())
+		return
 	}
-	if plan.AccountIDs != nil {
-		ids := []string{}
-		for _, id := range plan.AccountIDs {
-			if !id.IsNull() {
-				ids = append(ids, id.ValueString())
-			}
-		}
-		payload.AccountIds = ids
-	}
-	if plan.ProjectIDs != nil {
-		ids := []string{}
-		for _, id := range plan.ProjectIDs {
-			if !id.IsNull() {
-				ids = append(ids, id.ValueString())
-			}
-		}
-		payload.ProjectIds = ids
-	}
-	apiResp, _, err := r.client.ApiTokenAPI.ApiTokensPost(ctx).Body(payload).Execute()
+
+	apiResp, err := r.client.CreateAPITokenWithResponse(ctx, &csv2.CreateAPITokenParams{XAccountId: accountID}, csv2.CreateAPITokenRequest{
+		AccountIds: accountIDs,
+		Expiry:     expiry,
+		Name:       plan.Name.ValueString(),
+		ProjectIds: projectIDs,
+		Scope:      csv2.CreateAPITokenRequestScope(plan.Scope.ValueString()),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating API token", err.Error())
 		return
 	}
-	if apiResp.Data == nil || apiResp.Data.Id == nil {
-		resp.Diagnostics.AddError("API token creation failed", "No ID returned")
+	if apiResp.StatusCode() != http.StatusCreated || apiResp.JSON201 == nil {
+		resp.Diagnostics.AddError("Error creating API token", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	plan.ID = types.StringValue(*apiResp.Data.Id)
-	plan.Token = types.StringPointerValue(apiResp.Data.Token)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	r.Read(ctx, resource.ReadRequest{State: resp.State}, &resource.ReadResponse{State: resp.State, Diagnostics: resp.Diagnostics})
+
+	var state apiTokenResourceModel
+	state.apply(&apiResp.JSON201.Token)
+	state.Token = types.StringValue(apiResp.JSON201.Secret)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *ApiTokenResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -115,67 +154,43 @@ func (r *ApiTokenResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := r.client.ApiTokenAPI.ApiTokensIdGet(ctx, state.ID.ValueString()).Execute()
+
+	tid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid api token id", err.Error())
+		return
+	}
+
+	apiResp, err := r.client.GetAPITokenWithResponse(ctx, tid)
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading API token", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	token := apiResp.Data
-	state.Name = types.StringValue(token.GetName())
-	state.Scope = types.StringValue(token.GetScope())
-	state.Expiry = types.StringPointerValue(token.Expiry)
-	state.Type = types.StringPointerValue(token.Type)
-	state.AccountID = types.StringPointerValue(token.AccountId)
-	if token.AccountIds != nil {
-		ids := make([]types.String, 0, len(token.AccountIds))
-		for _, id := range token.AccountIds {
-			ids = append(ids, types.StringValue(id))
-		}
-		state.AccountIDs = ids
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading API token", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
 	}
-	if token.ProjectIds != nil {
-		ids := make([]types.String, 0, len(token.ProjectIds))
-		for _, id := range token.ProjectIds {
-			ids = append(ids, types.StringValue(id))
-		}
-		state.ProjectIDs = ids
-	}
-	state.Token = types.StringPointerValue(token.Token)
-	state.CreatedAt = types.StringValue(token.GetCreatedAt())
-	state.UserID = types.StringPointerValue(token.UserId)
-	if token.Accounts != nil {
-		accounts := make([]types.String, 0, len(token.Accounts))
-		for _, a := range token.Accounts {
-			accounts = append(accounts, types.StringValue(a.GetId()))
-		}
-		state.Accounts = accounts
-	}
-	if token.Projects != nil {
-		projects := make([]types.String, 0, len(token.Projects))
-		for _, p := range token.Projects {
-			projects = append(projects, types.StringValue(p.GetId()))
-		}
-		state.Projects = projects
-	}
+
+	// Preserve the secret from prior state; Get does not return it.
+	token := state.Token
+	state.apply(apiResp.JSON200)
+	state.Token = token
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *ApiTokenResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// API tokens are immutable (every mutable attribute forces replacement), so
+	// update only carries state forward.
 	var plan apiTokenResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	r.Read(ctx, resource.ReadRequest{State: resp.State}, &resource.ReadResponse{State: resp.State, Diagnostics: resp.Diagnostics})
 }
 
 func (r *ApiTokenResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -184,16 +199,24 @@ func (r *ApiTokenResource) Delete(ctx context.Context, req resource.DeleteReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, httpResp, err := r.client.ApiTokenAPI.ApiTokensIdDelete(ctx, state.ID.ValueString()).Execute()
+
+	tid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-		resp.Diagnostics.AddError("Error deleting API token", err.Error())
+		resp.Diagnostics.AddError("Invalid api token id", err.Error())
 		return
 	}
-	resp.State.RemoveResource(ctx)
+
+	apiResp, err := r.client.RevokeAPITokenWithResponse(ctx, tid)
+	if err != nil {
+		resp.Diagnostics.AddError("Error revoking API token", err.Error())
+		return
+	}
+	switch apiResp.StatusCode() {
+	case http.StatusOK, http.StatusNoContent, http.StatusAccepted, http.StatusNotFound:
+		resp.State.RemoveResource(ctx)
+	default:
+		resp.Diagnostics.AddError("Error revoking API token", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+	}
 }
 
 func (r *ApiTokenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
