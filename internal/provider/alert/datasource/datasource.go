@@ -62,7 +62,7 @@ func (d *AlertDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	apiResp, err := d.client.GetAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid))
+	apiResp, err := d.client.GetAlertRuleWithResponse(ctx, arid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading alert", err.Error())
 		return

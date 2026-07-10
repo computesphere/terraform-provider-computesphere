@@ -60,7 +60,7 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	apiResp, err := d.client.GetEnvironmentWithResponse(ctx, csv2.EnvironmentId(eid))
+	apiResp, err := d.client.GetEnvironmentWithResponse(ctx, eid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading environment", err.Error())
 		return

@@ -62,7 +62,7 @@ func (d *ServiceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	apiResp, err := d.client.GetServiceWithResponse(ctx, csv2.ServiceId(sid))
+	apiResp, err := d.client.GetServiceWithResponse(ctx, sid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service", err.Error())
 		return

@@ -103,7 +103,7 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	apiResp, err := r.client.GetProjectWithResponse(ctx, csv2.ProjectId(pid))
+	apiResp, err := r.client.GetProjectWithResponse(ctx, pid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading project", err.Error())
 		return
@@ -137,7 +137,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	name := plan.Name.ValueString()
-	apiResp, err := r.client.UpdateProjectWithResponse(ctx, csv2.ProjectId(pid), csv2.UpdateProjectRequest{
+	apiResp, err := r.client.UpdateProjectWithResponse(ctx, pid, csv2.UpdateProjectRequest{
 		Name:        &name,
 		Description: cstypes.StringPtr(plan.Description.ValueString()),
 	})
@@ -169,7 +169,7 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	cascade := true
-	apiResp, err := r.client.DeleteProjectWithResponse(ctx, csv2.ProjectId(pid), &csv2.DeleteProjectParams{
+	apiResp, err := r.client.DeleteProjectWithResponse(ctx, pid, &csv2.DeleteProjectParams{
 		Cascade: &cascade,
 	})
 	if err != nil {

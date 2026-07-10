@@ -120,7 +120,7 @@ func (r *ServiceResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	apiResp, err := r.client.GetServiceWithResponse(ctx, csv2.ServiceId(sid))
+	apiResp, err := r.client.GetServiceWithResponse(ctx, sid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service", err.Error())
 		return
@@ -155,7 +155,7 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	// The v2 service update surface is the plan (spherelet shape); name/type/
 	// project changes force replacement via RequiresReplace.
-	apiResp, err := r.client.UpdateServiceWithResponse(ctx, csv2.ServiceId(sid), csv2.UpdateServiceRequest{
+	apiResp, err := r.client.UpdateServiceWithResponse(ctx, sid, csv2.UpdateServiceRequest{
 		PlanId: plan.PlanID.ValueString(),
 	})
 	if err != nil {
@@ -185,7 +185,7 @@ func (r *ServiceResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	apiResp, err := r.client.DeleteServiceWithResponse(ctx, csv2.ServiceId(sid))
+	apiResp, err := r.client.DeleteServiceWithResponse(ctx, sid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting service", err.Error())
 		return

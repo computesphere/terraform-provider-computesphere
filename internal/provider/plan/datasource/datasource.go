@@ -77,7 +77,7 @@ func (d *PlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	apiResp, err := d.client.GetPlanWithResponse(ctx, csv2.PlanId(pid))
+	apiResp, err := d.client.GetPlanWithResponse(ctx, pid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading plan", err.Error())
 		return

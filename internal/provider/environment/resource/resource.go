@@ -110,7 +110,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	apiResp, err := r.client.GetEnvironmentWithResponse(ctx, csv2.EnvironmentId(eid))
+	apiResp, err := r.client.GetEnvironmentWithResponse(ctx, eid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading environment", err.Error())
 		return
@@ -144,7 +144,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	name := plan.Name.ValueString()
-	apiResp, err := r.client.UpdateEnvironmentWithResponse(ctx, csv2.EnvironmentId(eid), csv2.UpdateEnvironmentRequest{
+	apiResp, err := r.client.UpdateEnvironmentWithResponse(ctx, eid, csv2.UpdateEnvironmentRequest{
 		Name: &name,
 	})
 	if err != nil {
@@ -175,7 +175,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	cascade := true
-	apiResp, err := r.client.DeleteEnvironmentWithResponse(ctx, csv2.EnvironmentId(eid), &csv2.DeleteEnvironmentParams{
+	apiResp, err := r.client.DeleteEnvironmentWithResponse(ctx, eid, &csv2.DeleteEnvironmentParams{
 		Cascade: &cascade,
 	})
 	if err != nil {

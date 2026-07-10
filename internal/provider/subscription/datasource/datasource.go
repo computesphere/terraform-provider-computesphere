@@ -60,7 +60,7 @@ func (d *SubscriptionDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	apiResp, err := d.client.GetSubscriptionWithResponse(ctx, csv2.SubscriptionId(sid))
+	apiResp, err := d.client.GetSubscriptionWithResponse(ctx, sid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading subscription", err.Error())
 		return

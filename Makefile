@@ -76,13 +76,6 @@ check-deps:
 .PHONY: setup-replace
 setup-replace:
 	@echo "Setting up local development environment..."
-	@if ! grep -q "replace github.com/computesphere/cli/cs => ../cli/cs" go.mod; then \
-		echo "Adding cli/cs replace directive to go.mod..."; \
-		echo "" >> go.mod; \
-		echo "replace github.com/computesphere/cli/cs => ../cli/cs" >> go.mod; \
-	else \
-		echo "cli/cs replace directive already exists in go.mod"; \
-	fi
 
 # Complete development environment setup
 .PHONY: dev-setup

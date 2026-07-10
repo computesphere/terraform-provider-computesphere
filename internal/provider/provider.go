@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	cs "github.com/computesphere/cli/cs"
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -87,7 +86,7 @@ func WithAccountID(accountID string) ConfigFunc {
 	}
 }
 
-// WithHTTPClient overrides the HTTP client for both API clients. Used by tests
+// WithHTTPClient overrides the HTTP client for the API client. Used by tests
 // to inject a go-vcr recorder so cassettes can be recorded/replayed.
 func WithHTTPClient(c *http.Client) ConfigFunc {
 	return func(p *ComputeSphereProvider) {
@@ -210,24 +209,8 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	tflog.Debug(ctx, "Creating ComputeSphere API client")
-	conf := cs.NewConfiguration()
-	if p.Host != "" {
-		conf.Host = p.Host
-	}
-	if p.APIToken != "" {
-		conf.XUserToken(p.APIToken)
-	}
-	if p.AccountID != "" {
-		conf.XAccountID(p.AccountID)
-	}
-	if p.HTTPClient != nil {
-		conf.HTTPClient = p.HTTPClient
-	}
-	client := cs.NewAPIClient(conf)
 
-	// Build the v2 SDK client alongside the legacy one. Resources whose
-	// domain has landed in openapi/v2/spec.yaml prefer V2Client; the
-	// others keep using Client until their domain migrates.
+	// Build the public v2 SDK client used by every resource and datasource.
 	v2Base := v2BaseURL(p.Host)
 	v2Opts := []csv2.ClientOption{
 		csv2.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
@@ -250,7 +233,6 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	data := &cstypes.Data{
-		Client:    client,
 		V2Client:  v2Client,
 		AccountID: p.AccountID,
 	}

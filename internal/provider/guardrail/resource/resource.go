@@ -145,7 +145,7 @@ func (r *GuardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	apiResp, err := r.client.GetGuardrailWithResponse(ctx, csv2.GuardrailId(gid), &csv2.GetGuardrailParams{XAccountId: accountID})
+	apiResp, err := r.client.GetGuardrailWithResponse(ctx, gid, &csv2.GetGuardrailParams{XAccountId: accountID})
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading guardrail", err.Error())
 		return
@@ -183,7 +183,7 @@ func (r *GuardrailResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	apiResp, err := r.client.UpdateGuardrailWithResponse(ctx, csv2.GuardrailId(gid), &csv2.UpdateGuardrailParams{XAccountId: accountID}, plan.toRequest())
+	apiResp, err := r.client.UpdateGuardrailWithResponse(ctx, gid, &csv2.UpdateGuardrailParams{XAccountId: accountID}, plan.toRequest())
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating guardrail", err.Error())
 		return
@@ -194,7 +194,7 @@ func (r *GuardrailResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// The update response is not typed; re-read to refresh state.
-	getResp, err := r.client.GetGuardrailWithResponse(ctx, csv2.GuardrailId(gid), &csv2.GetGuardrailParams{XAccountId: accountID})
+	getResp, err := r.client.GetGuardrailWithResponse(ctx, gid, &csv2.GetGuardrailParams{XAccountId: accountID})
 	if err != nil || getResp.StatusCode() != http.StatusOK || getResp.JSON200 == nil {
 		resp.Diagnostics.AddError("Error updating guardrail", "guardrail updated but could not be re-read")
 		return
@@ -221,7 +221,7 @@ func (r *GuardrailResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	apiResp, err := r.client.DeleteGuardrailWithResponse(ctx, csv2.GuardrailId(gid), &csv2.DeleteGuardrailParams{XAccountId: accountID})
+	apiResp, err := r.client.DeleteGuardrailWithResponse(ctx, gid, &csv2.DeleteGuardrailParams{XAccountId: accountID})
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting guardrail", err.Error())
 		return

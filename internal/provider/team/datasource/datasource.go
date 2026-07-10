@@ -61,7 +61,7 @@ func (d *TeamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	apiResp, err := d.client.GetTeamWithResponse(ctx, csv2.TeamId(tid))
+	apiResp, err := d.client.GetTeamWithResponse(ctx, tid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading team", err.Error())
 		return

@@ -59,7 +59,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	apiResp, err := d.client.GetProjectWithResponse(ctx, csv2.ProjectId(pid))
+	apiResp, err := d.client.GetProjectWithResponse(ctx, pid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading project", err.Error())
 		return

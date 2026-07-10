@@ -31,14 +31,14 @@ func (d *GuardrailDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 type guardrailDataSourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Effect      types.String `tfsdk:"effect"`
-	Message     types.String `tfsdk:"message"`
-	Scope       types.String `tfsdk:"scope"`
-	Status      types.Bool   `tfsdk:"status"`
-	Type        types.String `tfsdk:"type"`
+	ID                   types.String `tfsdk:"id"`
+	Name                 types.String `tfsdk:"name"`
+	Description          types.String `tfsdk:"description"`
+	Effect               types.String `tfsdk:"effect"`
+	Message              types.String `tfsdk:"message"`
+	Scope                types.String `tfsdk:"scope"`
+	Status               types.Bool   `tfsdk:"status"`
+	Type                 types.String `tfsdk:"type"`
 	AccountID            types.String `tfsdk:"account_id"`
 	CreatedBy            types.String `tfsdk:"created_by"`
 	IsPredefinedAssigned types.Bool   `tfsdk:"is_predefined_assigned"`
@@ -84,7 +84,7 @@ func (d *GuardrailDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	apiResp, err := d.client.GetGuardrailWithResponse(ctx, csv2.GuardrailId(gid), &csv2.GetGuardrailParams{XAccountId: accountID})
+	apiResp, err := d.client.GetGuardrailWithResponse(ctx, gid, &csv2.GetGuardrailParams{XAccountId: accountID})
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading guardrail", err.Error())
 		return

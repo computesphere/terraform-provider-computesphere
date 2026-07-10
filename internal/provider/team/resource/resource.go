@@ -124,7 +124,7 @@ func (r *TeamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	apiResp, err := r.client.GetTeamWithResponse(ctx, csv2.TeamId(tid))
+	apiResp, err := r.client.GetTeamWithResponse(ctx, tid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading team", err.Error())
 		return
@@ -158,7 +158,7 @@ func (r *TeamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	name := plan.Name.ValueString()
-	apiResp, err := r.client.UpdateTeamWithResponse(ctx, csv2.TeamId(tid), csv2.UpdateTeamRequest{
+	apiResp, err := r.client.UpdateTeamWithResponse(ctx, tid, csv2.UpdateTeamRequest{
 		Name:        &name,
 		Description: cstypes.StringPtr(plan.Description.ValueString()),
 	})
@@ -189,7 +189,7 @@ func (r *TeamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	apiResp, err := r.client.DeleteTeamWithResponse(ctx, csv2.TeamId(tid))
+	apiResp, err := r.client.DeleteTeamWithResponse(ctx, tid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting team", err.Error())
 		return

@@ -130,7 +130,7 @@ func (r *AlertResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	apiResp, err := r.client.GetAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid))
+	apiResp, err := r.client.GetAlertRuleWithResponse(ctx, arid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading alert", err.Error())
 		return
@@ -181,7 +181,7 @@ func (r *AlertResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		body.EnvironmentId = &envID
 	}
 
-	apiResp, err := r.client.UpdateAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid), body)
+	apiResp, err := r.client.UpdateAlertRuleWithResponse(ctx, arid, body)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating alert", err.Error())
 		return
@@ -209,7 +209,7 @@ func (r *AlertResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	apiResp, err := r.client.DeleteAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid))
+	apiResp, err := r.client.DeleteAlertRuleWithResponse(ctx, arid)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting alert", err.Error())
 		return
