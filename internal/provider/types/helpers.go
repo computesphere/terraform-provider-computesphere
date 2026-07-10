@@ -1,6 +1,11 @@
 package types
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 // ProblemSummary formats the RFC 7807 Problem body returned by the v2 API for
 // Terraform diagnostic output. It prefers the raw body; when empty, it falls
@@ -21,4 +26,13 @@ func StringPtr(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+// TimePtrString maps an optional v2 timestamp (*time.Time) to a Terraform
+// string value, or null when the timestamp is absent.
+func TimePtrString(t *time.Time) types.String {
+	if t == nil {
+		return types.StringNull()
+	}
+	return types.StringValue(t.Format(time.RFC3339))
 }

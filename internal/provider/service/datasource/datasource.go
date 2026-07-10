@@ -2,15 +2,19 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"time"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type ServiceDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &ServiceDataSource{}
@@ -40,7 +44,8 @@ type serviceDataSourceModel struct {
 func (d *ServiceDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
@@ -50,25 +55,33 @@ func (d *ServiceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := d.client.ServiceAPI.ServicesIdGet(ctx, state.ID.ValueString()).Execute()
+
+	sid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid service id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetServiceWithResponse(ctx, csv2.ServiceId(sid))
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading service", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	service := apiResp.Data
-	state.Name = types.StringValue(service.GetName())
-	state.ProjectID = types.StringValue(service.GetProjectId())
-	state.Type = types.StringValue(service.GetType())
-	state.Active = types.BoolValue(service.GetActive())
-	state.CreatedAt = types.StringValue(service.GetCreatedAt())
-	state.LastOpenedAt = types.StringValue(service.GetLastOpenedAt())
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading service", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	s := apiResp.JSON200
+	state.Name = types.StringValue(s.Name)
+	state.ProjectID = types.StringValue(s.ProjectId.String())
+	state.Type = types.StringValue(s.Type)
+	state.Active = types.BoolValue(s.Active)
+	state.CreatedAt = types.StringValue(s.CreatedAt.Format(time.RFC3339))
+	state.LastOpenedAt = cstypes.TimePtrString(s.LastOpenedAt)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

@@ -2,6 +2,8 @@ package resource
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 var ServiceID = schema.StringAttribute{
@@ -11,14 +13,28 @@ var ServiceID = schema.StringAttribute{
 var ServiceName = schema.StringAttribute{
 	Required:    true,
 	Description: "Name of the service.",
+	PlanModifiers: []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	},
 }
 var ServiceProjectID = schema.StringAttribute{
-	Computed:    true,
-	Description: "Project ID associated with the service.",
+	Required:    true,
+	Description: "Project the service belongs to.",
+	PlanModifiers: []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	},
 }
 var ServiceType = schema.StringAttribute{
+	Required:    true,
+	Description: "Type of the service (e.g. web-service, cron-job, background-worker).",
+	PlanModifiers: []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	},
+}
+var ServicePlanID = schema.StringAttribute{
+	Optional:    true,
 	Computed:    true,
-	Description: "Type of the service.",
+	Description: "Plan (spherelet shape) assigned to the service. Updatable in place.",
 }
 var ServiceActive = schema.BoolAttribute{
 	Computed:    true,
