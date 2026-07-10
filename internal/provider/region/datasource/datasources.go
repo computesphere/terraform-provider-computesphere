@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	csv2 "github.com/computesphere/computesphere-api/sdk/go"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"

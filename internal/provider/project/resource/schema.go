@@ -14,9 +14,6 @@ func Schema(ctx context.Context) schema.Schema {
 			"id":          shared.ProjID,
 			"name":        shared.ProjectName,
 			"description": shared.ProjectDescription,
-			"plan_name":   shared.ProjectPlanName,
-			"plan_value":  shared.ProjectPlanValue,
-			"plan_id":     shared.ProjectPlanID,
 			"created_at":  shared.ProjectCreatedAt,
 		},
 	}

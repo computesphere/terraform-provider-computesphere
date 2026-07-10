@@ -2,15 +2,17 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type AlertsDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &AlertsDataSource{}
@@ -45,46 +47,36 @@ type alertsDataSourceModel struct {
 func (d *AlertsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
 func (d *AlertsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state alertsDataSourceModel
-	apiResp, _, err := d.client.AlertRuleAPI.AlertsGet(ctx).Execute()
+
+	apiResp, err := d.client.ListAlertRulesWithResponse(ctx, &csv2.ListAlertRulesParams{})
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing alerts", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error listing alerts", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	alerts := make([]alertItemModel, 0, len(apiResp.Data))
-	for _, a := range apiResp.Data {
-		item := alertItemModel{
-			ID:            types.StringValue(a.GetId()),
-			ProjectID:     types.StringValue(a.GetProjectId()),
-			EnvironmentID: types.StringValue(a.GetEnvironmentId()),
-			AlertType:     types.StringValue(a.GetAlertType()),
-			Severity:      types.StringValue(a.GetSeverityLevel()),
-		}
-		if a.Threshold != nil {
-			item.Threshold = types.Int64Value(int64(*a.Threshold))
-		} else {
-			item.Threshold = types.Int64Null()
-		}
-		if a.EvaluationPeriod != nil {
-			item.EvaluationPeriod = types.Int64Value(int64(*a.EvaluationPeriod))
-		} else {
-			item.EvaluationPeriod = types.Int64Null()
-		}
-		if a.Active != nil {
-			item.Active = types.BoolPointerValue(a.Active)
-		} else {
-			item.Active = types.BoolNull()
-		}
-		alerts = append(alerts, item)
+
+	alerts := make([]alertItemModel, 0, len(apiResp.JSON200.Items))
+	for _, a := range apiResp.JSON200.Items {
+		alerts = append(alerts, alertItemModel{
+			ID:               types.StringValue(a.Id.String()),
+			ProjectID:        types.StringValue(a.ProjectId.String()),
+			EnvironmentID:    types.StringValue(a.EnvironmentId.String()),
+			AlertType:        types.StringValue(string(a.AlertType)),
+			Severity:         types.StringValue(string(a.SeverityLevel)),
+			Threshold:        types.Int64Value(int64(a.Threshold)),
+			EvaluationPeriod: types.Int64Value(int64(a.EvaluationPeriod)),
+			Active:           types.BoolValue(a.Active),
+		})
 	}
 	state.Alerts = alerts
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

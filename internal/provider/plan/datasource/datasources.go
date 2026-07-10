@@ -2,15 +2,17 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type PlansDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &PlansDataSource{}
@@ -47,36 +49,38 @@ type plansDataSourceModel struct {
 func (d *PlansDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
 func (d *PlansDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state plansDataSourceModel
-	apiResp, _, err := d.client.PlanAPI.PlansGet(ctx).Execute()
+
+	apiResp, err := d.client.ListPlansWithResponse(ctx, &csv2.ListPlansParams{})
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing plans", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error listing plans", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	plans := make([]planItemModel, 0, len(apiResp.Data))
-	for _, p := range apiResp.Data {
-		item := planItemModel{
-			ID:           types.StringValue(p.GetId()),
-			Active:       types.BoolValue(p.GetActive()),
-			Core:         types.Int64Value(int64(p.GetCore())),
-			CountryCode:  types.StringValue(p.GetCountryCode()),
-			CurrencyCode: types.StringValue(p.GetCurrencyCode()),
-			Memory:       types.Int64Value(int64(p.GetMemory())),
-			Name:         types.StringValue(p.GetName()),
-			Price:        types.Float64Value(float64(p.GetPrice())),
-			Slug:         types.StringValue(p.GetSlug()),
-			Type:         types.StringValue(p.GetType()),
-		}
-		plans = append(plans, item)
+
+	plans := make([]planItemModel, 0, len(apiResp.JSON200.Items))
+	for _, p := range apiResp.JSON200.Items {
+		plans = append(plans, planItemModel{
+			ID:           types.StringValue(p.Id),
+			Active:       types.BoolValue(p.Active),
+			Core:         types.Int64Value(int64(p.Core)),
+			CountryCode:  types.StringValue(p.CountryCode),
+			CurrencyCode: types.StringValue(p.CurrencyCode),
+			Memory:       types.Int64Value(int64(p.Memory)),
+			Name:         types.StringValue(p.Name),
+			Price:        types.Float64Value(p.Price),
+			Slug:         types.StringValue(p.Slug),
+			Type:         types.StringValue(p.Type),
+		})
 	}
 	state.Plans = plans
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

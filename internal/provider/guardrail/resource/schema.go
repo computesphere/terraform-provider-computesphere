@@ -16,7 +16,6 @@ func Schema(ctx context.Context) schema.Schema {
 			"description":            shared.GuardrailDescription,
 			"effect":                 shared.GuardrailEffect,
 			"message":                shared.GuardrailMessage,
-			"rules":                  shared.GuardrailRules,
 			"scope":                  shared.GuardrailScope,
 			"status":                 shared.GuardrailStatus,
 			"type":                   shared.GuardrailType,

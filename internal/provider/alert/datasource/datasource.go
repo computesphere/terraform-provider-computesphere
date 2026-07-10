@@ -2,15 +2,18 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type AlertDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &AlertDataSource{}
@@ -41,7 +44,8 @@ type alertDataSourceModel struct {
 func (d *AlertDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
@@ -51,38 +55,34 @@ func (d *AlertDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := d.client.AlertRuleAPI.AlertsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	arid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid alert id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetAlertRuleWithResponse(ctx, arid)
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading alert", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	alert := apiResp.Data
-	state.ProjectID = types.StringValue(alert.GetProjectId())
-	state.EnvironmentID = types.StringValue(alert.GetEnvironmentId())
-	state.AlertType = types.StringValue(alert.GetAlertType())
-	state.Severity = types.StringValue(alert.GetSeverityLevel())
-	if alert.Threshold != nil {
-		state.Threshold = types.Int64Value(int64(*alert.Threshold))
-	} else {
-		state.Threshold = types.Int64Null()
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading alert", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
 	}
-	if alert.EvaluationPeriod != nil {
-		state.EvaluationPeriod = types.Int64Value(int64(*alert.EvaluationPeriod))
-	} else {
-		state.EvaluationPeriod = types.Int64Null()
-	}
-	if alert.Active != nil {
-		state.Active = types.BoolPointerValue(alert.Active)
-	} else {
-		state.Active = types.BoolNull()
-	}
+
+	a := apiResp.JSON200
+	state.ProjectID = types.StringValue(a.ProjectId.String())
+	state.EnvironmentID = types.StringValue(a.EnvironmentId.String())
+	state.AlertType = types.StringValue(string(a.AlertType))
+	state.Severity = types.StringValue(string(a.SeverityLevel))
+	state.Threshold = types.Int64Value(int64(a.Threshold))
+	state.EvaluationPeriod = types.Int64Value(int64(a.EvaluationPeriod))
+	state.Active = types.BoolValue(a.Active)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

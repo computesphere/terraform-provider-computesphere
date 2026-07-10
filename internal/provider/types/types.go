@@ -3,27 +3,17 @@ package types
 import (
 	"fmt"
 
-	cs "github.com/computesphere/cli/cs"
-	csv2 "github.com/computesphere/computesphere-api/sdk/go"
+	csv2 "github.com/computesphere/computesphere-go"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
 // Data is the provider-wide configuration handed to every resource and
 // datasource via terraform-plugin-framework's ConfigureRequest.ProviderData.
-//
-// The provider is mid-migration from the v1 SDK (cli/cs.APIClient) to the
-// generated v2 SDK (computesphere-api/sdk/go). During the transition both
-// clients are constructed in provider.Configure and handed out here;
-// resources swap to V2Client one bounded context at a time as each v2
-// domain ships in openapi/v2/spec.yaml.
 type Data struct {
-	// Client is the legacy v1 API client. Remove once every resource has
-	// migrated to V2Client.
-	Client *cs.APIClient
-
-	// V2Client is the generated v2 API client. Preferred for new code and
-	// for any resource whose domain is in openapi/v2/spec.yaml.
+	// V2Client is the generated public v2 API client
+	// (github.com/computesphere/computesphere-go), used by every resource and
+	// datasource.
 	V2Client *csv2.ClientWithResponses
 
 	// AccountID is the active account UUID, required on every v2 request

@@ -2,15 +2,17 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type NotificationSettingDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &NotificationSettingDataSource{}
@@ -28,96 +30,57 @@ func (d *NotificationSettingDataSource) Schema(ctx context.Context, req datasour
 }
 
 type notificationSettingDataSourceModel struct {
-	Activity       types.Bool                `tfsdk:"activity"`
-	Billing        types.Bool                `tfsdk:"billing"`
-	Deployment     types.Bool                `tfsdk:"deployment"`
-	EmailEnabled   types.Bool                `tfsdk:"email_enabled"`
-	Emails         []types.String            `tfsdk:"emails"`
-	InappEnabled   types.Bool                `tfsdk:"inapp_enabled"`
-	Invites        types.Bool                `tfsdk:"invites"`
-	Payment        types.Bool                `tfsdk:"payment"`
-	WebhookEnabled types.Bool                `tfsdk:"webhook_enabled"`
-	Webhooks       []map[string]types.String `tfsdk:"webhooks"`
-	ID             types.String              `tfsdk:"id"`
-	UserID         types.String              `tfsdk:"user_id"`
+	Activity       types.Bool     `tfsdk:"activity"`
+	Billing        types.Bool     `tfsdk:"billing"`
+	Deployment     types.Bool     `tfsdk:"deployment"`
+	EmailEnabled   types.Bool     `tfsdk:"email_enabled"`
+	Emails         []types.String `tfsdk:"emails"`
+	InappEnabled   types.Bool     `tfsdk:"inapp_enabled"`
+	Invites        types.Bool     `tfsdk:"invites"`
+	Payment        types.Bool     `tfsdk:"payment"`
+	WebhookEnabled types.Bool     `tfsdk:"webhook_enabled"`
+	ID             types.String   `tfsdk:"id"`
+	UserID         types.String   `tfsdk:"user_id"`
 }
 
 func (d *NotificationSettingDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
 func (d *NotificationSettingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state notificationSettingDataSourceModel
-	client := d.client
-	apiResp, httpResp, err := client.NotificationAPI.NotificationsSettingsGet(ctx).Execute()
+	apiResp, err := d.client.GetNotificationSettingsWithResponse(ctx)
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError("Error reading notification setting", err.Error())
 		return
 	}
-	if apiResp.Data == nil || apiResp.Data.Id == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	state.ID = types.StringValue(apiResp.Data.GetId())
-	if apiResp.Data.UserId != nil {
-		state.UserID = types.StringPointerValue(apiResp.Data.UserId)
-	} else {
-		state.UserID = types.StringNull()
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading notification setting", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
 	}
-	if apiResp.Data.Activity != nil {
-		state.Activity = types.BoolPointerValue(apiResp.Data.Activity)
-	} else {
-		state.Activity = types.BoolNull()
+	n := apiResp.JSON200
+	state.ID = types.StringValue(n.Id.String())
+	state.UserID = types.StringValue(n.UserId.String())
+	state.Activity = types.BoolValue(n.Activity)
+	state.Billing = types.BoolValue(n.Billing)
+	state.Deployment = types.BoolValue(n.Deployment)
+	state.EmailEnabled = types.BoolValue(n.EmailEnabled)
+	state.InappEnabled = types.BoolValue(n.InappEnabled)
+	state.Invites = types.BoolValue(n.Invites)
+	state.Payment = types.BoolValue(n.Payment)
+	state.WebhookEnabled = types.BoolValue(n.WebhookEnabled)
+	emails := make([]types.String, 0, len(n.Emails))
+	for _, e := range n.Emails {
+		emails = append(emails, types.StringValue(string(e)))
 	}
-	if apiResp.Data.Billing != nil {
-		state.Billing = types.BoolPointerValue(apiResp.Data.Billing)
-	} else {
-		state.Billing = types.BoolNull()
-	}
-	if apiResp.Data.Deployment != nil {
-		state.Deployment = types.BoolPointerValue(apiResp.Data.Deployment)
-	} else {
-		state.Deployment = types.BoolNull()
-	}
-	if apiResp.Data.EmailEnabled != nil {
-		state.EmailEnabled = types.BoolPointerValue(apiResp.Data.EmailEnabled)
-	} else {
-		state.EmailEnabled = types.BoolNull()
-	}
-	if apiResp.Data.Emails != nil {
-		emails := make([]types.String, 0, len(apiResp.Data.Emails))
-		for _, e := range apiResp.Data.Emails {
-			emails = append(emails, types.StringValue(e))
-		}
-		state.Emails = emails
-	}
-	if apiResp.Data.InappEnabled != nil {
-		state.InappEnabled = types.BoolPointerValue(apiResp.Data.InappEnabled)
-	} else {
-		state.InappEnabled = types.BoolNull()
-	}
-	if apiResp.Data.Invites != nil {
-		state.Invites = types.BoolPointerValue(apiResp.Data.Invites)
-	} else {
-		state.Invites = types.BoolNull()
-	}
-	if apiResp.Data.Payment != nil {
-		state.Payment = types.BoolPointerValue(apiResp.Data.Payment)
-	} else {
-		state.Payment = types.BoolNull()
-	}
-	if apiResp.Data.WebhookEnabled != nil {
-		state.WebhookEnabled = types.BoolPointerValue(apiResp.Data.WebhookEnabled)
-	} else {
-		state.WebhookEnabled = types.BoolNull()
-	}
-	// Webhooks omitted for brevity; add as needed
+	state.Emails = emails
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

@@ -2,16 +2,20 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type GuardrailResource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ resource.Resource = &GuardrailResource{}
@@ -37,25 +41,54 @@ func (r *GuardrailResource) IdentitySchema(ctx context.Context, req resource.Ide
 	}
 }
 
+// guardrailResourceModel — the nested `rules` collection is intentionally not
+// modeled here; the v2 create/update surface takes rule ids and the response
+// shape is a separate follow-up.
 type guardrailResourceModel struct {
-	Name                 types.String              `tfsdk:"name"`
-	Description          types.String              `tfsdk:"description"`
-	Effect               types.String              `tfsdk:"effect"`
-	Message              types.String              `tfsdk:"message"`
-	Rules                []map[string]types.String `tfsdk:"rules"`
-	Scope                types.String              `tfsdk:"scope"`
-	Status               types.Bool                `tfsdk:"status"`
-	Type                 types.String              `tfsdk:"type"`
-	ID                   types.String              `tfsdk:"id"`
-	AccountID            types.String              `tfsdk:"account_id"`
-	CreatedBy            types.String              `tfsdk:"created_by"`
-	IsPredefinedAssigned types.Bool                `tfsdk:"is_predefined_assigned"`
+	Name                 types.String `tfsdk:"name"`
+	Description          types.String `tfsdk:"description"`
+	Effect               types.String `tfsdk:"effect"`
+	Message              types.String `tfsdk:"message"`
+	Scope                types.String `tfsdk:"scope"`
+	Status               types.Bool   `tfsdk:"status"`
+	Type                 types.String `tfsdk:"type"`
+	ID                   types.String `tfsdk:"id"`
+	AccountID            types.String `tfsdk:"account_id"`
+	CreatedBy            types.String `tfsdk:"created_by"`
+	IsPredefinedAssigned types.Bool   `tfsdk:"is_predefined_assigned"`
 }
 
 func (r *GuardrailResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	data := cstypes.ConfigureResource(req, resp)
 	if data != nil {
-		r.client = data.Client
+		r.client = data.V2Client
+		r.accountID = data.AccountID
+	}
+}
+
+func (m *guardrailResourceModel) apply(g *csv2.Guardrail) {
+	m.ID = types.StringValue(g.Id.String())
+	m.Name = types.StringValue(g.Name)
+	m.Description = types.StringValue(g.Description)
+	m.Effect = types.StringValue(string(g.Effect))
+	m.Message = types.StringValue(g.Message)
+	m.Scope = types.StringValue(string(g.Scope))
+	m.Status = types.BoolValue(g.Status)
+	m.Type = types.StringValue(string(g.Type))
+	m.AccountID = types.StringValue(g.AccountId.String())
+	m.CreatedBy = types.StringValue(g.CreatedBy.String())
+	m.IsPredefinedAssigned = types.BoolValue(g.IsPredefinedAssigned)
+}
+
+func (m *guardrailResourceModel) toRequest() csv2.CreateGuardrailRequest {
+	return csv2.CreateGuardrailRequest{
+		Description: m.Description.ValueString(),
+		Effect:      csv2.CreateGuardrailRequestEffect(m.Effect.ValueString()),
+		Message:     cstypes.StringPtr(m.Message.ValueString()),
+		Name:        m.Name.ValueString(),
+		Scope:       csv2.CreateGuardrailRequestScope(m.Scope.ValueString()),
+		Status:      m.Status.ValueBool(),
+		Type:        csv2.CreateGuardrailRequestType(m.Type.ValueString()),
 	}
 }
 
@@ -65,41 +98,33 @@ func (r *GuardrailResource) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var statusPtr *bool
-	if !plan.Status.IsNull() {
-		b := plan.Status.ValueBool()
-		statusPtr = &b
+
+	accountID, err := uuid.Parse(r.accountID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
 	}
-	// Convert rules from []map[string]types.String to []string
-	var rules []string
-	if plan.Rules != nil {
-		for _, ruleMap := range plan.Rules {
-			// Flatten the map to a string representation (e.g., JSON or key=value pairs)
-			// Here, we use a simple key=value; for more complex rules, adjust as needed
-			for k, v := range ruleMap {
-				rules = append(rules, k+"="+v.ValueString())
-			}
-		}
-	}
-	payload := cs.ModelGuardrailPayload{
-		Name:        ptrString(plan.Name.ValueString()),
-		Description: ptrString(plan.Description.ValueString()),
-		Effect:      ptrString(plan.Effect.ValueString()),
-		Message:     ptrString(plan.Message.ValueString()),
-		Scope:       ptrString(plan.Scope.ValueString()),
-		Status:      statusPtr,
-		Type:        ptrString(plan.Type.ValueString()),
-		Rules:       rules,
-	}
-	_, _, err := r.client.GuardrailsAPI.GuardrailsPost(ctx).Body(payload).Execute()
+
+	apiResp, err := r.client.CreateGuardrailWithResponse(ctx, &csv2.CreateGuardrailParams{XAccountId: accountID}, plan.toRequest())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating guardrail", err.Error())
 		return
 	}
-	// After creation, fetch the guardrail by name to get the ID
-	// (Assume a List API or similar exists; if not, this may need to be adjusted)
-	// For now, set state as best effort
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if apiResp.StatusCode() != http.StatusCreated && apiResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError("Error creating guardrail", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+	// The create response is not typed by the SDK; decode the guardrail from the
+	// raw body to recover its id, then set full state.
+	var created csv2.Guardrail
+	if err := json.Unmarshal(apiResp.Body, &created); err != nil || created.Id == uuid.Nil {
+		resp.Diagnostics.AddError("Error creating guardrail", "could not read the created guardrail from the API response")
+		return
+	}
+
+	var state guardrailResourceModel
+	state.apply(&created)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *GuardrailResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -108,94 +133,73 @@ func (r *GuardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := r.client.GuardrailsAPI.GuardrailsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	accountID, err := uuid.Parse(r.accountID)
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
+	}
+	gid, err := uuid.Parse(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid guardrail id", err.Error())
+		return
+	}
+
+	apiResp, err := r.client.GetGuardrailWithResponse(ctx, gid, &csv2.GetGuardrailParams{XAccountId: accountID})
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading guardrail", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	g := apiResp.Data
-	state.ID = types.StringValue(g.GetId())
-	state.Name = types.StringValue(g.GetName())
-	state.Description = types.StringValue(g.GetDescription())
-	state.Effect = types.StringValue(g.GetEffect())
-	state.Message = types.StringValue(g.GetMessage())
-	state.Scope = types.StringValue(g.GetScope())
-	state.Status = types.BoolValue(g.GetStatus())
-	state.Type = types.StringValue(g.GetType())
-	state.AccountID = types.StringValue(g.GetAccountId())
-	state.CreatedBy = types.StringValue(g.GetCreatedBy())
-	state.IsPredefinedAssigned = types.BoolValue(g.GetIsPredefinedAssigned())
-	// Convert rules from []ModelGuardrailSingleRuleResponse to []map[string]types.String
-	if g.Rules != nil {
-		rules := make([]map[string]types.String, 0, len(g.Rules))
-		for _, rule := range g.Rules {
-			m := map[string]types.String{}
-			if rule.Name != nil {
-				m["name"] = types.StringValue(*rule.Name)
-			}
-			if rule.Operator != nil {
-				m["operator"] = types.StringValue(*rule.Operator)
-			}
-			if rule.Scope != nil {
-				m["scope"] = types.StringValue(*rule.Scope)
-			}
-			if rule.Metrics != nil {
-				m["metrics"] = types.StringValue(*rule.Metrics)
-			}
-			// Value is a map[string]interface{}, convert to string if needed
-			if rule.Value != nil {
-				m["value"] = types.StringValue("<complex>") // Or serialize as needed
-			}
-			rules = append(rules, m)
-		}
-		state.Rules = rules
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading guardrail", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
 	}
+
+	state.apply(apiResp.JSON200)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *GuardrailResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan guardrailResourceModel
+	var state guardrailResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var statusPtr *bool
-	if !plan.Status.IsNull() {
-		b := plan.Status.ValueBool()
-		statusPtr = &b
+
+	accountID, err := uuid.Parse(r.accountID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
 	}
-	// Convert rules from []map[string]types.String to []string
-	var rules []string
-	if plan.Rules != nil {
-		for _, ruleMap := range plan.Rules {
-			for k, v := range ruleMap {
-				rules = append(rules, k+"="+v.ValueString())
-			}
-		}
+	gid, err := uuid.Parse(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid guardrail id", err.Error())
+		return
 	}
-	payload := cs.ModelGuardrailPayload{
-		Name:        ptrString(plan.Name.ValueString()),
-		Description: ptrString(plan.Description.ValueString()),
-		Effect:      ptrString(plan.Effect.ValueString()),
-		Message:     ptrString(plan.Message.ValueString()),
-		Scope:       ptrString(plan.Scope.ValueString()),
-		Status:      statusPtr,
-		Type:        ptrString(plan.Type.ValueString()),
-		Rules:       rules,
-	}
-	_, _, err := r.client.GuardrailsAPI.GuardrailsIdPut(ctx, plan.ID.ValueString()).Body(payload).Execute()
+
+	apiResp, err := r.client.UpdateGuardrailWithResponse(ctx, gid, &csv2.UpdateGuardrailParams{XAccountId: accountID}, plan.toRequest())
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating guardrail", err.Error())
 		return
 	}
+	if apiResp.StatusCode() != http.StatusOK && apiResp.StatusCode() != http.StatusNoContent {
+		resp.Diagnostics.AddError("Error updating guardrail", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	// The update response is not typed; re-read to refresh state.
+	getResp, err := r.client.GetGuardrailWithResponse(ctx, gid, &csv2.GetGuardrailParams{XAccountId: accountID})
+	if err != nil || getResp.StatusCode() != http.StatusOK || getResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error updating guardrail", "guardrail updated but could not be re-read")
+		return
+	}
+	plan.apply(getResp.JSON200)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -205,19 +209,27 @@ func (r *GuardrailResource) Delete(ctx context.Context, req resource.DeleteReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, httpResp, err := r.client.GuardrailsAPI.GuardrailsIdDelete(ctx, state.ID.ValueString()).Execute()
+
+	accountID, err := uuid.Parse(r.accountID)
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
+	}
+	gid, err := uuid.Parse(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid guardrail id", err.Error())
+		return
+	}
+
+	apiResp, err := r.client.DeleteGuardrailWithResponse(ctx, gid, &csv2.DeleteGuardrailParams{XAccountId: accountID})
+	if err != nil {
 		resp.Diagnostics.AddError("Error deleting guardrail", err.Error())
 		return
 	}
-	resp.State.RemoveResource(ctx)
-}
-
-// ptrString returns a pointer to the given string.
-func ptrString(s string) *string {
-	return &s
+	switch apiResp.StatusCode() {
+	case http.StatusOK, http.StatusNoContent, http.StatusAccepted, http.StatusNotFound:
+		resp.State.RemoveResource(ctx)
+	default:
+		resp.Diagnostics.AddError("Error deleting guardrail", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+	}
 }

@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	cs "github.com/computesphere/cli/cs"
-	csv2 "github.com/computesphere/computesphere-api/sdk/go"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -25,10 +24,8 @@ import (
 	environmentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/resource"
 	guardrailresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/resource"
 	notificationresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/resource"
-	planresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/plan/resource"
 	projectresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/project/resource"
 	serviceresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/service/resource"
-	subscriptionresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/subscription/resource"
 	teamresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/team/resource"
 
 	// Datasource imports
@@ -62,6 +59,10 @@ type ComputeSphereProvider struct {
 	Host      string
 	APIToken  string
 	AccountID string
+	// HTTPClient, when set, overrides the default HTTP client used by both the
+	// v1 and v2 API clients. Tests inject a go-vcr recorder client here so
+	// cassette replay intercepts outbound requests instead of hitting the API.
+	HTTPClient *http.Client
 }
 
 // ConfigFunc allows for flexible provider construction (for testing/extensibility)
@@ -82,6 +83,14 @@ func WithAPIToken(token string) ConfigFunc {
 func WithAccountID(accountID string) ConfigFunc {
 	return func(p *ComputeSphereProvider) {
 		p.AccountID = accountID
+	}
+}
+
+// WithHTTPClient overrides the HTTP client for the API client. Used by tests
+// to inject a go-vcr recorder so cassettes can be recorded/replayed.
+func WithHTTPClient(c *http.Client) ConfigFunc {
+	return func(p *ComputeSphereProvider) {
+		p.HTTPClient = c
 	}
 }
 
@@ -200,31 +209,21 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	tflog.Debug(ctx, "Creating ComputeSphere API client")
-	conf := cs.NewConfiguration()
-	if p.Host != "" {
-		conf.Host = p.Host
-	}
-	if p.APIToken != "" {
-		conf.XUserToken(p.APIToken)
-	}
-	if p.AccountID != "" {
-		conf.XAccountID(p.AccountID)
-	}
-	client := cs.NewAPIClient(conf)
 
-	// Build the v2 SDK client alongside the legacy one. Resources whose
-	// domain has landed in openapi/v2/spec.yaml prefer V2Client; the
-	// others keep using Client until their domain migrates.
+	// Build the public v2 SDK client used by every resource and datasource.
 	v2Base := v2BaseURL(p.Host)
-	v2Client, v2Err := csv2.NewClientWithResponses(
-		v2Base,
+	v2Opts := []csv2.ClientOption{
 		csv2.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
 			if p.APIToken != "" {
 				req.Header.Set("Authorization", "Bearer "+p.APIToken)
 			}
 			return nil
 		}),
-	)
+	}
+	if p.HTTPClient != nil {
+		v2Opts = append(v2Opts, csv2.WithHTTPClient(p.HTTPClient))
+	}
+	v2Client, v2Err := csv2.NewClientWithResponses(v2Base, v2Opts...)
 	if v2Err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to initialize v2 API client",
@@ -234,7 +233,6 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	data := &cstypes.Data{
-		Client:    client,
 		V2Client:  v2Client,
 		AccountID: p.AccountID,
 	}
@@ -270,11 +268,9 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		alertresource.NewAlertResource,
 		environmentresource.NewEnvironmentResource,
 		guardrailresource.NewGuardrailResource,
-		planresource.NewPlanResource,
 		projectresource.NewProjectResource,
 		serviceresource.NewServiceResource,
 		apitokenresource.NewApiTokenResource,
-		subscriptionresource.NewSubscriptionResource,
 		teamresource.NewTeamResource,
 	}
 }

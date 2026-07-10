@@ -2,9 +2,12 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"time"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
@@ -12,7 +15,8 @@ import (
 )
 
 type ProjectResource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ resource.Resource = &ProjectResource{}
@@ -34,9 +38,6 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 type projectResourceModel struct {
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	PlanName    types.String `tfsdk:"plan_name"`
-	PlanValue   types.Int64  `tfsdk:"plan_value"`
-	PlanID      types.String `tfsdk:"plan_id"`
 	CreatedAt   types.String `tfsdk:"created_at"`
 	ID          types.String `tfsdk:"id"`
 }
@@ -44,160 +45,114 @@ type projectResourceModel struct {
 func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	data := cstypes.ConfigureResource(req, resp)
 	if data != nil {
-		r.client = data.Client
+		r.client = data.V2Client
+		r.accountID = data.AccountID
 	}
+}
+
+// apply maps a v2 Project into Terraform state.
+func (m *projectResourceModel) apply(p *csv2.Project) {
+	m.ID = types.StringValue(p.Id)
+	m.Name = types.StringValue(p.Name)
+	m.Description = types.StringPointerValue(p.Description)
+	m.CreatedAt = types.StringValue(p.CreatedAt.Format(time.RFC3339))
 }
 
 func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan projectResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...) // get planned values
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Prepare payload for API
-	planName := plan.PlanName.ValueString()
-	if planName == "" {
-		planName = "FLX"
-	}
-	payload := cs.ModelProjectRequestPayload{
-		Name:        &[]string{plan.Name.ValueString()}[0],
-		Description: &[]string{plan.Description.ValueString()}[0],
-		PlanName:    &planName,
-		PlanValue:   func(v int64) *int { i := int(v); return &i }(plan.PlanValue.ValueInt64()),
+	accountID, err := uuid.Parse(r.accountID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
 	}
 
-	apiResp, _, err := r.client.ProjectAPI.ProjectsPost(ctx).Body(payload).Execute()
+	apiResp, err := r.client.CreateProjectWithResponse(ctx, csv2.CreateProjectRequest{
+		AccountId:   accountID,
+		Name:        plan.Name.ValueString(),
+		Description: cstypes.StringPtr(plan.Description.ValueString()),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating project", err.Error())
 		return
 	}
-	if apiResp.Data == nil || apiResp.Data.Id == nil {
-		resp.Diagnostics.AddError("Project creation failed", "No ID returned")
+	if apiResp.StatusCode() != http.StatusCreated || apiResp.JSON201 == nil {
+		resp.Diagnostics.AddError("Error creating project", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
 
-	// Map API response to state
 	var state projectResourceModel
-	state.ID = types.StringValue(*apiResp.Data.Id)
-	state.Name = types.StringValue(apiResp.Data.GetName())
-	state.Description = types.StringValue(apiResp.Data.GetDescription())
-	// Set created_at
-	if apiResp.Data.GetCreatedAt() != "" {
-		state.CreatedAt = types.StringValue(apiResp.Data.GetCreatedAt())
-	} else {
-		state.CreatedAt = types.StringValue("")
-	}
-	// Set plan_id
-	if apiResp.Data.Plan != nil && apiResp.Data.Plan.Id != nil {
-		state.PlanID = types.StringPointerValue(apiResp.Data.Plan.Id)
-	} else if apiResp.Data.PlanId != nil {
-		state.PlanID = types.StringPointerValue(apiResp.Data.PlanId)
-	} else {
-		state.PlanID = types.StringValue("")
-	}
-	if apiResp.Data.Plan != nil {
-		state.PlanName = types.StringPointerValue(apiResp.Data.Plan.Name)
-		state.PlanValue = types.Int64Value(int64(apiResp.Data.GetPlanValue()))
-	} else {
-		state.PlanName = types.StringNull()
-		state.PlanValue = types.Int64Null()
-	}
-
+	state.apply(apiResp.JSON201)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state projectResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...) // get current state
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := r.client.ProjectAPI.ProjectsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	pid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid project id", err.Error())
+		return
+	}
+
+	apiResp, err := r.client.GetProjectWithResponse(ctx, pid)
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading project", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	project := apiResp.Data
-	if project == nil {
-		resp.State.RemoveResource(ctx)
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading project", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	// Defensive: always set all required/computed fields to non-null values
-	if project.GetName() != "" {
-		state.Name = types.StringValue(project.GetName())
-	} else {
-		state.Name = types.StringValue("")
-	}
-	if project.GetId() != "" {
-		state.ID = types.StringValue(project.GetId())
-	} else {
-		state.ID = types.StringValue("")
-	}
-	if project.GetDescription() != "" {
-		state.Description = types.StringValue(project.GetDescription())
-	} else {
-		state.Description = types.StringValue("")
-	}
-	if project.GetCreatedAt() != "" {
-		state.CreatedAt = types.StringValue(project.GetCreatedAt())
-	} else {
-		state.CreatedAt = types.StringValue("")
-	}
-	// Plan fields: check all pointers
-	if project.Plan != nil {
-		if project.Plan.Id != nil {
-			state.PlanID = types.StringPointerValue(project.Plan.Id)
-		} else {
-			state.PlanID = types.StringValue("")
-		}
-		if project.Plan.Name != nil {
-			state.PlanName = types.StringPointerValue(project.Plan.Name)
-		} else {
-			state.PlanName = types.StringValue("")
-		}
-		state.PlanValue = types.Int64Value(int64(project.GetPlanValue()))
-	} else {
-		state.PlanID = types.StringValue("")
-		state.PlanName = types.StringValue("")
-		state.PlanValue = types.Int64Value(0)
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...) // update state
+
+	state.apply(apiResp.JSON200)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan projectResourceModel
 	var state projectResourceModel
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)   // get planned changes
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...) // get current state
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if state.ID.IsNull() || state.ID.ValueString() == "" {
-		resp.Diagnostics.AddError("Missing project ID", "Cannot update project because the ID is missing from state.")
+
+	pid, err := uuid.Parse(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid project id", err.Error())
 		return
 	}
-	payload := cs.ModelProjectUpdatePayload{
-		Name:        &[]string{plan.Name.ValueString()}[0],
-		Description: &[]string{plan.Description.ValueString()}[0],
-		PlanValue:   func(v int64) *int { i := int(v); return &i }(plan.PlanValue.ValueInt64()),
-	}
-	_, _, err := r.client.ProjectAPI.ProjectsIdPut(ctx, state.ID.ValueString()).Body(payload).Execute()
+
+	name := plan.Name.ValueString()
+	apiResp, err := r.client.UpdateProjectWithResponse(ctx, pid, csv2.UpdateProjectRequest{
+		Name:        &name,
+		Description: cstypes.StringPtr(plan.Description.ValueString()),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating project", err.Error())
 		return
 	}
-	// Standard pattern: call Read once to refresh state
-	r.Read(ctx, resource.ReadRequest{State: resp.State}, &resource.ReadResponse{State: resp.State, Diagnostics: resp.Diagnostics})
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error updating project", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	var newState projectResourceModel
+	newState.apply(apiResp.JSON200)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -206,16 +161,27 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, httpResp, err := r.client.ProjectAPI.ProjectsIdDelete(ctx, state.ID.ValueString()).Execute()
+
+	pid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid project id", err.Error())
+		return
+	}
+
+	cascade := true
+	apiResp, err := r.client.DeleteProjectWithResponse(ctx, pid, &csv2.DeleteProjectParams{
+		Cascade: &cascade,
+	})
+	if err != nil {
 		resp.Diagnostics.AddError("Error deleting project", err.Error())
 		return
 	}
-	resp.State.RemoveResource(ctx)
+	switch apiResp.StatusCode() {
+	case http.StatusOK, http.StatusNoContent, http.StatusAccepted, http.StatusNotFound:
+		resp.State.RemoveResource(ctx)
+	default:
+		resp.Diagnostics.AddError("Error deleting project", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+	}
 }
 
 func (r *ProjectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

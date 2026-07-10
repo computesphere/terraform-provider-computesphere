@@ -22,6 +22,12 @@ func SetupRecordingProvider(t *testing.T, cassetteName string) map[string]func()
 
 var tokenRegex = regexp.MustCompile(`(?i)Bearer [a-zA-Z0-9\-_\.]+`)
 
+// testAccountID is the placeholder account id used in replay mode and scrubbed
+// into recorded cassettes. It must be a valid UUID: the v2 SDK datasources parse
+// account_id as a UUID before issuing a request, so a non-UUID placeholder (the
+// former "some-account-id") fails validation during cassette replay.
+const testAccountID = "11111111-1111-1111-1111-111111111111"
+
 func scrubString(i *cassette.Interaction, from, to string) {
 	i.Request.URL = strings.ReplaceAll(i.Request.URL, from, to)
 	i.Request.Body = strings.ReplaceAll(i.Request.Body, from, to)
@@ -58,7 +64,7 @@ func SetupRecordingProviderConfigureWait(t *testing.T, cassetteName string) map[
 	r.AddHook(replaceAuthHeader, recorder.AfterCaptureHook)
 
 	replaceAccountID := func(i *cassette.Interaction) error {
-		scrubString(i, os.Getenv("COMPUTESPHERE_ACCOUNT_ID"), "some-account-id")
+		scrubString(i, os.Getenv("COMPUTESPHERE_ACCOUNT_ID"), testAccountID)
 		return nil
 	}
 	r.AddHook(replaceAccountID, recorder.AfterCaptureHook)
@@ -75,29 +81,31 @@ func SetupRecordingProviderConfigureWait(t *testing.T, cassetteName string) map[
 	}
 	r.AddHook(removeHeaders, recorder.AfterCaptureHook)
 
-	providerOpts := []provider.ConfigFunc{
-		provider.WithHost(os.Getenv("COMPUTESPHERE_API_URL")),
-		provider.WithAPIToken(os.Getenv("COMPUTESPHERE_API_TOKEN")),
-		provider.WithAccountID(os.Getenv("COMPUTESPHERE_ACCOUNT_ID")),
-	}
-
-	if r.GetDefaultClient() != nil {
-		// If go-vcr is recording or replaying, use its client
-		// (Assumes provider supports HTTP client injection; add provider.WithHTTPClient if available)
-	}
+	var providerOpts []provider.ConfigFunc
 
 	if r.IsRecording() {
 		t.Log("Recording interactions for " + cassetteName)
 		require.NotZero(t, os.Getenv("COMPUTESPHERE_API_URL"), "COMPUTESPHERE_API_URL must be set when recording")
 		require.NotZero(t, os.Getenv("COMPUTESPHERE_API_TOKEN"), "COMPUTESPHERE_API_TOKEN must be set when recording")
 		require.NotZero(t, os.Getenv("COMPUTESPHERE_ACCOUNT_ID"), "COMPUTESPHERE_ACCOUNT_ID must be set when recording")
-	} else {
-		// Optionally set fake values for replay mode
 		providerOpts = []provider.ConfigFunc{
-			provider.WithHost("https://api.testing.computesphere.com/v1"),
-			provider.WithAPIToken("some-api-token"),
-			provider.WithAccountID("some-account-id"),
+			provider.WithHost(os.Getenv("COMPUTESPHERE_API_URL")),
+			provider.WithAPIToken(os.Getenv("COMPUTESPHERE_API_TOKEN")),
+			provider.WithAccountID(os.Getenv("COMPUTESPHERE_ACCOUNT_ID")),
 		}
+	} else {
+		// Replay mode: fixed fake credentials; requests never reach the network.
+		providerOpts = []provider.ConfigFunc{
+			provider.WithHost("https://api.testing.computesphere.com"),
+			provider.WithAPIToken("some-api-token"),
+			provider.WithAccountID(testAccountID),
+		}
+	}
+
+	// Inject the go-vcr client so both API clients record/replay through the
+	// cassette instead of hitting the live API.
+	if c := r.GetDefaultClient(); c != nil {
+		providerOpts = append(providerOpts, provider.WithHTTPClient(c))
 	}
 
 	return map[string]func() (tfprotov6.ProviderServer, error){

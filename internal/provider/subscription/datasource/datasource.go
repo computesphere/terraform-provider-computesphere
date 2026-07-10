@@ -2,15 +2,18 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type SubscriptionDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &SubscriptionDataSource{}
@@ -39,7 +42,8 @@ type subscriptionDataSourceModel struct {
 func (d *SubscriptionDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
@@ -49,24 +53,32 @@ func (d *SubscriptionDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := d.client.SubscriptionAPI.SubscriptionsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	sid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid subscription id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetSubscriptionWithResponse(ctx, sid)
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading subscription", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	sub := apiResp.Data
-	state.Name = types.StringValue(sub.GetName())
-	state.Active = types.BoolValue(sub.GetActive())
-	state.CountryCode = types.StringValue(sub.GetCountryCode())
-	state.CurrencyCode = types.StringValue(sub.GetCurrencyCode())
-	state.Price = types.Float64Value(float64(sub.GetPrice()))
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading subscription", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	s := apiResp.JSON200
+	state.Name = types.StringValue(s.Name)
+	state.Active = types.BoolValue(s.Active)
+	state.CountryCode = types.StringValue(s.CountryCode)
+	state.CurrencyCode = types.StringValue(s.CurrencyCode)
+	state.Price = types.Float64Value(s.Price)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

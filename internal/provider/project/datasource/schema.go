@@ -14,9 +14,6 @@ func Schema(ctx context.Context) schema.Schema {
 			"id":          schema.StringAttribute{Required: true, Description: shared.ProjID.Description},
 			"name":        schema.StringAttribute{Computed: true, Description: shared.ProjectName.Description},
 			"description": schema.StringAttribute{Computed: true, Description: shared.ProjectDescription.Description},
-			"plan_name":   schema.StringAttribute{Computed: true, Description: shared.ProjectPlanName.Description},
-			"plan_value":  schema.Int64Attribute{Computed: true, Description: shared.ProjectPlanValue.Description},
-			"plan_id":     schema.StringAttribute{Computed: true, Description: shared.ProjectPlanID.Description},
 			"created_at":  schema.StringAttribute{Computed: true, Description: shared.ProjectCreatedAt.Description},
 		},
 	}
@@ -33,7 +30,6 @@ func PluralSchema(ctx context.Context) schema.Schema {
 						"id":          schema.StringAttribute{Computed: true, Description: shared.ProjID.Description},
 						"name":        schema.StringAttribute{Computed: true, Description: shared.ProjectName.Description},
 						"description": schema.StringAttribute{Computed: true, Description: shared.ProjectDescription.Description},
-						"plan_id":     schema.StringAttribute{Computed: true, Description: shared.ProjectPlanID.Description},
 						"created_at":  schema.StringAttribute{Computed: true, Description: shared.ProjectCreatedAt.Description},
 					},
 				},

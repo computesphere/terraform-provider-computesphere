@@ -2,15 +2,19 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"time"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type EnvironmentDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &EnvironmentDataSource{}
@@ -38,7 +42,8 @@ type environmentDataSourceModel struct {
 func (d *EnvironmentDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
@@ -48,23 +53,31 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := d.client.EnvironmentAPI.EnvironmentsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	eid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid environment id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetEnvironmentWithResponse(ctx, eid)
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading environment", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	env := apiResp.Data
-	state.Name = types.StringValue(env.GetName())
-	state.Region = types.StringValue(env.GetRegion())
-	state.ProjectID = types.StringValue(env.GetProjectId())
-	state.CreatedAt = types.StringValue(env.GetCreatedAt())
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading environment", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	e := apiResp.JSON200
+	state.Name = types.StringValue(e.Name)
+	state.Region = types.StringValue(e.Region)
+	state.ProjectID = types.StringValue(e.ProjectId.String())
+	state.CreatedAt = types.StringValue(e.CreatedAt.Format(time.RFC3339))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

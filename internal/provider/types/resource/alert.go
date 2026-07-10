@@ -19,6 +19,9 @@ var ProjectID = schema.StringAttribute{
 	Required:            true,
 	Description:         "ID of the project this alert belongs to.",
 	MarkdownDescription: "ID of the project this alert belongs to.",
+	PlanModifiers: []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	},
 }
 
 var EnvironmentID = schema.StringAttribute{
@@ -34,25 +37,26 @@ var AlertType = schema.StringAttribute{
 }
 
 var Severity = schema.StringAttribute{
-	Optional:            true,
+	Required:            true,
 	Description:         "Severity level of the alert.",
 	MarkdownDescription: "Severity level of the alert.",
 }
 
 var Threshold = schema.Int64Attribute{
-	Optional:            true,
+	Required:            true,
 	Description:         "Threshold value for the alert.",
 	MarkdownDescription: "Threshold value for the alert.",
 }
 
 var EvaluationPeriod = schema.Int64Attribute{
-	Optional:            true,
+	Required:            true,
 	Description:         "Evaluation period for the alert.",
 	MarkdownDescription: "Evaluation period for the alert.",
 }
 
 var Active = schema.BoolAttribute{
 	Optional:            true,
+	Computed:            true,
 	Description:         "Whether the alert is active.",
 	MarkdownDescription: "Whether the alert is active.",
 }

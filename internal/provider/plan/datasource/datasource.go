@@ -2,15 +2,18 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type PlanDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &PlanDataSource{}
@@ -43,8 +46,22 @@ type planDataSourceModel struct {
 func (d *PlanDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
+}
+
+func (m *planDataSourceModel) apply(p *csv2.Plan) {
+	m.ID = types.StringValue(p.Id)
+	m.Active = types.BoolValue(p.Active)
+	m.Core = types.Int64Value(int64(p.Core))
+	m.CountryCode = types.StringValue(p.CountryCode)
+	m.CurrencyCode = types.StringValue(p.CurrencyCode)
+	m.Memory = types.Int64Value(int64(p.Memory))
+	m.Name = types.StringValue(p.Name)
+	m.Price = types.Float64Value(p.Price)
+	m.Slug = types.StringValue(p.Slug)
+	m.Type = types.StringValue(p.Type)
 }
 
 func (d *PlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -53,28 +70,27 @@ func (d *PlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := d.client.PlanAPI.PlansIdGet(ctx, state.ID.ValueString()).Execute()
+
+	pid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid plan id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetPlanWithResponse(ctx, pid)
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading plan", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	plan := apiResp.Data
-	state.Active = types.BoolValue(plan.GetActive())
-	state.Core = types.Int64Value(int64(plan.GetCore()))
-	state.CountryCode = types.StringValue(plan.GetCountryCode())
-	state.CurrencyCode = types.StringValue(plan.GetCurrencyCode())
-	state.Memory = types.Int64Value(int64(plan.GetMemory()))
-	state.Name = types.StringValue(plan.GetName())
-	state.Price = types.Float64Value(float64(plan.GetPrice()))
-	state.Slug = types.StringValue(plan.GetSlug())
-	state.Type = types.StringValue(plan.GetType())
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading plan", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	state.apply(apiResp.JSON200)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
