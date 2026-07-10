@@ -2,15 +2,19 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"time"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type TeamDataSource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ datasource.DataSource = &TeamDataSource{}
@@ -32,12 +36,15 @@ type teamDataSourceModel struct {
 	Name        types.String `tfsdk:"name"`
 	AccountID   types.String `tfsdk:"account_id"`
 	Description types.String `tfsdk:"description"`
+	CreatedAt   types.String `tfsdk:"created_at"`
+	UpdatedAt   types.String `tfsdk:"updated_at"`
 }
 
 func (d *TeamDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	data := cstypes.ConfigureDatasource(req, resp)
 	if data != nil {
-		d.client = data.Client
+		d.client = data.V2Client
+		d.accountID = data.AccountID
 	}
 }
 
@@ -47,26 +54,32 @@ func (d *TeamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	accountID := state.AccountID.ValueString()
-	if state.AccountID.IsNull() || accountID == "" {
-		accountID = d.client.GetConfig().DefaultHeader["X-Account-ID"]
-	}
-	apiResp, httpResp, err := d.client.TeamAPI.TeamsIdGet(ctx, state.ID.ValueString()).XAccountId(accountID).Execute()
+
+	tid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid team id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.GetTeamWithResponse(ctx, csv2.TeamId(tid))
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading team", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	team := apiResp.Data
-	state.Name = types.StringValue(team.GetName())
-	state.AccountID = types.StringValue(team.GetAccountId())
-	state.Description = types.StringValue(team.GetDescription())
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading team", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	t := apiResp.JSON200
+	state.Name = types.StringValue(t.Name)
+	state.AccountID = types.StringValue(t.AccountId.String())
+	state.Description = types.StringPointerValue(t.Description)
+	state.CreatedAt = types.StringValue(t.CreatedAt.Format(time.RFC3339))
+	state.UpdatedAt = types.StringValue(t.UpdatedAt.Format(time.RFC3339))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

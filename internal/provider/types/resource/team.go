@@ -26,5 +26,6 @@ var TeamUpdatedAt = schema.StringAttribute{
 }
 var TeamAccountID = schema.StringAttribute{
 	Optional:    true,
+	Computed:    true,
 	Description: "The ComputeSphere account ID. Defaults to the provider account_id if not set.",
 }
