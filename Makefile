@@ -83,12 +83,6 @@ setup-replace:
 	else \
 		echo "cli/cs replace directive already exists in go.mod"; \
 	fi
-	@if ! grep -q "replace github.com/computesphere/computesphere-api/sdk/go => ../computesphere-api/sdk/go" go.mod; then \
-		echo "Adding computesphere-api/sdk/go replace directive to go.mod..."; \
-		echo "replace github.com/computesphere/computesphere-api/sdk/go => ../computesphere-api/sdk/go" >> go.mod; \
-	else \
-		echo "computesphere-api/sdk/go replace directive already exists in go.mod"; \
-	fi
 
 # Complete development environment setup
 .PHONY: dev-setup

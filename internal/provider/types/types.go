@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	cs "github.com/computesphere/cli/cs"
-	csv2 "github.com/computesphere/computesphere-api/sdk/go"
+	csv2 "github.com/computesphere/computesphere-go"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -13,10 +13,10 @@ import (
 // datasource via terraform-plugin-framework's ConfigureRequest.ProviderData.
 //
 // The provider is mid-migration from the v1 SDK (cli/cs.APIClient) to the
-// generated v2 SDK (computesphere-api/sdk/go). During the transition both
-// clients are constructed in provider.Configure and handed out here;
-// resources swap to V2Client one bounded context at a time as each v2
-// domain ships in openapi/v2/spec.yaml.
+// public generated v2 SDK (github.com/computesphere/computesphere-go). During
+// the transition both clients are constructed in provider.Configure and handed
+// out here; resources swap to V2Client one bounded context at a time as each v2
+// domain ships in the public SDK.
 type Data struct {
 	// Client is the legacy v1 API client. Remove once every resource has
 	// migrated to V2Client.

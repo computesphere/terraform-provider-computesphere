@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	cs "github.com/computesphere/cli/cs"
-	csv2 "github.com/computesphere/computesphere-api/sdk/go"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
