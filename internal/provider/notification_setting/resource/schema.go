@@ -20,7 +20,6 @@ func Schema(ctx context.Context) schema.Schema {
 			"invites":         shared.NotificationSettingInvites,
 			"payment":         shared.NotificationSettingPayment,
 			"webhook_enabled": shared.NotificationSettingWebhookEnabled,
-			"webhooks":        shared.NotificationSettingWebhooks,
 			"id":              shared.NotificationSettingID,
 			"user_id":         shared.NotificationSettingUserID,
 		},
