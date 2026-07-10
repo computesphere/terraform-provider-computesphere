@@ -2,16 +2,19 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
-	cs "github.com/computesphere/cli/cs"
+	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type AlertResource struct {
-	client *cs.APIClient
+	client    *csv2.ClientWithResponses
+	accountID string
 }
 
 var _ resource.Resource = &AlertResource{}
@@ -38,7 +41,6 @@ func (r *AlertResource) IdentitySchema(ctx context.Context, req resource.Identit
 }
 
 type alertResourceModel struct {
-	Name             types.String `tfsdk:"name"`
 	ProjectID        types.String `tfsdk:"project_id"`
 	EnvironmentID    types.String `tfsdk:"environment_id"`
 	AlertType        types.String `tfsdk:"alert_type"`
@@ -52,8 +54,20 @@ type alertResourceModel struct {
 func (r *AlertResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	data := cstypes.ConfigureResource(req, resp)
 	if data != nil {
-		r.client = data.Client
+		r.client = data.V2Client
+		r.accountID = data.AccountID
 	}
+}
+
+func (m *alertResourceModel) apply(a *csv2.AlertRule) {
+	m.ID = types.StringValue(a.Id.String())
+	m.ProjectID = types.StringValue(a.ProjectId.String())
+	m.EnvironmentID = types.StringValue(a.EnvironmentId.String())
+	m.AlertType = types.StringValue(string(a.AlertType))
+	m.Severity = types.StringValue(string(a.SeverityLevel))
+	m.Threshold = types.Int64Value(int64(a.Threshold))
+	m.EvaluationPeriod = types.Int64Value(int64(a.EvaluationPeriod))
+	m.Active = types.BoolValue(a.Active)
 }
 
 func (r *AlertResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -62,35 +76,45 @@ func (r *AlertResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	payload := cs.ModelAlertRuleRequest{
-		ProjectId:     ptrString(plan.ProjectID.ValueString()),
-		EnvironmentId: ptrString(plan.EnvironmentID.ValueString()),
-		AlertType:     ptrString(plan.AlertType.ValueString()),
-		SeverityLevel: ptrString(plan.Severity.ValueString()),
+
+	accountID, err := uuid.Parse(r.accountID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid account_id", err.Error())
+		return
 	}
-	if !plan.Threshold.IsNull() {
-		val := int(plan.Threshold.ValueInt64())
-		payload.Threshold = &val
+	projectID, err := uuid.Parse(plan.ProjectID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid project_id", err.Error())
+		return
 	}
-	if !plan.EvaluationPeriod.IsNull() {
-		val := int(plan.EvaluationPeriod.ValueInt64())
-		payload.EvaluationPeriod = &val
+	body := csv2.CreateAlertRuleRequest{
+		AlertType:        csv2.CreateAlertRuleRequestAlertType(plan.AlertType.ValueString()),
+		EvaluationPeriod: int(plan.EvaluationPeriod.ValueInt64()),
+		ProjectId:        projectID,
+		SeverityLevel:    csv2.CreateAlertRuleRequestSeverityLevel(plan.Severity.ValueString()),
+		Threshold:        int(plan.Threshold.ValueInt64()),
 	}
-	if !plan.Active.IsNull() {
-		val := plan.Active.ValueBool()
-		payload.Active = &val
+	if !plan.Active.IsNull() && !plan.Active.IsUnknown() {
+		active := plan.Active.ValueBool()
+		body.Active = &active
 	}
-	apiResp, _, err := r.client.AlertRuleAPI.AlertsPost(ctx).Body(payload).Execute()
+	if envID, perr := uuid.Parse(plan.EnvironmentID.ValueString()); perr == nil {
+		body.EnvironmentId = &envID
+	}
+
+	apiResp, err := r.client.CreateAlertRuleWithResponse(ctx, &csv2.CreateAlertRuleParams{XAccountId: accountID}, body)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating alert", err.Error())
 		return
 	}
-	if apiResp == nil || apiResp.Data == nil {
-		resp.Diagnostics.AddError("Alert creation failed", "No ID returned")
+	if apiResp.StatusCode() != http.StatusCreated || apiResp.JSON201 == nil {
+		resp.Diagnostics.AddError("Error creating alert", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	plan.ID = types.StringValue(*apiResp.Data)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	var state alertResourceModel
+	state.apply(apiResp.JSON201)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *AlertResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -99,79 +123,77 @@ func (r *AlertResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	apiResp, httpResp, err := r.client.AlertRuleAPI.AlertsIdGet(ctx, state.ID.ValueString()).Execute()
+
+	arid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid alert id", err.Error())
+		return
+	}
+
+	apiResp, err := r.client.GetAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid))
+	if err != nil {
 		resp.Diagnostics.AddError("Error reading alert", err.Error())
 		return
 	}
-	if apiResp.Data == nil {
+	if apiResp.StatusCode() == http.StatusNotFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	alert := apiResp.Data
-	state.ProjectID = types.StringValue(alert.GetProjectId())
-	state.EnvironmentID = types.StringValue(alert.GetEnvironmentId())
-	state.AlertType = types.StringValue(alert.GetAlertType())
-	state.Severity = types.StringValue(alert.GetSeverityLevel())
-	if alert.Threshold != nil {
-		state.Threshold = types.Int64Value(int64(*alert.Threshold))
-	} else {
-		state.Threshold = types.Int64Null()
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error reading alert", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
 	}
-	if alert.EvaluationPeriod != nil {
-		state.EvaluationPeriod = types.Int64Value(int64(*alert.EvaluationPeriod))
-	} else {
-		state.EvaluationPeriod = types.Int64Null()
-	}
-	if alert.Active != nil {
-		state.Active = types.BoolPointerValue(alert.Active)
-	} else {
-		state.Active = types.BoolNull()
-	}
+
+	state.apply(apiResp.JSON200)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *AlertResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan alertResourceModel
+	var state alertResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	payload := cs.ModelAlertRuleUpdateRequest{}
-	if !plan.Active.IsNull() {
-		val := plan.Active.ValueBool()
-		payload.Active = &val
+
+	arid, err := uuid.Parse(state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid alert id", err.Error())
+		return
 	}
-	if !plan.AlertType.IsNull() {
-		str := plan.AlertType.ValueString()
-		payload.AlertType = &str
+
+	alertType := csv2.UpdateAlertRuleRequestAlertType(plan.AlertType.ValueString())
+	severity := csv2.UpdateAlertRuleRequestSeverityLevel(plan.Severity.ValueString())
+	evalPeriod := int(plan.EvaluationPeriod.ValueInt64())
+	threshold := int(plan.Threshold.ValueInt64())
+	body := csv2.UpdateAlertRuleRequest{
+		AlertType:        &alertType,
+		SeverityLevel:    &severity,
+		EvaluationPeriod: &evalPeriod,
+		Threshold:        &threshold,
 	}
-	if !plan.EnvironmentID.IsNull() {
-		str := plan.EnvironmentID.ValueString()
-		payload.EnvironmentId = &str
+	if !plan.Active.IsNull() && !plan.Active.IsUnknown() {
+		active := plan.Active.ValueBool()
+		body.Active = &active
 	}
-	if !plan.EvaluationPeriod.IsNull() {
-		val := int(plan.EvaluationPeriod.ValueInt64())
-		payload.EvaluationPeriod = &val
+	if envID, perr := uuid.Parse(plan.EnvironmentID.ValueString()); perr == nil {
+		body.EnvironmentId = &envID
 	}
-	if !plan.Severity.IsNull() {
-		str := plan.Severity.ValueString()
-		payload.SeverityLevel = &str
-	}
-	if !plan.Threshold.IsNull() {
-		val := int(plan.Threshold.ValueInt64())
-		payload.Threshold = &val
-	}
-	_, _, err := r.client.AlertRuleAPI.AlertsIdPut(ctx, plan.ID.ValueString()).Body(payload).Execute()
+
+	apiResp, err := r.client.UpdateAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid), body)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating alert", err.Error())
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error updating alert", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		return
+	}
+
+	var newState alertResourceModel
+	newState.apply(apiResp.JSON200)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *AlertResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -180,16 +202,22 @@ func (r *AlertResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, httpResp, err := r.client.AlertRuleAPI.AlertsIdDelete(ctx, state.ID.ValueString()).Execute()
+
+	arid, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
-		if httpResp != nil && httpResp.StatusCode == 404 {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		resp.Diagnostics.AddError("Invalid alert id", err.Error())
+		return
+	}
+
+	apiResp, err := r.client.DeleteAlertRuleWithResponse(ctx, csv2.AlertRuleId(arid))
+	if err != nil {
 		resp.Diagnostics.AddError("Error deleting alert", err.Error())
 		return
 	}
-	resp.State.RemoveResource(ctx)
+	switch apiResp.StatusCode() {
+	case http.StatusOK, http.StatusNoContent, http.StatusAccepted, http.StatusNotFound:
+		resp.State.RemoveResource(ctx)
+	default:
+		resp.Diagnostics.AddError("Error deleting alert", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+	}
 }
-
-func ptrString(s string) *string { return &s }

@@ -13,7 +13,6 @@ func Schema(ctx context.Context) schema.Schema {
 		Description: "Manages an alert resource.",
 		Attributes: map[string]schema.Attribute{
 			"id":                shared.AlertID,
-			"name":              schema.StringAttribute{Required: true, Description: "Name of the alert."},
 			"project_id":        shared.ProjectID,
 			"environment_id":    shared.EnvironmentID,
 			"alert_type":        shared.AlertType,
