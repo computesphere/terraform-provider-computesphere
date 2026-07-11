@@ -1,5 +1,5 @@
 resource "computesphere_environment" "example" {
   name       = "example-environment"
   region     = "us-east-1"
-  project_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
+  project_id = "13316e7e-21d7-43c8-9ee7-69674510ceeb"
 } 

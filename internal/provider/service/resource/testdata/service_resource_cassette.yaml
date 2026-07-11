@@ -1,3 +1,174 @@
 ---
 version: 2
-interactions: []
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 148
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{"name":"example-service","plan_id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","type":"web-service"}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/services
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 345
+        uncompressed: false
+        body: '{"object":"service","id":"9455ae05-24ad-41da-a060-0b19e7d1cf62","name":"example-service","type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","plan_id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","plan":null,"active":true,"last_opened_at":null,"created_at":"2026-07-11T02:48:07.661592Z","updated_at":"2026-07-11T02:48:07.661592Z"}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "345"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:48:07 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T024807Z-r1586589745gj7dshC1QRO9r4n000000066g000000001ac3
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 3f9d2fe8-186c-4e42-9c1f-bcf94a127da2
+        status: 201 Created
+        code: 201
+        duration: 396.723458ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/services/9455ae05-24ad-41da-a060-0b19e7d1cf62
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 556
+        uncompressed: false
+        body: '{"object":"service","id":"9455ae05-24ad-41da-a060-0b19e7d1cf62","name":"example-service","type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","plan_id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","plan":{"object":"plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"spherelet","active":true},"active":true,"last_opened_at":null,"created_at":"2026-07-11T02:48:07.661592Z","updated_at":"2026-07-11T02:48:07.661592Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "556"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:48:07 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T024807Z-r1586589745gj7dshC1QRO9r4n000000066g000000001acn
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - bd0c7033-0983-4204-88f3-f474208e105d
+        status: 200 OK
+        code: 200
+        duration: 112.352417ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/services/9455ae05-24ad-41da-a060-0b19e7d1cf62
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 02:48:08 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T024808Z-r1586589745gj7dshC1QRO9r4n000000066g000000001acz
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 4c3a8b35-03d4-48c8-bfa4-a18a28eca22a
+        status: 204 No Content
+        code: 204
+        duration: 125.317083ms

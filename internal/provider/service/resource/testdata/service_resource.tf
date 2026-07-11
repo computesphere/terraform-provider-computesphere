@@ -1,9 +1,6 @@
 resource "computesphere_service" "example" {
-  name         = "example-service"
-  project_id   = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
-  env_id       = "e1f2a3b4-5678-90ab-cdef-1234567890ab"
-  image_name   = "nginx:latest"
-  port         = 80
-  sphere_count = 2
-  type         = "web"
-} 
+  name       = "example-service"
+  project_id = "13316e7e-21d7-43c8-9ee7-69674510ceeb"
+  type       = "web-service"
+  plan_id    = "9dd4b690-f41a-4d6f-b12b-233766628a9b"
+}
