@@ -44,9 +44,8 @@ provider "computesphere" {
   api_url    = var.api_url    # or set COMPUTESPHERE_API_URL env variable
 }
 
-data "computesphere_notification_setting" "example" {
-  id = "n1a2b3c4-5678-90ab-cdef-1234567890ab"
-}
+# Notification settings are per-account; this data source takes no arguments.
+data "computesphere_notification_setting" "example" {}
 
 output "notification_setting" {
   value = data.computesphere_notification_setting.example

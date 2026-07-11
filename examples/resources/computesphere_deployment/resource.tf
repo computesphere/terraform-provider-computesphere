@@ -29,9 +29,29 @@ provider "computesphere" {
   api_url    = var.api_url    # or set COMPUTESPHERE_API_URL env variable
 }
 
-# Notification settings are per-account; this data source takes no arguments.
-data "computesphere_notification_setting" "example" {}
+resource "computesphere_deployment" "example" {
+  service_id     = "s1a2b3c4-5678-90ab-cdef-1234567890ab"
+  environment_id = "e1f2a3b4-5678-90ab-cdef-1234567890ab"
+  project_id     = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
+  type           = "web-service"
 
-output "notification_setting" {
-  value = data.computesphere_notification_setting.example
-} 
+  image        = "nginx:latest"
+  port         = 80
+  sphere_count = 2
+
+  env_vars = {
+    LOG_LEVEL = "info"
+  }
+
+  secret_vars = {
+    API_KEY = "example-secret-value"
+  }
+}
+
+output "deployment_id" {
+  value = computesphere_deployment.example.id
+}
+
+output "deployment_status" {
+  value = computesphere_deployment.example.status
+}

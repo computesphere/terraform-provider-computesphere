@@ -50,7 +50,7 @@ data "computesphere_team" "default" {
 
 data "computesphere_team" "with_account" {
   id         = "b7e6a1c2-3f4d-4e5a-8b9c-1d2e3f4a5b6c"
-  account_id = "eb773429-b6be-4faf-86b7-05d2125ce940"
+  account_id = "11111111-1111-1111-1111-111111111111"
 }
 ```
 

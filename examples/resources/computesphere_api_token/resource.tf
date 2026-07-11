@@ -30,8 +30,9 @@ provider "computesphere" {
 }
 
 resource "computesphere_api_token" "example" {
-  name  = "example-token"
-  scope = "read"
+  name   = "example-token"
+  scope  = "account"
+  expiry = "2027-01-01T00:00:00Z"
 }
 
 output "api_token_id" {

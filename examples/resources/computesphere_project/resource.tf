@@ -30,11 +30,8 @@ provider "computesphere" {
 }
 
 resource "computesphere_project" "example" {
-  name        = "tf-example-pre10"
+  name        = "tf-example-project"
   description = "A sample ComputeSphere project created via Terraform"
-  plan_name   = "PWR"
-  plan_value  = 50
-  # Add other required or optional fields as needed
 }
 
 output "project_id" {
@@ -47,18 +44,6 @@ output "project_name" {
 
 output "project_description" {
   value = computesphere_project.example.description
-}
-
-output "project_plan_name" {
-  value = computesphere_project.example.plan_name
-}
-
-output "project_plan_value" {
-  value = computesphere_project.example.plan_value
-}
-
-output "project_plan_id" {
-  value = computesphere_project.example.plan_id
 }
 
 output "project_created_at" {

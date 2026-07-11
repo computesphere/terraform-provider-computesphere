@@ -29,7 +29,9 @@ provider "computesphere" {
   api_url    = var.api_url    # or set COMPUTESPHERE_API_URL env variable
 }
 
-data "computesphere_environments" "example" {}
+data "computesphere_environments" "example" {
+  project_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
+}
 
 output "environments" {
   value = data.computesphere_environments.example

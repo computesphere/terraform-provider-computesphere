@@ -45,9 +45,7 @@ provider "computesphere" {
 }
 
 data "computesphere_project" "example" {
-  id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-  # name = "testproj34"
-  # Add other required or optional fields as needed
+  id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
 }
 
 output "project_id" {
@@ -60,18 +58,6 @@ output "project_name" {
 
 output "project_description" {
   value = data.computesphere_project.example.description
-}
-
-output "project_plan_name" {
-  value = data.computesphere_project.example.plan_name
-}
-
-output "project_plan_value" {
-  value = data.computesphere_project.example.plan_value
-}
-
-output "project_plan_id" {
-  value = data.computesphere_project.example.plan_id
 }
 
 output "project_created_at" {
