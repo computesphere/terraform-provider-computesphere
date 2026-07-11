@@ -3,12 +3,12 @@
 page_title: "computesphere_api_token Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages an API token resource.
+  Manages an API token resource. The token secret is only returned once, at creation.
 ---
 
 # computesphere_api_token (Resource)
 
-Manages an API token resource.
+Manages an API token resource. The token secret is only returned once, at creation.
 
 ## Example Usage
 
@@ -67,25 +67,22 @@ output "api_token_scope" {
 
 ### Required
 
+- `expiry` (String) Expiry timestamp (RFC3339).
 - `name` (String) Name of the API token.
-- `scope` (String) Scope of the API token.
+- `scope` (String) Scope of the API token (full, account, project).
 
 ### Optional
 
-- `account_id` (String) Account ID associated with the API token.
-- `account_ids` (List of String) List of account IDs associated with the API token.
-- `expiry` (String) Expiry date of the API token.
-- `project_ids` (List of String) List of project IDs associated with the API token.
-- `type` (String) Type of the API token.
+- `account_ids` (List of String) Account ids the token is scoped to.
+- `project_ids` (List of String) Project ids the token is scoped to.
 
 ### Read-Only
 
-- `accounts` (List of String) List of account IDs associated with the API token.
-- `created_at` (String) Creation timestamp of the API token.
+- `account_id` (String) Owning account id.
+- `created_at` (String) Creation timestamp.
 - `id` (String) Unique identifier for the API token.
-- `projects` (List of String) List of project IDs associated with the API token.
-- `token` (String, Sensitive) The API token value.
-- `user_id` (String) User ID associated with the API token.
+- `token` (String, Sensitive) The token secret. Only returned at creation.
+- `user_id` (String) Creator user id.
 
 ## Import
 

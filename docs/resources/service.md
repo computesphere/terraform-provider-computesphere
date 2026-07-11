@@ -69,6 +69,12 @@ output "service_name" {
 ### Required
 
 - `name` (String) Name of the service.
+- `project_id` (String) Project the service belongs to.
+- `type` (String) Type of the service (e.g. web-service, cron-job, background-worker).
+
+### Optional
+
+- `plan_id` (String) Plan (spherelet shape) assigned to the service. Updatable in place.
 
 ### Read-Only
 
@@ -76,8 +82,6 @@ output "service_name" {
 - `created_at` (String) Creation timestamp of the service.
 - `id` (String) Unique identifier for the service.
 - `last_opened_at` (String) Last opened timestamp of the service.
-- `project_id` (String) Project ID associated with the service.
-- `type` (String) Type of the service.
 
 ## Import
 

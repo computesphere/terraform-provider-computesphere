@@ -69,7 +69,6 @@ output "guardrail" {
 - `is_predefined_assigned` (Boolean) Whether the guardrail is predefined and assigned.
 - `message` (String) Message for the guardrail.
 - `name` (String) Name of the guardrail.
-- `rules` (List of Map of String) List of rules for the guardrail.
 - `scope` (String) Scope of the guardrail.
 - `status` (Boolean) Status of the guardrail.
 - `type` (String) Type of the guardrail.

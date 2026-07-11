@@ -72,7 +72,6 @@ output "notification_setting_email_enabled" {
 - `invites` (Boolean) Invites notification enabled.
 - `payment` (Boolean) Payment notification enabled.
 - `webhook_enabled` (Boolean) Webhook notifications enabled.
-- `webhooks` (List of Map of String) List of webhook configurations.
 
 ### Read-Only
 

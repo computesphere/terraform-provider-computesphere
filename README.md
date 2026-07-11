@@ -56,36 +56,32 @@ You can configure the provider using variables in the provider block or via envi
 
 ## Supported Resources and Data Sources
 
-| Type         | Name / Address                       | Provider Folder                                               | Example |
-|--------------|--------------------------------------|--------------------------------------------------------------|---------|
-| Resource     | computesphere_team                   | [team/resource](internal/provider/team/resource/)             | [examples/resources/computesphere_team](./examples/resources/computesphere_team) |
-| Resource     | computesphere_project                | [project/resource](internal/provider/project/resource/)       | [examples/resources/computesphere_project](./examples/resources/computesphere_project) |
-| Resource     | computesphere_api_token              | [api_token/resource](internal/provider/api_token/resource/)   | [examples/resources/computesphere_api_token](./examples/resources/computesphere_api_token) |
-| Resource     | computesphere_environment            | [environment/resource](internal/provider/environment/resource/)| [examples/resources/computesphere_environment](./examples/resources/computesphere_environment) |
-| Resource     | computesphere_alert                  | [alert/resource](internal/provider/alert/resource/)           | [examples/resources/computesphere_alert](./examples/resources/computesphere_alert) |
-| Resource     | computesphere_guardrail              | [guardrail/resource](internal/provider/guardrail/resource/)   | [examples/resources/computesphere_guardrail](./examples/resources/computesphere_guardrail) |
-| Resource     | computesphere_notification_setting   | [notification_setting/resource](internal/provider/notification_setting/resource/) | [examples/resources/computesphere_notification_setting](./examples/resources/computesphere_notification_setting) |
-| Resource     | computesphere_plan                   | [plan/resource](internal/provider/plan/resource/)             | [examples/resources/computesphere_plan](./examples/resources/computesphere_plan) |
-| Resource     | computesphere_service                | [service/resource](internal/provider/service/resource/)       | [examples/resources/computesphere_service](./examples/resources/computesphere_service) |
-| Resource     | computesphere_subscription           | [subscription/resource](internal/provider/subscription/resource/) | [examples/resources/computesphere_subscription](./examples/resources/computesphere_subscription) |
-| Data Source  | computesphere_team                   | [team/datasource](internal/provider/team/datasource/)         | [examples/data-sources/computesphere_team](./examples/data-sources/computesphere_team) |
-| Data Source  | computesphere_teams                  | [team/datasource](internal/provider/team/datasource/)         | [examples/data-sources/computesphere_teams](./examples/data-sources/computesphere_teams) |
-| Data Source  | computesphere_project                | [project/datasource](internal/provider/project/datasource/)   | [examples/data-sources/computesphere_project](./examples/data-sources/computesphere_project) |
-| Data Source  | computesphere_projects               | [project/datasource](internal/provider/project/datasource/)   | [examples/data-sources/computesphere_projects](./examples/data-sources/computesphere_projects) |
-| Data Source  | computesphere_environment            | [environment/datasource](internal/provider/environment/datasource/) | [examples/data-sources/computesphere_environment](./examples/data-sources/computesphere_environment) |
-| Data Source  | computesphere_environments           | [environment/datasource](internal/provider/environment/datasource/) | [examples/data-sources/computesphere_environments](./examples/data-sources/computesphere_environments) |
-| Data Source  | computesphere_alert                  | [alert/datasource](internal/provider/alert/datasource/)       | [examples/data-sources/computesphere_alert](./examples/data-sources/computesphere_alert) |
-| Data Source  | computesphere_alerts                 | [alert/datasource](internal/provider/alert/datasource/)       | [examples/data-sources/computesphere_alerts](./examples/data-sources/computesphere_alerts) |
-| Data Source  | computesphere_guardrail              | [guardrail/datasource](internal/provider/guardrail/datasource/) | [examples/data-sources/computesphere_guardrail](./examples/data-sources/computesphere_guardrail) |
-| Data Source  | computesphere_guardrails             | [guardrail/datasource](internal/provider/guardrail/datasource/) | [examples/data-sources/computesphere_guardrails](./examples/data-sources/computesphere_guardrails) |
-| Data Source  | computesphere_notification_setting   | [notification_setting/datasource](internal/provider/notification_setting/datasource/) | [examples/data-sources/computesphere_notification_setting](./examples/data-sources/computesphere_notification_setting) |
-| Data Source  | computesphere_notification_settings  | [notification_setting/datasource](internal/provider/notification_setting/datasource/) | [examples/data-sources/computesphere_notification_settings](./examples/data-sources/computesphere_notification_settings) |
-| Data Source  | computesphere_plan                   | [plan/datasource](internal/provider/plan/datasource/)         | [examples/data-sources/computesphere_plan](./examples/data-sources/computesphere_plan) |
-| Data Source  | computesphere_plans                  | [plan/datasource](internal/provider/plan/datasource/)         | [examples/data-sources/computesphere_plans](./examples/data-sources/computesphere_plans) |
-| Data Source  | computesphere_service                | [service/datasource](internal/provider/service/datasource/)   | [examples/data-sources/computesphere_service](./examples/data-sources/computesphere_service) |
-| Data Source  | computesphere_services               | [service/datasource](internal/provider/service/datasource/)   | [examples/data-sources/computesphere_services](./examples/data-sources/computesphere_services) |
-| Data Source  | computesphere_subscription           | [subscription/datasource](internal/provider/subscription/datasource/) | [examples/data-sources/computesphere_subscription](./examples/data-sources/computesphere_subscription) |
-| Data Source  | computesphere_subscriptions          | [subscription/datasource](internal/provider/subscription/datasource/) | [examples/data-sources/computesphere_subscriptions](./examples/data-sources/computesphere_subscriptions) |
+Full per-attribute documentation for every resource and data source lives under
+[`docs/`](./docs) (generated) and on the Terraform Registry.
+
+| Type         | Name / Address                       | Provider Folder                                               |
+|--------------|--------------------------------------|--------------------------------------------------------------|
+| Resource     | computesphere_project                | [project/resource](internal/provider/project/resource/)      |
+| Resource     | computesphere_environment            | [environment/resource](internal/provider/environment/resource/) |
+| Resource     | computesphere_service                | [service/resource](internal/provider/service/resource/)      |
+| Resource     | computesphere_deployment             | [deployment/resource](internal/provider/deployment/resource/) |
+| Resource     | computesphere_team                   | [team/resource](internal/provider/team/resource/)            |
+| Resource     | computesphere_api_token              | [api_token/resource](internal/provider/api_token/resource/)  |
+| Resource     | computesphere_alert                  | [alert/resource](internal/provider/alert/resource/)          |
+| Resource     | computesphere_guardrail              | [guardrail/resource](internal/provider/guardrail/resource/)  |
+| Resource     | computesphere_notification_setting   | [notification_setting/resource](internal/provider/notification_setting/resource/) |
+| Data Source  | computesphere_project / _projects    | [project/datasource](internal/provider/project/datasource/)  |
+| Data Source  | computesphere_environment / _environments | [environment/datasource](internal/provider/environment/datasource/) |
+| Data Source  | computesphere_environment_variables  | [environment/datasource](internal/provider/environment/datasource/) |
+| Data Source  | computesphere_environment_secrets    | [environment/datasource](internal/provider/environment/datasource/) |
+| Data Source  | computesphere_service / _services    | [service/datasource](internal/provider/service/datasource/)  |
+| Data Source  | computesphere_region / _regions      | [region/datasource](internal/provider/region/datasource/)    |
+| Data Source  | computesphere_team / _teams          | [team/datasource](internal/provider/team/datasource/)        |
+| Data Source  | computesphere_alert / _alerts        | [alert/datasource](internal/provider/alert/datasource/)      |
+| Data Source  | computesphere_guardrail              | [guardrail/datasource](internal/provider/guardrail/datasource/) |
+| Data Source  | computesphere_notification_setting   | [notification_setting/datasource](internal/provider/notification_setting/datasource/) |
+| Data Source  | computesphere_plan / _plans          | [plan/datasource](internal/provider/plan/datasource/)        |
+| Data Source  | computesphere_subscription / _subscriptions | [subscription/datasource](internal/provider/subscription/datasource/) |
 
 ---
 

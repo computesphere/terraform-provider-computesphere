@@ -69,4 +69,3 @@ output "notification_setting" {
 - `payment` (Boolean) Payment notification enabled.
 - `user_id` (String) User ID associated with the notification setting.
 - `webhook_enabled` (Boolean) Webhook notifications enabled.
-- `webhooks` (List of Map of String) List of webhook configurations.

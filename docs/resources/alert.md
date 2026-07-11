@@ -70,15 +70,14 @@ output "alert_type" {
 
 - `alert_type` (String) Type of the alert.
 - `environment_id` (String) ID of the environment this alert belongs to.
-- `name` (String) Name of the alert.
+- `evaluation_period` (Number) Evaluation period for the alert.
 - `project_id` (String) ID of the project this alert belongs to.
+- `severity` (String) Severity level of the alert.
+- `threshold` (Number) Threshold value for the alert.
 
 ### Optional
 
 - `active` (Boolean) Whether the alert is active.
-- `evaluation_period` (Number) Evaluation period for the alert.
-- `severity` (String) Severity level of the alert.
-- `threshold` (Number) Threshold value for the alert.
 
 ### Read-Only
 
