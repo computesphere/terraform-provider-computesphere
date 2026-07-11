@@ -61,15 +61,11 @@ output "subscriptions" {
 <a id="nestedatt--subscriptions"></a>
 ### Nested Schema for `subscriptions`
 
-Required:
-
-- `id` (String) Unique identifier for the subscription.
-
 Read-Only:
 
 - `active` (Boolean) Whether the subscription is active.
-- `created_at` (String) Creation timestamp of the subscription.
+- `country_code` (String) Country code for the subscription.
+- `currency_code` (String) Currency code for the subscription.
+- `id` (String) Unique identifier for the subscription.
 - `name` (String) Name of the subscription.
-- `plan` (String) Plan associated with the subscription.
-- `type` (String) Type of the subscription.
-- `user_id` (String) User ID associated with the subscription.
+- `price` (Number) Price of the subscription.

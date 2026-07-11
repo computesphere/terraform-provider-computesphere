@@ -67,4 +67,3 @@ Read-Only:
 - `description` (String) Description of the project.
 - `id` (String) Unique identifier for the project.
 - `name` (String) Name of the project.
-- `plan_id` (String) Plan ID for the project.

@@ -76,7 +76,6 @@ output "guardrail_name" {
 - `description` (String) Description of the guardrail.
 - `effect` (String) Effect of the guardrail.
 - `message` (String) Message for the guardrail.
-- `rules` (List of Map of String) List of rules for the guardrail.
 - `scope` (String) Scope of the guardrail.
 - `status` (Boolean) Status of the guardrail.
 - `type` (String) Type of the guardrail.

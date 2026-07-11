@@ -91,6 +91,3 @@ output "project_created_at" {
 - `created_at` (String) Creation timestamp of the project.
 - `description` (String) Description of the project.
 - `name` (String) Name of the project.
-- `plan_id` (String) Plan ID for the project.
-- `plan_name` (String) Name of the plan for the project.
-- `plan_value` (Number) Plan value for the project.

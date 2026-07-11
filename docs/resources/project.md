@@ -91,14 +91,11 @@ output "project_created_at" {
 ### Optional
 
 - `description` (String) Description of the project.
-- `plan_name` (String) Name of the plan for the project.
-- `plan_value` (Number) Plan value for the project.
 
 ### Read-Only
 
 - `created_at` (String) Creation timestamp of the project.
 - `id` (String) Unique identifier for the project.
-- `plan_id` (String) Plan ID for the project.
 
 ## Import
 
