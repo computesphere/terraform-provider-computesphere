@@ -27,6 +27,7 @@ func PluralSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Description: "Provides a list of alerts.",
 		Attributes: map[string]schema.Attribute{
+			"project_id": schema.StringAttribute{Required: true, Description: "Project to list alerts for."},
 			"alerts": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{

@@ -37,14 +37,12 @@ func Schema(ctx context.Context) schema.Schema {
 			"account_ids": schema.ListAttribute{
 				ElementType:   types.StringType,
 				Optional:      true,
-				Computed:      true,
 				Description:   "Account ids the token is scoped to.",
 				PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 			},
 			"project_ids": schema.ListAttribute{
 				ElementType:   types.StringType,
 				Optional:      true,
-				Computed:      true,
 				Description:   "Project ids the token is scoped to.",
 				PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 			},

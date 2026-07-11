@@ -6,6 +6,7 @@ import (
 
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -41,7 +42,8 @@ type alertItemModel struct {
 }
 
 type alertsDataSourceModel struct {
-	Alerts []alertItemModel `tfsdk:"alerts"`
+	ProjectID types.String     `tfsdk:"project_id"`
+	Alerts    []alertItemModel `tfsdk:"alerts"`
 }
 
 func (d *AlertsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -54,8 +56,18 @@ func (d *AlertsDataSource) Configure(ctx context.Context, req datasource.Configu
 
 func (d *AlertsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state alertsDataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	apiResp, err := d.client.ListAlertRulesWithResponse(ctx, &csv2.ListAlertRulesParams{})
+	projectID, err := uuid.Parse(state.ProjectID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid project_id", err.Error())
+		return
+	}
+
+	apiResp, err := d.client.ListAlertRulesWithResponse(ctx, &csv2.ListAlertRulesParams{ProjectId: &projectID})
 	if err != nil {
 		resp.Diagnostics.AddError("Error listing alerts", err.Error())
 		return

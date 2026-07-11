@@ -1,3 +1,162 @@
 ---
 version: 2
-interactions: []
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/subscriptions/a04d59a6-6e78-449e-9613-bec40ae36d46
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"subscription","id":"a04d59a6-6e78-449e-9613-bec40ae36d46","name":"Hobby","price":15,"country_code":"US","currency_code":"USD","active":true,"created_at":"0001-01-01T00:00:00Z","subscription_item":[{"object":"subscription_item","id":"0ee7feab-a033-4cea-bd6a-07c57d331dc1","slug":"email_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"8565087f-2cf8-410b-ac57-d890409d40dd","slug":"chat_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"540e0382-735f-4d2a-a98a-619b05b1e0c9","slug":"phone_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"7937b120-58d1-4f76-957f-20e6d4874286","slug":"spherelet","value":"FLX","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"155442b8-cf19-4494-88d4-aca012b0a4b1","slug":"autoscaling","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"137c3e88-8b04-4b97-8841-1d1040cbb7c2","slug":"vertical_scaling","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"9cc5c725-13c2-41e5-8ce8-05a08820e8ec","slug":"custom_domain","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"7302a0c2-ea0c-4502-9ce4-35af1ece2d53","slug":"cron_jobs","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"233496c2-50f6-4a14-9105-6bcc49fa74ce","slug":"spherestor","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"4093ff7d-1f9d-44f2-b17a-1cce20d1d809","slug":"sphereops","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"a6686b3d-224a-4adb-a6f5-338868ffa6ad","slug":"rbac","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"eced5f9b-96f1-4393-ab75-54af28710cc7","slug":"deployment_rollback","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"a09dbee6-a9f7-4ded-baf3-1e747af4f879","slug":"zero_downtime","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"d9969a0b-45fc-4102-bacf-f578a0e0ebb3","slug":"private_network","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"529b6faa-c0c7-4dbb-b8b5-356f15ebfdf5","slug":"postgresql_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"34e50b4c-07d9-4af4-aed2-92b935638f72","slug":"redis_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"606b3a26-4eb6-453d-a7fa-d524eb466085","slug":"mysql_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0bddbcdc-e6a9-488a-96bd-5fe2235c9540","slug":"rabbitmq_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0c0a7f91-38db-42ba-869f-01105f791438","slug":"health_check","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0a2f8bf4-4950-4abf-908b-a5b97f03e2aa","slug":"log_stream","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"f0157002-6049-46cc-9ee2-c19ceea88f47","slug":"log_export","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"60617358-b0fc-4ea4-af0a-4c6629b56f40","slug":"user","value":"1","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"abeae31e-8549-4fcc-af44-b35e75bf5aaa","slug":"community_forum","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"3d4e7f2a-55cb-41a0-82bf-489f02d0db6f","slug":"priority_response","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"cce32570-9587-4ae9-bee7-2b2d33f7b6bf","slug":"account_manager","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null}],"plans":[{"object":"subscription_plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"","active":true}]}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:36:24 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023624Z-r185bbb44bdjkjslhC1DFWr4040000000bbg000000007btd
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - c59741fe-a3f0-450d-ad89-8d8b2a26f72d
+        status: 200 OK
+        code: 200
+        duration: 340.313208ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/subscriptions/a04d59a6-6e78-449e-9613-bec40ae36d46
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"subscription","id":"a04d59a6-6e78-449e-9613-bec40ae36d46","name":"Hobby","price":15,"country_code":"US","currency_code":"USD","active":true,"created_at":"0001-01-01T00:00:00Z","subscription_item":[{"object":"subscription_item","id":"0ee7feab-a033-4cea-bd6a-07c57d331dc1","slug":"email_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"8565087f-2cf8-410b-ac57-d890409d40dd","slug":"chat_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"540e0382-735f-4d2a-a98a-619b05b1e0c9","slug":"phone_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"7937b120-58d1-4f76-957f-20e6d4874286","slug":"spherelet","value":"FLX","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"155442b8-cf19-4494-88d4-aca012b0a4b1","slug":"autoscaling","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"137c3e88-8b04-4b97-8841-1d1040cbb7c2","slug":"vertical_scaling","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"9cc5c725-13c2-41e5-8ce8-05a08820e8ec","slug":"custom_domain","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"7302a0c2-ea0c-4502-9ce4-35af1ece2d53","slug":"cron_jobs","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"233496c2-50f6-4a14-9105-6bcc49fa74ce","slug":"spherestor","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"4093ff7d-1f9d-44f2-b17a-1cce20d1d809","slug":"sphereops","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"a6686b3d-224a-4adb-a6f5-338868ffa6ad","slug":"rbac","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"eced5f9b-96f1-4393-ab75-54af28710cc7","slug":"deployment_rollback","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"a09dbee6-a9f7-4ded-baf3-1e747af4f879","slug":"zero_downtime","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"d9969a0b-45fc-4102-bacf-f578a0e0ebb3","slug":"private_network","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"529b6faa-c0c7-4dbb-b8b5-356f15ebfdf5","slug":"postgresql_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"34e50b4c-07d9-4af4-aed2-92b935638f72","slug":"redis_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"606b3a26-4eb6-453d-a7fa-d524eb466085","slug":"mysql_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0bddbcdc-e6a9-488a-96bd-5fe2235c9540","slug":"rabbitmq_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0c0a7f91-38db-42ba-869f-01105f791438","slug":"health_check","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0a2f8bf4-4950-4abf-908b-a5b97f03e2aa","slug":"log_stream","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"f0157002-6049-46cc-9ee2-c19ceea88f47","slug":"log_export","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"60617358-b0fc-4ea4-af0a-4c6629b56f40","slug":"user","value":"1","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"abeae31e-8549-4fcc-af44-b35e75bf5aaa","slug":"community_forum","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"3d4e7f2a-55cb-41a0-82bf-489f02d0db6f","slug":"priority_response","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"cce32570-9587-4ae9-bee7-2b2d33f7b6bf","slug":"account_manager","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null}],"plans":[{"object":"subscription_plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"","active":true}]}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:36:24 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023624Z-r185bbb44bdjkjslhC1DFWr4040000000bbg000000007bts
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 95130c5c-ed9b-46ff-96a4-d9cce07b2234
+        status: 200 OK
+        code: 200
+        duration: 98.002084ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/subscriptions/a04d59a6-6e78-449e-9613-bec40ae36d46
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"subscription","id":"a04d59a6-6e78-449e-9613-bec40ae36d46","name":"Hobby","price":15,"country_code":"US","currency_code":"USD","active":true,"created_at":"0001-01-01T00:00:00Z","subscription_item":[{"object":"subscription_item","id":"0ee7feab-a033-4cea-bd6a-07c57d331dc1","slug":"email_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"8565087f-2cf8-410b-ac57-d890409d40dd","slug":"chat_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"540e0382-735f-4d2a-a98a-619b05b1e0c9","slug":"phone_support","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"7937b120-58d1-4f76-957f-20e6d4874286","slug":"spherelet","value":"FLX","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"155442b8-cf19-4494-88d4-aca012b0a4b1","slug":"autoscaling","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"137c3e88-8b04-4b97-8841-1d1040cbb7c2","slug":"vertical_scaling","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"9cc5c725-13c2-41e5-8ce8-05a08820e8ec","slug":"custom_domain","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"7302a0c2-ea0c-4502-9ce4-35af1ece2d53","slug":"cron_jobs","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"233496c2-50f6-4a14-9105-6bcc49fa74ce","slug":"spherestor","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"4093ff7d-1f9d-44f2-b17a-1cce20d1d809","slug":"sphereops","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"a6686b3d-224a-4adb-a6f5-338868ffa6ad","slug":"rbac","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"eced5f9b-96f1-4393-ab75-54af28710cc7","slug":"deployment_rollback","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"a09dbee6-a9f7-4ded-baf3-1e747af4f879","slug":"zero_downtime","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"d9969a0b-45fc-4102-bacf-f578a0e0ebb3","slug":"private_network","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"529b6faa-c0c7-4dbb-b8b5-356f15ebfdf5","slug":"postgresql_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"34e50b4c-07d9-4af4-aed2-92b935638f72","slug":"redis_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"606b3a26-4eb6-453d-a7fa-d524eb466085","slug":"mysql_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0bddbcdc-e6a9-488a-96bd-5fe2235c9540","slug":"rabbitmq_db","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0c0a7f91-38db-42ba-869f-01105f791438","slug":"health_check","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"0a2f8bf4-4950-4abf-908b-a5b97f03e2aa","slug":"log_stream","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"f0157002-6049-46cc-9ee2-c19ceea88f47","slug":"log_export","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"60617358-b0fc-4ea4-af0a-4c6629b56f40","slug":"user","value":"1","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"abeae31e-8549-4fcc-af44-b35e75bf5aaa","slug":"community_forum","value":"yes","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"3d4e7f2a-55cb-41a0-82bf-489f02d0db6f","slug":"priority_response","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null},{"object":"subscription_item","id":"cce32570-9587-4ae9-bee7-2b2d33f7b6bf","slug":"account_manager","value":"no","feature":{"object":"subscription_feature","id":"","name":"","type":"","accessibility":""},"category":null}],"plans":[{"object":"subscription_plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"","active":true}]}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:36:24 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023624Z-r185bbb44bdjkjslhC1DFWr4040000000bbg000000007btx
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 8e1e41ce-c02d-4abd-b774-b30b26ed1d4f
+        status: 200 OK
+        code: 200
+        duration: 54.111916ms

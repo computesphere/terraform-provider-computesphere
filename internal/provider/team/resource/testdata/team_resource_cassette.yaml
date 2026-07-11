@@ -1,3 +1,174 @@
 ---
 version: 2
-interactions: []
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 141
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{"account_id":"11111111-1111-1111-1111-111111111111","description":"A sample ComputeSphere team created via Terraform","name":"example-team"}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/teams
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 497
+        uncompressed: false
+        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949549Z","members":[{"object":"team_member","id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","email":"garretttom931@hotmail.com","first_name":"Tom","last_name":"Garett"}]}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "497"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:50 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023950Z-16c99cf4c865pvn2hC1DFWq6fs0000000aeg000000002k44
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - b14fdfe6-8dfe-4d43-a01a-8b844ff6da5c
+        status: 201 Created
+        code: 201
+        duration: 322.236666ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/teams/b658f667-0862-40d3-bd19-c7346eaf2c66
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 494
+        uncompressed: false
+        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949Z","members":[{"object":"team_member","id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","email":"garretttom931@hotmail.com","first_name":"Tom","last_name":"Garett"}]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "494"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:50 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023950Z-16c99cf4c865pvn2hC1DFWq6fs0000000aeg000000002k4b
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 9c3ac837-d846-483d-a1e5-36687b494a14
+        status: 200 OK
+        code: 200
+        duration: 121.815334ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/teams/b658f667-0862-40d3-bd19-c7346eaf2c66
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 02:39:50 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023950Z-16c99cf4c865pvn2hC1DFWq6fs0000000aeg000000002k4f
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 868e9def-2213-4683-b9b6-ddff35e0b38b
+        status: 204 No Content
+        code: 204
+        duration: 97.52525ms

@@ -1,3 +1,3 @@
 data "computesphere_plan" "example" {
-  id = "p1a2b3c4-5678-90ab-cdef-1234567890ab"
+  id = "67449b6e-4292-4f60-9845-2d8f729d1ac3"
 } 

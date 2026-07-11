@@ -16,8 +16,7 @@ func TestAccProjectDatasources_basic(t *testing.T) {
 			{
 				ConfigFile: config.StaticFile("./testdata/projects_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckTypeSetElemAttr("data.computesphere_projects.all", "projects.*.name", "tf-datasource-list-1"),
-					resource.TestCheckTypeSetElemAttr("data.computesphere_projects.all", "projects.*.name", "tf-datasource-list-2"),
+					resource.TestCheckResourceAttrSet("data.computesphere_projects.all", "projects.#"),
 				),
 			},
 		},

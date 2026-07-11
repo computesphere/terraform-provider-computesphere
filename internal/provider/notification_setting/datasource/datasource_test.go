@@ -9,14 +9,14 @@ import (
 	th "github.com/computesphere/terraform-provider-computesphere/internal/provider/testhelpers"
 )
 
-func TestAccNotificationSettingsDatasources_basic(t *testing.T) {
+func TestAccNotificationSettingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: th.SetupRecordingProvider(t, "notification_settings_datasource_cassette"),
+		ProtoV6ProviderFactories: th.SetupRecordingProvider(t, "notification_setting_datasource_cassette"),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("./testdata/notification_settings_datasource.tf"),
+				ConfigFile: config.StaticFile("./testdata/notification_setting_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.computesphere_notification_settings.example", "settings.#"),
+					resource.TestCheckResourceAttrSet("data.computesphere_notification_setting.example", "id"),
 				),
 			},
 		},

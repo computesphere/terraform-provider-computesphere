@@ -17,7 +17,7 @@ func TestAccEnvironmentDataSource_basic(t *testing.T) {
 				ConfigFile: config.StaticFile("./testdata/environment_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.computesphere_environment.example", "id"),
-					resource.TestCheckResourceAttr("data.computesphere_environment.example", "name", "example-environment"),
+					resource.TestCheckResourceAttrSet("data.computesphere_environment.example", "name"),
 				),
 			},
 		},

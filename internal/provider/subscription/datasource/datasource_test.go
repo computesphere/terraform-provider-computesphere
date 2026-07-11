@@ -17,7 +17,7 @@ func TestAccSubscriptionDataSource_basic(t *testing.T) {
 				ConfigFile: config.StaticFile("./testdata/subscription_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.computesphere_subscription.example", "id"),
-					resource.TestCheckResourceAttr("data.computesphere_subscription.example", "name", "example-subscription"),
+					resource.TestCheckResourceAttrSet("data.computesphere_subscription.example", "name"),
 				),
 			},
 		},

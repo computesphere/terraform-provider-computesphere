@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 
-	shared "github.com/computesphere/terraform-provider-computesphere/internal/provider/types/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
@@ -11,13 +10,12 @@ func Schema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Description: "Provides details for a single subscription.",
 		Attributes: map[string]schema.Attribute{
-			"id":         shared.SubscriptionID,
-			"name":       shared.SubscriptionName,
-			"active":     shared.SubscriptionActive,
-			"created_at": shared.SubscriptionCreatedAt,
-			"type":       shared.SubscriptionType,
-			"plan":       shared.SubscriptionPlan,
-			"user_id":    shared.SubscriptionUserID,
+			"id":            schema.StringAttribute{Required: true, Description: "Unique identifier for the subscription."},
+			"name":          schema.StringAttribute{Computed: true, Description: "Name of the subscription."},
+			"active":        schema.BoolAttribute{Computed: true, Description: "Whether the subscription is active."},
+			"country_code":  schema.StringAttribute{Computed: true, Description: "Country code for the subscription."},
+			"currency_code": schema.StringAttribute{Computed: true, Description: "Currency code for the subscription."},
+			"price":         schema.Float64Attribute{Computed: true, Description: "Price of the subscription."},
 		},
 	}
 }
@@ -30,13 +28,12 @@ func PluralSchema(ctx context.Context) schema.Schema {
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":         shared.SubscriptionID,
-						"name":       shared.SubscriptionName,
-						"active":     shared.SubscriptionActive,
-						"created_at": shared.SubscriptionCreatedAt,
-						"type":       shared.SubscriptionType,
-						"plan":       shared.SubscriptionPlan,
-						"user_id":    shared.SubscriptionUserID,
+						"id":            schema.StringAttribute{Computed: true, Description: "Unique identifier for the subscription."},
+						"name":          schema.StringAttribute{Computed: true, Description: "Name of the subscription."},
+						"active":        schema.BoolAttribute{Computed: true, Description: "Whether the subscription is active."},
+						"country_code":  schema.StringAttribute{Computed: true, Description: "Country code for the subscription."},
+						"currency_code": schema.StringAttribute{Computed: true, Description: "Currency code for the subscription."},
+						"price":         schema.Float64Attribute{Computed: true, Description: "Price of the subscription."},
 					},
 				},
 			},

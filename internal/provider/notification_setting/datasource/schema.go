@@ -21,7 +21,6 @@ func Schema(ctx context.Context) schema.Schema {
 			"invites":         schema.BoolAttribute{Computed: true, Description: shared.NotificationSettingInvites.Description},
 			"payment":         schema.BoolAttribute{Computed: true, Description: shared.NotificationSettingPayment.Description},
 			"webhook_enabled": schema.BoolAttribute{Computed: true, Description: shared.NotificationSettingWebhookEnabled.Description},
-			"webhooks":        schema.ListAttribute{ElementType: types.MapType{ElemType: types.StringType}, Computed: true, Description: shared.NotificationSettingWebhooks.Description},
 			"id":              schema.StringAttribute{Computed: true, Description: shared.NotificationSettingID.Description},
 			"user_id":         schema.StringAttribute{Computed: true, Description: shared.NotificationSettingUserID.Description},
 		},

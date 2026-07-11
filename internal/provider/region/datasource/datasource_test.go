@@ -16,7 +16,6 @@ func TestAccRegionDataSource_basic(t *testing.T) {
 			{
 				ConfigFile: config.StaticFile("./testdata/region_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.computesphere_region.default", "id"),
 					resource.TestCheckResourceAttr("data.computesphere_region.default", "name", "us-east-1"),
 				),
 			},

@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"net/http"
 
 	csv2 "github.com/computesphere/computesphere-go"
@@ -110,21 +110,44 @@ func (r *GuardrailResource) Create(ctx context.Context, req resource.CreateReque
 		resp.Diagnostics.AddError("Error creating guardrail", err.Error())
 		return
 	}
-	if apiResp.StatusCode() != http.StatusCreated && apiResp.StatusCode() != http.StatusOK {
+	switch apiResp.StatusCode() {
+	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
+	default:
 		resp.Diagnostics.AddError("Error creating guardrail", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	// The create response is not typed by the SDK; decode the guardrail from the
-	// raw body to recover its id, then set full state.
-	var created csv2.Guardrail
-	if err := json.Unmarshal(apiResp.Body, &created); err != nil || created.Id == uuid.Nil {
-		resp.Diagnostics.AddError("Error creating guardrail", "could not read the created guardrail from the API response")
+
+	// Create returns 204 with no body, so recover the guardrail by listing the
+	// account's guardrails filtered by name.
+	name := plan.Name.ValueString()
+	created := r.findByName(ctx, accountID, name, &resp.Diagnostics)
+	if created == nil {
 		return
 	}
 
 	var state guardrailResourceModel
-	state.apply(&created)
+	state.apply(created)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+// findByName recovers a guardrail by (account, name) after a body-less create.
+func (r *GuardrailResource) findByName(ctx context.Context, accountID uuid.UUID, name string, diags *diag.Diagnostics) *csv2.Guardrail {
+	listResp, err := r.client.ListGuardrailsWithResponse(ctx, &csv2.ListGuardrailsParams{XAccountId: accountID, Name: &name})
+	if err != nil {
+		diags.AddError("Error creating guardrail", err.Error())
+		return nil
+	}
+	if listResp.StatusCode() != http.StatusOK || listResp.JSON200 == nil {
+		diags.AddError("Error creating guardrail", cstypes.ProblemSummary(listResp.Body, listResp.StatusCode()))
+		return nil
+	}
+	for i := range listResp.JSON200.Items {
+		if listResp.JSON200.Items[i].Name == name {
+			return &listResp.JSON200.Items[i]
+		}
+	}
+	diags.AddError("Error creating guardrail", "guardrail was created but could not be found by name")
+	return nil
 }
 
 func (r *GuardrailResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

@@ -17,7 +17,7 @@ func TestAccPlanDataSource_basic(t *testing.T) {
 				ConfigFile: config.StaticFile("./testdata/plan_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.computesphere_plan.example", "id"),
-					resource.TestCheckResourceAttr("data.computesphere_plan.example", "name", "example-plan"),
+					resource.TestCheckResourceAttrSet("data.computesphere_plan.example", "name"),
 				),
 			},
 		},

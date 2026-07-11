@@ -217,6 +217,12 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 			if p.APIToken != "" {
 				req.Header.Set("Authorization", "Bearer "+p.APIToken)
 			}
+			// The API is account-scoped. Operations that take an explicit
+			// account_id param send it themselves; account-scoped GET-by-id
+			// operations rely on this header, so set it on every request.
+			if p.AccountID != "" {
+				req.Header.Set("x-account-id", p.AccountID)
+			}
 			return nil
 		}),
 	}
