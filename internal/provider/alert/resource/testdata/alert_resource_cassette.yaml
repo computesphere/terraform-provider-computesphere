@@ -1,0 +1,174 @@
+---
+version: 2
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 203
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{"active":true,"alert_type":"cpu","environment_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","evaluation_period":5,"project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","severity_level":"high","threshold":80}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/alerts
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 324
+        uncompressed: false
+        body: '{"object":"alert_rule","id":"ff8cf8d7-3408-4dce-b197-56231883ac4a","alert_type":"cpu","threshold":80,"evaluation_period":5,"severity_level":"high","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","environment_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","active":true,"status":"","created_at":"2026-07-11T02:50:23.069607Z"}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "324"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:50:23 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T025022Z-18545b8556d8xz2bhC1MEXpm7800000001f0000000003puh
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - e9132fc6-47ea-4f41-8234-629f0607b580
+        status: 201 Created
+        code: 201
+        duration: 655.785208ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/alerts/ff8cf8d7-3408-4dce-b197-56231883ac4a
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 332
+        uncompressed: false
+        body: '{"object":"alert_rule","id":"ff8cf8d7-3408-4dce-b197-56231883ac4a","alert_type":"cpu","threshold":80,"evaluation_period":5,"severity_level":"high","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","environment_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","active":true,"status":"inactive","created_at":"2026-07-11T02:50:23.069607Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "332"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:50:23 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T025023Z-18545b8556d8xz2bhC1MEXpm7800000001f0000000003pvf
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 0ec0c35d-c931-4f0a-83de-cb7c9ed9fc1f
+        status: 200 OK
+        code: 200
+        duration: 152.867625ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/alerts/ff8cf8d7-3408-4dce-b197-56231883ac4a
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 02:50:23 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T025023Z-18545b8556d8xz2bhC1MEXpm7800000001f0000000003pvv
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 44fd5d66-c4dc-4025-a26c-cc44b5f2eab7
+        status: 204 No Content
+        code: 204
+        duration: 137.460292ms

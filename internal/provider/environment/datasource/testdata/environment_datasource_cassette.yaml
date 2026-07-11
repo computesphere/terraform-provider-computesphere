@@ -1,0 +1,180 @@
+---
+version: 2
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/environments/b3669d6a-d89e-4037-873a-65903f3f3ced
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 359
+        uncompressed: false
+        body: '{"object":"environment","id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","region":"us-east-1","active":true,"network_policy":null,"network_access":null,"sub_domain":null,"custom_domain":null,"domain_path":{},"created_at":"2026-07-10T20:02:24.51503Z","updated_at":"2026-07-10T20:02:24.51503Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "359"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:04 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023904Z-18545b8556dwlrcxhC1MEXd1800000000a7g0000000004u4
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 9edf1a7b-40ea-4692-bfab-1e08e387698e
+        status: 200 OK
+        code: 200
+        duration: 545.533833ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/environments/b3669d6a-d89e-4037-873a-65903f3f3ced
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 359
+        uncompressed: false
+        body: '{"object":"environment","id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","region":"us-east-1","active":true,"network_policy":null,"network_access":null,"sub_domain":null,"custom_domain":null,"domain_path":{},"created_at":"2026-07-10T20:02:24.51503Z","updated_at":"2026-07-10T20:02:24.51503Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "359"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:05 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023904Z-18545b8556dwlrcxhC1MEXd1800000000a7g0000000004uq
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - de7ab32c-b154-4a4e-afd0-c1ed65ed8fd5
+        status: 200 OK
+        code: 200
+        duration: 129.955834ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/environments/b3669d6a-d89e-4037-873a-65903f3f3ced
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 359
+        uncompressed: false
+        body: '{"object":"environment","id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","region":"us-east-1","active":true,"network_policy":null,"network_access":null,"sub_domain":null,"custom_domain":null,"domain_path":{},"created_at":"2026-07-10T20:02:24.51503Z","updated_at":"2026-07-10T20:02:24.51503Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "359"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:05 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023905Z-18545b8556dwlrcxhC1MEXd1800000000a7g0000000004ux
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - ffaded04-2009-44c8-8000-f9ed5d4e996a
+        status: 200 OK
+        code: 200
+        duration: 156.187667ms

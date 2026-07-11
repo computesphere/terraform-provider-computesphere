@@ -1,0 +1,180 @@
+---
+version: 2
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/teams?account_id=11111111-1111-1111-1111-111111111111
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 631
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"team","id":"f4b4f0b7-7d07-407e-8b75-d7652bae1ce0","name":"Platform","description":"Owns build, deploy, and observability for the platform.","account_id":"11111111-1111-1111-1111-111111111111","owner_id":null,"created_at":"2026-06-11T16:43:20.185351Z","updated_at":"2026-06-11T17:12:54.427113Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}],"pagination":{"page":1,"page_size":20,"total":1,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "631"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:38:21 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023820Z-r1586589745gsbkjhC1QRO55bw0000000rxg000000005mc2
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 7a1be075-3600-4d52-85d6-55427c56c4aa
+        status: 200 OK
+        code: 200
+        duration: 160.072333ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/teams?account_id=11111111-1111-1111-1111-111111111111
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 631
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"team","id":"f4b4f0b7-7d07-407e-8b75-d7652bae1ce0","name":"Platform","description":"Owns build, deploy, and observability for the platform.","account_id":"11111111-1111-1111-1111-111111111111","owner_id":null,"created_at":"2026-06-11T16:43:20.185351Z","updated_at":"2026-06-11T17:12:54.427113Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}],"pagination":{"page":1,"page_size":20,"total":1,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "631"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:38:21 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023821Z-r1586589745gsbkjhC1QRO55bw0000000rxg000000005mcd
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - f215b20f-7329-4ded-a81f-92dc6678bfa5
+        status: 200 OK
+        code: 200
+        duration: 160.747416ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - 11111111-1111-1111-1111-111111111111
+        url: https://api.computesphere.com/v2/teams?account_id=11111111-1111-1111-1111-111111111111
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 631
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"team","id":"f4b4f0b7-7d07-407e-8b75-d7652bae1ce0","name":"Platform","description":"Owns build, deploy, and observability for the platform.","account_id":"11111111-1111-1111-1111-111111111111","owner_id":null,"created_at":"2026-06-11T16:43:20.185351Z","updated_at":"2026-06-11T17:12:54.427113Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}],"pagination":{"page":1,"page_size":20,"total":1,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "631"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:38:21 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023821Z-r1586589745gsbkjhC1QRO55bw0000000rxg000000005mcr
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - f8d0d94d-5508-4a41-92d7-25ed86bdfd3a
+        status: 200 OK
+        code: 200
+        duration: 150.098834ms

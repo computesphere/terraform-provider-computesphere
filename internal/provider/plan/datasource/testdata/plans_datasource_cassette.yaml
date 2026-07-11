@@ -1,0 +1,174 @@
+---
+version: 2
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/plans
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 1905
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"plan","id":"67449b6e-4292-4f60-9845-2d8f729d1ac3","name":"SphereStorNG","display_name":"SphereStorNG","slug":"","country_code":"NG","currency_code":"NGN","memory":0,"core":0,"price":180000,"type":"","active":false},{"object":"plan","id":"510f0418-7544-4c1d-9565-b9ffe3ec7ae9","name":"SphereStorUS","display_name":"SphereStorUS","slug":"","country_code":"US","currency_code":"USD","memory":0,"core":0,"price":110,"type":"","active":true},{"object":"plan","id":"aaf6066b-e0da-4c43-b7b5-f5b84263d2cf","name":"PWR","display_name":"Performance","slug":"","country_code":"NG","currency_code":"NGN","memory":4096,"core":2000,"price":41600,"type":"","active":false},{"object":"plan","id":"775d637d-12b0-48d6-808a-65796260d5fb","name":"MAX","display_name":"Standard","slug":"","country_code":"NG","currency_code":"NGN","memory":2048,"core":1000,"price":24000,"type":"","active":false},{"object":"plan","id":"b3b75004-10a8-4a7c-9be9-3169a0faf2cc","name":"FLX","display_name":"Flex","slug":"","country_code":"NG","currency_code":"NGN","memory":512,"core":250,"price":14400,"type":"","active":false},{"object":"plan","id":"10396722-d0c2-4b4e-87f9-c08324d6b771","name":"PWR","display_name":"Performance","slug":"","country_code":"US","currency_code":"USD","memory":4096,"core":2000,"price":59,"type":"","active":true},{"object":"plan","id":"99e3ed55-56a3-43db-b108-28dc06ce396e","name":"MAX","display_name":"Standard","slug":"","country_code":"US","currency_code":"USD","memory":2048,"core":1000,"price":29,"type":"","active":true},{"object":"plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"","active":true}],"pagination":{"page":1,"page_size":20,"total":8,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "1905"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:36:25 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023625Z-r185bbb44bdh8lrthC1DFW9yks00000001k0000000003adc
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - a897d393-45a2-4c5c-a45c-595c61e4ff34
+        status: 200 OK
+        code: 200
+        duration: 140.561542ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/plans
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 1905
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"plan","id":"67449b6e-4292-4f60-9845-2d8f729d1ac3","name":"SphereStorNG","display_name":"SphereStorNG","slug":"","country_code":"NG","currency_code":"NGN","memory":0,"core":0,"price":180000,"type":"","active":false},{"object":"plan","id":"510f0418-7544-4c1d-9565-b9ffe3ec7ae9","name":"SphereStorUS","display_name":"SphereStorUS","slug":"","country_code":"US","currency_code":"USD","memory":0,"core":0,"price":110,"type":"","active":true},{"object":"plan","id":"aaf6066b-e0da-4c43-b7b5-f5b84263d2cf","name":"PWR","display_name":"Performance","slug":"","country_code":"NG","currency_code":"NGN","memory":4096,"core":2000,"price":41600,"type":"","active":false},{"object":"plan","id":"775d637d-12b0-48d6-808a-65796260d5fb","name":"MAX","display_name":"Standard","slug":"","country_code":"NG","currency_code":"NGN","memory":2048,"core":1000,"price":24000,"type":"","active":false},{"object":"plan","id":"b3b75004-10a8-4a7c-9be9-3169a0faf2cc","name":"FLX","display_name":"Flex","slug":"","country_code":"NG","currency_code":"NGN","memory":512,"core":250,"price":14400,"type":"","active":false},{"object":"plan","id":"10396722-d0c2-4b4e-87f9-c08324d6b771","name":"PWR","display_name":"Performance","slug":"","country_code":"US","currency_code":"USD","memory":4096,"core":2000,"price":59,"type":"","active":true},{"object":"plan","id":"99e3ed55-56a3-43db-b108-28dc06ce396e","name":"MAX","display_name":"Standard","slug":"","country_code":"US","currency_code":"USD","memory":2048,"core":1000,"price":29,"type":"","active":true},{"object":"plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"","active":true}],"pagination":{"page":1,"page_size":20,"total":8,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "1905"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:36:25 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023625Z-r185bbb44bdh8lrthC1DFW9yks00000001k0000000003adr
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 24323516-069a-4a2f-b584-41f31a1de102
+        status: 200 OK
+        code: 200
+        duration: 129.844042ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/plans
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 1905
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"plan","id":"67449b6e-4292-4f60-9845-2d8f729d1ac3","name":"SphereStorNG","display_name":"SphereStorNG","slug":"","country_code":"NG","currency_code":"NGN","memory":0,"core":0,"price":180000,"type":"","active":false},{"object":"plan","id":"510f0418-7544-4c1d-9565-b9ffe3ec7ae9","name":"SphereStorUS","display_name":"SphereStorUS","slug":"","country_code":"US","currency_code":"USD","memory":0,"core":0,"price":110,"type":"","active":true},{"object":"plan","id":"aaf6066b-e0da-4c43-b7b5-f5b84263d2cf","name":"PWR","display_name":"Performance","slug":"","country_code":"NG","currency_code":"NGN","memory":4096,"core":2000,"price":41600,"type":"","active":false},{"object":"plan","id":"775d637d-12b0-48d6-808a-65796260d5fb","name":"MAX","display_name":"Standard","slug":"","country_code":"NG","currency_code":"NGN","memory":2048,"core":1000,"price":24000,"type":"","active":false},{"object":"plan","id":"b3b75004-10a8-4a7c-9be9-3169a0faf2cc","name":"FLX","display_name":"Flex","slug":"","country_code":"NG","currency_code":"NGN","memory":512,"core":250,"price":14400,"type":"","active":false},{"object":"plan","id":"10396722-d0c2-4b4e-87f9-c08324d6b771","name":"PWR","display_name":"Performance","slug":"","country_code":"US","currency_code":"USD","memory":4096,"core":2000,"price":59,"type":"","active":true},{"object":"plan","id":"99e3ed55-56a3-43db-b108-28dc06ce396e","name":"MAX","display_name":"Standard","slug":"","country_code":"US","currency_code":"USD","memory":2048,"core":1000,"price":29,"type":"","active":true},{"object":"plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"","active":true}],"pagination":{"page":1,"page_size":20,"total":8,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "1905"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:36:25 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023625Z-r185bbb44bdh8lrthC1DFW9yks00000001k0000000003adz
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - b148e1b9-502c-412a-a811-59dac841a330
+        status: 200 OK
+        code: 200
+        duration: 87.297583ms

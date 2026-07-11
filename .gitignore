@@ -1,0 +1,54 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Output of go build/go install
+terraform-provider-computesphere
+
+# Vendor directory (if used)
+vendor/
+
+# Test cache and coverage files
+*.coverprofile
+*.testresult
+*.log
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Terraform local state and files
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+crash.log
+*.tfplan
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+
+# Environment files
+.env
+.env.*
+
+# Go module files (if you want to ignore local replace directives)
+go.work
+go.work.sum 
