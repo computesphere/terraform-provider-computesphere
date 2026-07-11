@@ -1,3 +1,168 @@
 ---
 version: 2
-interactions: []
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 125
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{"account_id":"11111111-1111-1111-1111-111111111111","description":"Project for datasource test","name":"tf-datasource-test"}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+        url: https://api.computesphere.com/v2/projects
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 422
+        uncompressed: false
+        body: '{"object":"project","id":"f253ce36-a19e-4a20-8b89-42391bc2b014","name":"tf-datasource-test","description":"Project for datasource test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:30:08.889692Z","updated_at":"2026-07-11T02:30:08.889692Z"}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "422"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:30:08 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023008Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gh1
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 4aa40552-9f58-4f88-95dd-450e2457f5b4
+        status: 201 Created
+        code: 201
+        duration: 504.148916ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/projects/f253ce36-a19e-4a20-8b89-42391bc2b014
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 422
+        uncompressed: false
+        body: '{"object":"project","id":"f253ce36-a19e-4a20-8b89-42391bc2b014","name":"tf-datasource-test","description":"Project for datasource test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:30:08.889692Z","updated_at":"2026-07-11T02:30:08.889692Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "422"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:30:09 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023008Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003ghv
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - b6063d5d-2320-4f06-85b3-86bc0db1a20a
+        status: 200 OK
+        code: 200
+        duration: 141.688333ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+        url: https://api.computesphere.com/v2/projects/f253ce36-a19e-4a20-8b89-42391bc2b014?cascade=true
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 02:30:09 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023009Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gkv
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 45e47e53-7148-46de-92ef-0d3031fa70c0
+        status: 204 No Content
+        code: 204
+        duration: 150.490959ms

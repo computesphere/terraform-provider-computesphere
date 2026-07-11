@@ -1,3 +1,180 @@
 ---
 version: 2
-interactions: []
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/regions
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 262
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"region","name":"us-east-1","display_name":"US East (N. Virginia)","available":true}],"pagination":{"page":1,"page_size":1,"total":1,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "262"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:28:16 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T022815Z-18545b8556d5shgnhC1MEXcx8n00000008100000000060sz
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 5157805d-f867-476f-b7f4-cd0053afee38
+        status: 200 OK
+        code: 200
+        duration: 567.720375ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/regions
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 262
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"region","name":"us-east-1","display_name":"US East (N. Virginia)","available":true}],"pagination":{"page":1,"page_size":1,"total":1,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "262"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:28:16 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T022816Z-18545b8556d5shgnhC1MEXcx8n00000008100000000060te
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - a2d19d29-9925-4619-93c5-3d650000ef90
+        status: 200 OK
+        code: 200
+        duration: 176.831709ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/regions
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 262
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"region","name":"us-east-1","display_name":"US East (N. Virginia)","available":true}],"pagination":{"page":1,"page_size":1,"total":1,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "262"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:28:16 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T022816Z-18545b8556d5shgnhC1MEXcx8n00000008100000000060tm
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 932f145f-f2b9-42be-8240-64761a32df58
+        status: 200 OK
+        code: 200
+        duration: 151.113125ms
