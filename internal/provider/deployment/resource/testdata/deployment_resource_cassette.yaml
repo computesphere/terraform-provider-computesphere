@@ -1,0 +1,569 @@
+---
+version: 2
+interactions:
+    - id: 0
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 151
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{"name":"tf-deploy-test-svc","plan_id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","type":"web-service"}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/services
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 348
+        uncompressed: false
+        body: '{"object":"service","id":"05983590-ad30-4c30-b4e7-2f59f1191428","name":"tf-deploy-test-svc","type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","plan_id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","plan":null,"active":true,"last_opened_at":null,"created_at":"2026-07-11T12:57:47.441746Z","updated_at":"2026-07-11T12:57:47.441746Z"}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "348"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:47 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125747Z-r1586589745f4v6shC1QROnb100000000txg000000001ecb
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - f3c19085-90d2-4b3b-a57f-af58c8a3d849
+        status: 201 Created
+        code: 201
+        duration: 475.29075ms
+    - id: 1
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 215
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{"environment_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","image":"nginx:latest","port":80,"project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","type":"web-service"}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"deployment","id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","type":"web-service","name":"tf-deploy-test-svc","status":"Deploying","outputs":{"internal_url":"http://d-1d39b56e:80","url":"https://d-tf-deploy-test-svc-1d39b56e.computesphere.app"},"raw":{"id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","created_at":"2026-07-11T12:57:47.780408Z","last_opened_at":"0001-01-01T00:00:00Z","deployment_name":"d-1d39b56e","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","service_name":"tf-deploy-test-svc","service_type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","project_name":"","env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","user_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","account_id":"11111111-1111-1111-1111-111111111111","environment":{"id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","region":"us-east-1","domain_details":{"account_id":"11111111-1111-1111-1111-111111111111","project_name":"","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","service_name":"tf-deploy-test-svc","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""}},"image_name":"","port":80,"sphere_count":1,"spherelet_resource_value":{"core":250,"memory":512},"auto_scaling_config":{"enabled":false,"min_replicas":0,"max_replicas":0,"cpu_utilization":0},"max_sphere_count":0,"namespace":"env-b3669d6a","environment_variables":null,"secret_variables":null,"sub_domain":"d-tf-deploy-test-svc-1d39b56e.computesphere.app","custom_domain":"","status":"Deploying","status_updated_at":"2026-07-11T12:57:47.778929Z","custom_domain_certificate":{"id":"","deployment_name":"","is_for_env":false,"env_id":"","not_after":"","not_before":"","renewal_time":"","message":"","private_key":"","certificate":"","type":"","status":false,"is_secret_applied":false},"domain_details":{"account_id":"","project_name":"","project_id":"","service_name":"","service_id":"","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""},"description":"","health_check":{"enabled":false,"path":"","port":0,"initial_delay_seconds":0,"period_seconds":0},"image":{"name":"nginx:latest","type":"public","provider":""},"db_config":{"operator":"","version":"","storage":0,"username":"","password":"","root_password":"","db_name":""},"ci_config":{},"runtime_config":{"type":"image","dockerfile":"Dockerfile","image":"nginx:latest","port":80,"pipeline_tier":"starter"},"external_logging":{"enabled":false,"provider":"","gcp_credential":null,"cloudwatch_credential":null,"s3_credential":null,"elastic_credential":null,"loki_credential":null,"kafka_credential":null,"additional_setting":null},"cronjob":{"schedule":"","command":"","suspend":null},"network_access":{"whitelisted_ips":[],"type":"public_access"},"stors":[],"domain_path":"","scheduled_backup":{"id":"","deployment_id":"","schedule_time":"","schedule":false}}}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:47 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125747Z-r1586589745f4v6shC1QROnb100000000txg000000001eck
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 1e53cb3d-32d0-4904-beac-a6e9e054c887
+        status: 201 Created
+        code: 201
+        duration: 367.326416ms
+    - id: 2
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 2
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: '{}'
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            Content-Type:
+                - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments/1d39b56e-0e28-4f25-a4af-a14df7092a9c/deploy
+        method: POST
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"deployment","id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","type":"web-service","name":"tf-deploy-test-svc","status":"Redeploying","raw":{"id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","created_at":"2026-07-11T12:57:47.780408Z","last_opened_at":"0001-01-01T00:00:00Z","deployment_name":"d-1d39b56e","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","service_name":"tf-deploy-test-svc","service_type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","project_name":"","env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","user_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","account_id":"11111111-1111-1111-1111-111111111111","environment":{"id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","region":"us-east-1","domain_details":{"account_id":"11111111-1111-1111-1111-111111111111","project_name":"","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","service_name":"tf-deploy-test-svc","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""}},"image_name":"","port":80,"sphere_count":1,"spherelet_resource_value":{"core":250,"memory":512},"auto_scaling_config":{"enabled":false,"min_replicas":0,"max_replicas":0,"cpu_utilization":0},"max_sphere_count":0,"namespace":"env-b3669d6a","environment_variables":null,"secret_variables":null,"sub_domain":"d-tf-deploy-test-svc-1d39b56e.computesphere.app","custom_domain":"","status":"Redeploying","status_updated_at":"2026-07-11T12:57:48.084838Z","custom_domain_certificate":{"id":"","deployment_name":"","is_for_env":false,"env_id":"","not_after":"","not_before":"","renewal_time":"","message":"","private_key":"","certificate":"","type":"","status":false,"is_secret_applied":false},"domain_details":{"account_id":"","project_name":"","project_id":"","service_name":"","service_id":"","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""},"description":"","health_check":{"enabled":false,"path":"","port":0,"initial_delay_seconds":0,"period_seconds":0},"image":{"name":"nginx:latest","type":"public","provider":"","digest":"sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce"},"db_config":{"operator":"","version":"","storage":0,"username":"","password":"","root_password":"","db_name":""},"ci_config":{},"runtime_config":{"type":"image","dockerfile":"Dockerfile","image":"nginx:latest","port":80,"pipeline_tier":"starter"},"external_logging":{"enabled":false,"provider":"","gcp_credential":null,"cloudwatch_credential":null,"s3_credential":null,"elastic_credential":null,"loki_credential":null,"kafka_credential":null,"additional_setting":null},"cronjob":{"schedule":"","command":"","suspend":null},"network_access":{"whitelisted_ips":[],"type":"public_access"},"stors":[],"domain_path":"","scheduled_backup":{"id":"","deployment_id":"","schedule_time":"","schedule":false}}}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:48 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125747Z-r1586589745f4v6shC1QROnb100000000txg000000001ect
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 5feef690-471c-4287-8dac-23c3af969598
+        status: 202 Accepted
+        code: 202
+        duration: 276.987ms
+    - id: 3
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments/1d39b56e-0e28-4f25-a4af-a14df7092a9c
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"deployment","id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","type":"web-service","name":"tf-deploy-test-svc","status":"Redeploying","outputs":{"url":"https://d-tf-deploy-test-svc-1d39b56e.computesphere.app"},"raw":{"id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","created_at":"2026-07-11T12:57:47.780408Z","last_opened_at":"0001-01-01T00:00:00Z","deployment_name":"d-1d39b56e","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","service_name":"tf-deploy-test-svc","service_type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","project_name":"","env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","user_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","account_id":"11111111-1111-1111-1111-111111111111","environment":{"id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","region":"us-east-1","domain_details":{"account_id":"11111111-1111-1111-1111-111111111111","project_name":"","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","service_name":"tf-deploy-test-svc","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""}},"image_name":"","port":80,"sphere_count":1,"spherelet_resource_value":{"core":250,"memory":512},"auto_scaling_config":{"enabled":false,"min_replicas":0,"max_replicas":0,"cpu_utilization":0},"max_sphere_count":0,"namespace":"env-b3669d6a","environment_variables":null,"secret_variables":null,"sub_domain":"d-tf-deploy-test-svc-1d39b56e.computesphere.app","custom_domain":"","status":"Redeploying","status_updated_at":"2026-07-11T12:57:48.084838Z","custom_domain_certificate":{"id":"","deployment_name":"","is_for_env":false,"env_id":"","not_after":"","not_before":"","renewal_time":"","message":"","private_key":"","certificate":"","type":"","status":false,"is_secret_applied":false},"domain_details":{"account_id":"","project_name":"","project_id":"","service_name":"","service_id":"","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""},"description":"","health_check":{"enabled":false,"path":"","port":0,"initial_delay_seconds":0,"period_seconds":0},"image":{"name":"nginx:latest","type":"public","provider":"","digest":"sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce"},"db_config":{"operator":"","version":"","storage":0,"username":"","password":"","root_password":"","db_name":""},"ci_config":{},"runtime_config":{"type":"image","dockerfile":"Dockerfile","image":"nginx:latest","port":80,"pipeline_tier":"starter"},"external_logging":{"enabled":false,"provider":"","gcp_credential":null,"cloudwatch_credential":null,"s3_credential":null,"elastic_credential":null,"loki_credential":null,"kafka_credential":null,"additional_setting":null},"cronjob":{"schedule":"","command":"","suspend":null},"network_access":{"whitelisted_ips":[],"type":"public_access"},"stors":[],"domain_path":"","scheduled_backup":{"id":"","deployment_id":"","schedule_time":"","schedule":false}}}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:48 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125748Z-r1586589745f4v6shC1QROnb100000000txg000000001ed0
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - c56958b0-e38d-4a03-ab0c-6dd91ff30aae
+        status: 200 OK
+        code: 200
+        duration: 130.3825ms
+    - id: 4
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments/1d39b56e-0e28-4f25-a4af-a14df7092a9c/status
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 185
+        uncompressed: false
+        body: '{"object":"deployment_status","id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","status":"Redeploying","status_updated_at":"2026-07-11T12:57:48.084838Z","sphere_count":1,"max_sphere_count":0}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "185"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:48 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125748Z-r1586589745f4v6shC1QROnb100000000txg000000001ed4
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - c233b581-a5ff-46a2-bb8d-584741a6a60d
+        status: 200 OK
+        code: 200
+        duration: 127.986125ms
+    - id: 5
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/services/05983590-ad30-4c30-b4e7-2f59f1191428
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 559
+        uncompressed: false
+        body: '{"object":"service","id":"05983590-ad30-4c30-b4e7-2f59f1191428","name":"tf-deploy-test-svc","type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","plan_id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","plan":{"object":"plan","id":"9dd4b690-f41a-4d6f-b12b-233766628a9b","name":"FLX","display_name":"Flex","slug":"","country_code":"US","currency_code":"USD","memory":512,"core":250,"price":9,"type":"spherelet","active":true},"active":true,"last_opened_at":null,"created_at":"2026-07-11T12:57:47.441746Z","updated_at":"2026-07-11T12:57:47.441746Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "559"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:48 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125748Z-r1586589745f4v6shC1QROnb100000000txg000000001ed7
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - bd35c4ce-b005-41f5-ada6-afa0f048d948
+        status: 200 OK
+        code: 200
+        duration: 124.867375ms
+    - id: 6
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments/1d39b56e-0e28-4f25-a4af-a14df7092a9c
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: -1
+        uncompressed: false
+        body: '{"object":"deployment","id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","type":"web-service","name":"tf-deploy-test-svc","status":"Redeploying","outputs":{"url":"https://d-tf-deploy-test-svc-1d39b56e.computesphere.app"},"raw":{"id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","created_at":"2026-07-11T12:57:47.780408Z","last_opened_at":"0001-01-01T00:00:00Z","deployment_name":"d-1d39b56e","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","service_name":"tf-deploy-test-svc","service_type":"web-service","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","project_name":"","env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","user_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","account_id":"11111111-1111-1111-1111-111111111111","environment":{"id":"b3669d6a-d89e-4037-873a-65903f3f3ced","name":"dev-o95nfo","region":"us-east-1","domain_details":{"account_id":"11111111-1111-1111-1111-111111111111","project_name":"","project_id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","service_name":"tf-deploy-test-svc","service_id":"05983590-ad30-4c30-b4e7-2f59f1191428","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"b3669d6a-d89e-4037-873a-65903f3f3ced","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""}},"image_name":"","port":80,"sphere_count":1,"spherelet_resource_value":{"core":250,"memory":512},"auto_scaling_config":{"enabled":false,"min_replicas":0,"max_replicas":0,"cpu_utilization":0},"max_sphere_count":0,"namespace":"env-b3669d6a","environment_variables":null,"secret_variables":null,"sub_domain":"d-tf-deploy-test-svc-1d39b56e.computesphere.app","custom_domain":"","status":"Redeploying","status_updated_at":"2026-07-11T12:57:48.084838Z","custom_domain_certificate":{"id":"","deployment_name":"","is_for_env":false,"env_id":"","not_after":"","not_before":"","renewal_time":"","message":"","private_key":"","certificate":"","type":"","status":false,"is_secret_applied":false},"domain_details":{"account_id":"","project_name":"","project_id":"","service_name":"","service_id":"","env_name":"","environment":{"sub_domain":"","custom_domain":"","domain_path":""},"env_id":"","sub_domain":"","custom_domain":"","message":"","status":false,"expiry_date":"","request_raised":false,"domain_path":""},"description":"","health_check":{"enabled":false,"path":"","port":0,"initial_delay_seconds":0,"period_seconds":0},"image":{"name":"nginx:latest","type":"public","provider":"","digest":"sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce"},"db_config":{"operator":"","version":"","storage":0,"username":"","password":"","root_password":"","db_name":""},"ci_config":{},"runtime_config":{"type":"image","dockerfile":"Dockerfile","image":"nginx:latest","port":80,"pipeline_tier":"starter"},"external_logging":{"enabled":false,"provider":"","gcp_credential":null,"cloudwatch_credential":null,"s3_credential":null,"elastic_credential":null,"loki_credential":null,"kafka_credential":null,"additional_setting":null},"cronjob":{"schedule":"","command":"","suspend":null},"network_access":{"whitelisted_ips":[],"type":"public_access"},"stors":[],"domain_path":"","scheduled_backup":{"id":"","deployment_id":"","schedule_time":"","schedule":false}}}'
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:48 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125748Z-r1586589745f4v6shC1QROnb100000000txg000000001ed8
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 3f4f0ae0-3667-4ba5-989e-f64296fdce0c
+        status: 200 OK
+        code: 200
+        duration: 132.327292ms
+    - id: 7
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments/1d39b56e-0e28-4f25-a4af-a14df7092a9c/status
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 185
+        uncompressed: false
+        body: '{"object":"deployment_status","id":"1d39b56e-0e28-4f25-a4af-a14df7092a9c","status":"Redeploying","status_updated_at":"2026-07-11T12:57:48.084838Z","sphere_count":1,"max_sphere_count":0}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "185"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 12:57:48 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125748Z-r1586589745f4v6shC1QROnb100000000txg000000001eda
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 3699645e-2da3-4ae4-b5ca-d97a2936cecb
+        status: 200 OK
+        code: 200
+        duration: 120.285667ms
+    - id: 8
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/deployments/1d39b56e-0e28-4f25-a4af-a14df7092a9c
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 12:57:49 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125749Z-r1586589745f4v6shC1QROnb100000000txg000000001edq
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 40919f0b-44bd-4c20-b1f2-13df7cbaf57e
+        status: 204 No Content
+        code: 204
+        duration: 135.430666ms
+    - id: 9
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/services/05983590-ad30-4c30-b4e7-2f59f1191428
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 12:57:49 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T125749Z-r1586589745f4v6shC1QROnb100000000txg000000001edr
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 91f31006-72c1-47a8-8425-2fdca6a80410
+        status: 204 No Content
+        code: 204
+        duration: 126.399625ms

@@ -21,6 +21,7 @@ import (
 
 	alertresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/resource"
 	apitokenresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/api_token/resource"
+	deploymentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/deployment/resource"
 	environmentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/resource"
 	guardrailresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/resource"
 	notificationresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/resource"
@@ -272,6 +273,7 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 	return []func() resource.Resource{
 		notificationresource.NewNotificationSettingResource,
 		alertresource.NewAlertResource,
+		deploymentresource.NewDeploymentResource,
 		environmentresource.NewEnvironmentResource,
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
@@ -288,6 +290,8 @@ func (p *ComputeSphereProvider) DataSources(_ context.Context) []func() datasour
 		alertdatasource.NewAlertsDataSource,
 		environmentdatasource.NewEnvironmentDataSource,
 		environmentdatasource.NewEnvironmentsDataSource,
+		environmentdatasource.NewEnvironmentVariablesDataSource,
+		environmentdatasource.NewEnvironmentSecretsDataSource,
 		guardraildatasource.NewGuardrailDataSource,
 		plandatasource.NewPlanDataSource,
 		plandatasource.NewPlansDataSource,
