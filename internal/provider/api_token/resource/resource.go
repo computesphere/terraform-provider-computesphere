@@ -77,8 +77,6 @@ func (m *apiTokenResourceModel) apply(t *csv2.APIToken) {
 	m.Scope = types.StringValue(string(t.Scope))
 	m.Expiry = types.StringValue(t.Expiry.Format(time.RFC3339))
 	m.AccountID = types.StringValue(t.AccountId)
-	m.AccountIDs = uuidStrings(t.AccountIds)
-	m.ProjectIDs = uuidStrings(t.ProjectIds)
 	m.CreatedAt = types.StringValue(t.CreatedAt.Format(time.RFC3339))
 	m.UserID = types.StringValue(t.UserId.String())
 }

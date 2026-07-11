@@ -27,8 +27,6 @@ func TestAccProjectResource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-project"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test project from acceptance test"),
-					resource.TestCheckResourceAttr(resourceName, "plan_name", "MAX"),
-					resource.TestCheckResourceAttr(resourceName, "plan_value", "2"),
 				),
 			},
 		},

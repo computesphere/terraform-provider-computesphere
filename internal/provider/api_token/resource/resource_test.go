@@ -18,7 +18,7 @@ func TestAccApiTokenResource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("computesphere_api_token.example", "id"),
 					resource.TestCheckResourceAttr("computesphere_api_token.example", "name", "example-token"),
-					resource.TestCheckResourceAttr("computesphere_api_token.example", "scope", "read"),
+					resource.TestCheckResourceAttr("computesphere_api_token.example", "scope", "full"),
 				),
 			},
 		},

@@ -1,1 +1,0 @@
-data "computesphere_notification_settings" "example" {} 
