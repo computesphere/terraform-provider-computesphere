@@ -30,9 +30,23 @@ var tokenRegex = regexp.MustCompile(`(?i)Bearer [a-zA-Z0-9\-_\.]+`)
 const testAccountID = "11111111-1111-1111-1111-111111111111"
 
 func scrubString(i *cassette.Interaction, from, to string) {
+	if from == "" {
+		return
+	}
 	i.Request.URL = strings.ReplaceAll(i.Request.URL, from, to)
 	i.Request.Body = strings.ReplaceAll(i.Request.Body, from, to)
 	i.Response.Body = strings.ReplaceAll(i.Response.Body, from, to)
+	// Also scrub request/response headers — the v2 API carries the account id in
+	// the X-Account-Id request header, which the body/URL scrub above misses. A
+	// real account id must never ship in a cassette committed to this public repo.
+	for _, h := range []http.Header{i.Request.Headers, i.Response.Headers} {
+		for k, vals := range h {
+			for idx, v := range vals {
+				vals[idx] = strings.ReplaceAll(v, from, to)
+			}
+			h[k] = vals
+		}
+	}
 }
 
 func scrubRegex(i *cassette.Interaction, re *regexp.Regexp, to string) {

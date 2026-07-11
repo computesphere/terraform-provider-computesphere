@@ -33,8 +33,8 @@ github.com/bufbuild/protocompile v0.4.0 h1:LbFKd2XowZvQ/kajzguUp2DC9UEIQhIq77fZZ
 github.com/bufbuild/protocompile v0.4.0/go.mod h1:3v93+mbWn/v3xzN+31nwkJfrEpAUwp+BagBSZWx+TP8=
 github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
 github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
-github.com/computesphere/computesphere-go v0.1.0 h1:kLvemVPGQI6dg5phY4daPp5kHaYh8pE/LeiQUG/Kcwc=
-github.com/computesphere/computesphere-go v0.1.0/go.mod h1:v58QFFPc3xi+PcRNREwDQ5TPF9Tz9mKNL4W5V6C3+FM=
+github.com/computesphere/computesphere-go v0.2.0 h1:8N5SRuML045EYNBBu6FxpaDK3xjOC9EORKLmxarXSh8=
+github.com/computesphere/computesphere-go v0.2.0/go.mod h1:v58QFFPc3xi+PcRNREwDQ5TPF9Tz9mKNL4W5V6C3+FM=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

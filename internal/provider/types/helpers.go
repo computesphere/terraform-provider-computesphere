@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ProblemSummary formats the RFC 7807 Problem body returned by the v2 API for
@@ -26,6 +27,17 @@ func StringPtr(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+// UUIDPtrString maps an optional UUID pointer to a Terraform string value, or
+// null when absent. The v2 guardrail `created_by` is null for system-provided
+// (predefined) guardrails, so a nil pointer must map to a null attribute rather
+// than panic on a nil dereference.
+func UUIDPtrString(u *openapi_types.UUID) types.String {
+	if u == nil {
+		return types.StringNull()
+	}
+	return types.StringValue(u.String())
 }
 
 // TimePtrString maps an optional v2 timestamp (*time.Time) to a Terraform

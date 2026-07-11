@@ -10,7 +10,6 @@ import (
 )
 
 func TestAccGuardrailResource_basic(t *testing.T) {
-	t.Skip("guardrail API is broken: created_by empty-string breaks UUID parse, DELETE 500 (see provider task #42)")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: th.SetupRecordingProvider(t, "guardrail_resource_cassette"),
 		Steps: []resource.TestStep{

@@ -76,7 +76,7 @@ func (m *guardrailResourceModel) apply(g *csv2.Guardrail) {
 	m.Status = types.BoolValue(g.Status)
 	m.Type = types.StringValue(string(g.Type))
 	m.AccountID = types.StringValue(g.AccountId.String())
-	m.CreatedBy = types.StringValue(g.CreatedBy.String())
+	m.CreatedBy = cstypes.UUIDPtrString(g.CreatedBy)
 	m.IsPredefinedAssigned = types.BoolValue(g.IsPredefinedAssigned)
 }
 

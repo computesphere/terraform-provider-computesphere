@@ -1,3 +1,13 @@
+resource "computesphere_guardrail" "example" {
+  name        = "example-guardrail"
+  description = "A sample guardrail for testing"
+  effect      = "block"
+  message     = "This is a test guardrail."
+  scope       = "project"
+  status      = true
+  type        = "custom"
+}
+
 data "computesphere_guardrail" "example" {
-  id = "g1a2b3c4-5678-90ab-cdef-1234567890ab"
-} 
+  id = computesphere_guardrail.example.id
+}
