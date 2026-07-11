@@ -61,14 +61,6 @@ func (r *ApiTokenResource) Configure(ctx context.Context, req resource.Configure
 	}
 }
 
-func uuidStrings(ids []openapi_types.UUID) []types.String {
-	out := make([]types.String, 0, len(ids))
-	for _, id := range ids {
-		out = append(out, types.StringValue(id.String()))
-	}
-	return out
-}
-
 // apply maps the token metadata into state. It never sets Token: the secret is
 // only returned once (at creation) and cannot be re-read.
 func (m *apiTokenResourceModel) apply(t *csv2.APIToken) {

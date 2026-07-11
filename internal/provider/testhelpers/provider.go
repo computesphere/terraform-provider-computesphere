@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -57,6 +58,20 @@ func SetupRecordingProviderConfigureWait(t *testing.T, cassetteName string) map[
 		require.NoError(t, r.Stop())
 	})
 
+	// Match on method + path + query only, ignoring scheme/host. Cassettes are
+	// recorded against the live API host but replayed against a fixed test host,
+	// so a full-URL match would never hit.
+	r.SetMatcher(func(req *http.Request, i cassette.Request) bool {
+		if req.Method != i.Method {
+			return false
+		}
+		u, err := url.Parse(i.URL)
+		if err != nil {
+			return false
+		}
+		return req.URL.Path == u.Path && req.URL.RawQuery == u.RawQuery
+	})
+
 	replaceAuthHeader := func(i *cassette.Interaction) error {
 		i.Request.Headers.Set("Authorization", "some-api-token")
 		return nil
@@ -96,7 +111,7 @@ func SetupRecordingProviderConfigureWait(t *testing.T, cassetteName string) map[
 	} else {
 		// Replay mode: fixed fake credentials; requests never reach the network.
 		providerOpts = []provider.ConfigFunc{
-			provider.WithHost("https://api.testing.computesphere.com"),
+			provider.WithHost("https://api.testing.computesphere.com/v2"),
 			provider.WithAPIToken("some-api-token"),
 			provider.WithAccountID(testAccountID),
 		}
