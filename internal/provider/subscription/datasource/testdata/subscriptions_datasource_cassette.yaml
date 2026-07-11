@@ -36,7 +36,7 @@ interactions:
             Content-Type:
                 - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:09 GMT
+                - Sat, 11 Jul 2026 02:36:25 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -44,16 +44,16 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023008Z-18545b8556dgzhdkhC1MEXa59c0000000960000000004erb
+                - 20260711T023625Z-r185bbb44bdjkjslhC1DFWr4040000000bbg000000007bu6
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 6b5f9554-ce2f-4339-910b-95991315ff08
+                - 8568ee88-bfe8-4635-8583-5f0bc6811600
         status: 200 OK
         code: 200
-        duration: 632.113667ms
+        duration: 115.809ms
     - id: 1
       request:
         proto: HTTP/1.1
@@ -89,7 +89,7 @@ interactions:
             Content-Type:
                 - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:09 GMT
+                - Sat, 11 Jul 2026 02:36:25 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -97,16 +97,16 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023009Z-18545b8556dgzhdkhC1MEXa59c0000000960000000004es1
+                - 20260711T023625Z-r185bbb44bdjkjslhC1DFWr4040000000bbg000000007buf
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - f2c5f9c6-3547-4193-b80c-67544d935155
+                - 6777ad4b-43e6-43bf-99e7-0be7eb21fbec
         status: 200 OK
         code: 200
-        duration: 150.72525ms
+        duration: 83.146625ms
     - id: 2
       request:
         proto: HTTP/1.1
@@ -142,7 +142,7 @@ interactions:
             Content-Type:
                 - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:09 GMT
+                - Sat, 11 Jul 2026 02:36:25 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -150,13 +150,13 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023009Z-18545b8556dgzhdkhC1MEXa59c0000000960000000004ess
+                - 20260711T023625Z-r185bbb44bdjkjslhC1DFWr4040000000bbg000000007bum
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - f6edad1a-31ba-4360-b09a-f764b14b54e6
+                - a80c5364-0f85-4f76-a1e9-1e9507d26226
         status: 200 OK
         code: 200
-        duration: 214.249833ms
+        duration: 70.437583ms

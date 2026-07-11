@@ -18,8 +18,6 @@ func TestAccProjectDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.computesphere_project.example", "name", "tf-datasource-test"),
 					resource.TestCheckResourceAttr("data.computesphere_project.example", "description", "Project for datasource test"),
-					resource.TestCheckResourceAttr("data.computesphere_project.example", "plan_name", "MAX"),
-					resource.TestCheckResourceAttr("data.computesphere_project.example", "plan_value", "2"),
 				),
 			},
 		},

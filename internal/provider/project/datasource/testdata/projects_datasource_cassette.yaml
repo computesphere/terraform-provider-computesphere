@@ -19,6 +19,8 @@ interactions:
                 - some-api-token
             Content-Type:
                 - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
         url: https://api.computesphere.com/v2/projects
         method: POST
       response:
@@ -29,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 431
         uncompressed: false
-        body: '{"object":"project","id":"50a540a6-f2a9-4593-981c-4748bb943270","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:30:09.654667Z","updated_at":"2026-07-11T02:30:09.654667Z"}'
+        body: '{"object":"project","id":"29a0d0fb-4c9c-4aca-ba87-50255d950a2f","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.122999Z","updated_at":"2026-07-11T02:39:06.122999Z"}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
@@ -40,7 +42,7 @@ interactions:
             Content-Type:
                 - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:09 GMT
+                - Sat, 11 Jul 2026 02:39:06 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -48,16 +50,16 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023009Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gmh
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064rb
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 9f918dbc-f4a0-42e0-beef-d5d00a668f70
+                - b1656c69-153d-4a90-8946-b7a1cd6d50e5
         status: 201 Created
         code: 201
-        duration: 189.468041ms
+        duration: 122.654833ms
     - id: 1
       request:
         proto: HTTP/1.1
@@ -76,6 +78,8 @@ interactions:
                 - some-api-token
             Content-Type:
                 - application/json
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
         url: https://api.computesphere.com/v2/projects
         method: POST
       response:
@@ -84,20 +88,20 @@ interactions:
         proto_minor: 0
         transfer_encoding: []
         trailer: {}
-        content_length: 429
+        content_length: 431
         uncompressed: false
-        body: '{"object":"project","id":"af6e125d-ae66-4867-9ce2-15410de07ad2","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:30:09.70698Z","updated_at":"2026-07-11T02:30:09.70698Z"}'
+        body: '{"object":"project","id":"3bd3dc78-8f36-407c-856e-8f11691f4a9b","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.216401Z","updated_at":"2026-07-11T02:39:06.216401Z"}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
             Content-Length:
-                - "429"
+                - "431"
             Content-Security-Policy:
                 - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
             Content-Type:
                 - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:09 GMT
+                - Sat, 11 Jul 2026 02:39:06 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -105,16 +109,16 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023009Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gmk
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064rc
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 4b171e98-0082-4528-829a-2e777b9ea254
+                - 891b46a6-d5c1-4353-9b18-626e16c9be3e
         status: 201 Created
         code: 201
-        duration: 240.587875ms
+        duration: 218.200375ms
     - id: 2
       request:
         proto: HTTP/1.1
@@ -131,6 +135,8 @@ interactions:
         headers:
             Authorization:
                 - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
         url: https://api.computesphere.com/v2/projects?account_id=11111111-1111-1111-1111-111111111111
         method: GET
       response:
@@ -139,22 +145,22 @@ interactions:
         proto_minor: 0
         transfer_encoding: []
         trailer: {}
-        content_length: 1424
+        content_length: 1426
         uncompressed: false
-        body: '{"object":"list","items":[{"object":"project","id":"af6e125d-ae66-4867-9ce2-15410de07ad2","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:30:09.70698Z","updated_at":"2026-07-11T02:30:09.70698Z"},{"object":"project","id":"50a540a6-f2a9-4593-981c-4748bb943270","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:30:09.654667Z","updated_at":"2026-07-11T02:30:09.654667Z"},{"object":"project","id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","name":"savanna-3xp5a3","description":null,"account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":1,"deployment_count":1,"sphere_count":1,"last_opened_at":null,"created_at":"2026-07-10T20:02:14.217027Z","updated_at":"2026-07-10T20:02:14.217027Z"}],"pagination":{"page":1,"page_size":20,"total":3,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        body: '{"object":"list","items":[{"object":"project","id":"3bd3dc78-8f36-407c-856e-8f11691f4a9b","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.216401Z","updated_at":"2026-07-11T02:39:06.216401Z"},{"object":"project","id":"29a0d0fb-4c9c-4aca-ba87-50255d950a2f","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.122999Z","updated_at":"2026-07-11T02:39:06.122999Z"},{"object":"project","id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","name":"savanna-3xp5a3","description":null,"account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":1,"deployment_count":1,"sphere_count":1,"last_opened_at":null,"created_at":"2026-07-10T20:02:14.217027Z","updated_at":"2026-07-10T20:02:14.217027Z"}],"pagination":{"page":1,"page_size":20,"total":3,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
         headers:
             Accept-Ranges:
                 - bytes
             Cache-Control:
                 - private, max-age=0, must-revalidate
             Content-Length:
-                - "1424"
+                - "1426"
             Content-Security-Policy:
                 - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
             Content-Type:
                 - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:09 GMT
+                - Sat, 11 Jul 2026 02:39:06 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -162,16 +168,16 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023009Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gn4
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064rh
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - ea6d5546-6b2d-4435-908b-867689e6be1a
+                - 51eafc6b-6ce0-4f95-a947-5ad701728b1e
         status: 200 OK
         code: 200
-        duration: 139.799875ms
+        duration: 122.148917ms
     - id: 3
       request:
         proto: HTTP/1.1
@@ -188,24 +194,32 @@ interactions:
         headers:
             Authorization:
                 - some-api-token
-        url: https://api.computesphere.com/v2/projects/af6e125d-ae66-4867-9ce2-15410de07ad2?cascade=true
-        method: DELETE
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/projects?account_id=11111111-1111-1111-1111-111111111111
+        method: GET
       response:
         proto: HTTP/2.0
         proto_major: 2
         proto_minor: 0
         transfer_encoding: []
         trailer: {}
-        content_length: 0
+        content_length: 1426
         uncompressed: false
-        body: ""
+        body: '{"object":"list","items":[{"object":"project","id":"3bd3dc78-8f36-407c-856e-8f11691f4a9b","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.216401Z","updated_at":"2026-07-11T02:39:06.216401Z"},{"object":"project","id":"29a0d0fb-4c9c-4aca-ba87-50255d950a2f","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.122999Z","updated_at":"2026-07-11T02:39:06.122999Z"},{"object":"project","id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","name":"savanna-3xp5a3","description":null,"account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":1,"deployment_count":1,"sphere_count":1,"last_opened_at":null,"created_at":"2026-07-10T20:02:14.217027Z","updated_at":"2026-07-10T20:02:14.217027Z"}],"pagination":{"page":1,"page_size":20,"total":3,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
         headers:
+            Accept-Ranges:
+                - bytes
             Cache-Control:
                 - private, max-age=0, must-revalidate
+            Content-Length:
+                - "1426"
             Content-Security-Policy:
                 - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
             Date:
-                - Sat, 11 Jul 2026 02:30:10 GMT
+                - Sat, 11 Jul 2026 02:39:06 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -213,16 +227,16 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023010Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gnz
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064rs
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 8e6fefb0-ee03-41f3-9255-a15fe1ab1264
-        status: 204 No Content
-        code: 204
-        duration: 213.81725ms
+                - 24f98740-ac52-4d00-8c32-8cbbc9607190
+        status: 200 OK
+        code: 200
+        duration: 119.846166ms
     - id: 4
       request:
         proto: HTTP/1.1
@@ -239,7 +253,186 @@ interactions:
         headers:
             Authorization:
                 - some-api-token
-        url: https://api.computesphere.com/v2/projects/50a540a6-f2a9-4593-981c-4748bb943270?cascade=true
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/projects/29a0d0fb-4c9c-4aca-ba87-50255d950a2f
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 431
+        uncompressed: false
+        body: '{"object":"project","id":"29a0d0fb-4c9c-4aca-ba87-50255d950a2f","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.122999Z","updated_at":"2026-07-11T02:39:06.122999Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "431"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:06 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064s2
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 9b520d4f-4f8c-4a91-9f34-653b53f1adf7
+        status: 200 OK
+        code: 200
+        duration: 136.362541ms
+    - id: 5
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/projects/3bd3dc78-8f36-407c-856e-8f11691f4a9b
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 431
+        uncompressed: false
+        body: '{"object":"project","id":"3bd3dc78-8f36-407c-856e-8f11691f4a9b","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.216401Z","updated_at":"2026-07-11T02:39:06.216401Z"}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "431"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:06 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064s1
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 65e105d5-2a66-46e1-a214-5d3c3d4fc065
+        status: 200 OK
+        code: 200
+        duration: 142.336166ms
+    - id: 6
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/projects?account_id=11111111-1111-1111-1111-111111111111
+        method: GET
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 1426
+        uncompressed: false
+        body: '{"object":"list","items":[{"object":"project","id":"3bd3dc78-8f36-407c-856e-8f11691f4a9b","name":"tf-datasource-list-1","description":"Project 1 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.216401Z","updated_at":"2026-07-11T02:39:06.216401Z"},{"object":"project","id":"29a0d0fb-4c9c-4aca-ba87-50255d950a2f","name":"tf-datasource-list-2","description":"Project 2 for datasource list test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:39:06.122999Z","updated_at":"2026-07-11T02:39:06.122999Z"},{"object":"project","id":"13316e7e-21d7-43c8-9ee7-69674510ceeb","name":"savanna-3xp5a3","description":null,"account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":1,"deployment_count":1,"sphere_count":1,"last_opened_at":null,"created_at":"2026-07-10T20:02:14.217027Z","updated_at":"2026-07-10T20:02:14.217027Z"}],"pagination":{"page":1,"page_size":20,"total":3,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        headers:
+            Accept-Ranges:
+                - bytes
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Length:
+                - "1426"
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Content-Type:
+                - application/json; charset=utf-8
+            Date:
+                - Sat, 11 Jul 2026 02:39:06 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023906Z-18545b8556dzj58hhC1MEXf68400000009d00000000064s6
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - 00c15393-2433-4b8e-8797-84b634bd096e
+        status: 200 OK
+        code: 200
+        duration: 139.891084ms
+    - id: 7
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/projects/29a0d0fb-4c9c-4aca-ba87-50255d950a2f?cascade=true
         method: DELETE
       response:
         proto: HTTP/2.0
@@ -256,7 +449,7 @@ interactions:
             Content-Security-Policy:
                 - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
             Date:
-                - Sat, 11 Jul 2026 02:30:10 GMT
+                - Sat, 11 Jul 2026 02:39:07 GMT
             Referrer-Policy:
                 - strict-origin-when-cross-origin
             Server-Timing:
@@ -264,13 +457,66 @@ interactions:
             Strict-Transport-Security:
                 - max-age=31536000; includeSubDomains; preload
             X-Azure-Ref:
-                - 20260711T023010Z-18545b8556dbcstfhC1MEXc5ms00000009fg000000003gny
+                - 20260711T023907Z-18545b8556dzj58hhC1MEXf68400000009d00000000064se
             X-Cache:
                 - CONFIG_NOCACHE
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - ccde677f-1b3d-4e26-a1c5-0ab8d0df257c
+                - e6be01c8-be75-4714-97f5-c3cb9d5d9bda
         status: 204 No Content
         code: 204
-        duration: 216.041792ms
+        duration: 140.715541ms
+    - id: 8
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        transfer_encoding: []
+        trailer: {}
+        host: api.computesphere.com
+        remote_addr: ""
+        request_uri: ""
+        body: ""
+        form: {}
+        headers:
+            Authorization:
+                - some-api-token
+            X-Account-Id:
+                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+        url: https://api.computesphere.com/v2/projects/3bd3dc78-8f36-407c-856e-8f11691f4a9b?cascade=true
+        method: DELETE
+      response:
+        proto: HTTP/2.0
+        proto_major: 2
+        proto_minor: 0
+        transfer_encoding: []
+        trailer: {}
+        content_length: 0
+        uncompressed: false
+        body: ""
+        headers:
+            Cache-Control:
+                - private, max-age=0, must-revalidate
+            Content-Security-Policy:
+                - frame-ancestors 'self' https://*.computesphere.com https://*.computesphere.cloud;
+            Date:
+                - Sat, 11 Jul 2026 02:39:07 GMT
+            Referrer-Policy:
+                - strict-origin-when-cross-origin
+            Server-Timing:
+                - total;dur=0
+            Strict-Transport-Security:
+                - max-age=31536000; includeSubDomains; preload
+            X-Azure-Ref:
+                - 20260711T023907Z-18545b8556dzj58hhC1MEXf68400000009d00000000064sd
+            X-Cache:
+                - CONFIG_NOCACHE
+            X-Content-Type-Options:
+                - nosniff
+            X-Request-Id:
+                - b6a5255b-79b4-4ccb-a79c-dc8706845981
+        status: 204 No Content
+        code: 204
+        duration: 141.30525ms
