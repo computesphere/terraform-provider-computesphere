@@ -20,7 +20,7 @@ interactions:
             Content-Type:
                 - application/json
             X-Account-Id:
-                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+                - 11111111-1111-1111-1111-111111111111
         url: https://api.computesphere.com/v2/environments
         method: POST
       response:
@@ -77,7 +77,7 @@ interactions:
             Authorization:
                 - some-api-token
             X-Account-Id:
-                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+                - 11111111-1111-1111-1111-111111111111
         url: https://api.computesphere.com/v2/environments/75e6d461-87f8-4beb-8243-7427c6632efa
         method: GET
       response:
@@ -136,7 +136,7 @@ interactions:
             Authorization:
                 - some-api-token
             X-Account-Id:
-                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+                - 11111111-1111-1111-1111-111111111111
         url: https://api.computesphere.com/v2/environments/75e6d461-87f8-4beb-8243-7427c6632efa?cascade=true
         method: DELETE
       response:

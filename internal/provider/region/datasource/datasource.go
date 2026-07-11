@@ -11,9 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// RegionDataSource is the `computesphere_region` datasource. Stage 4e-scaffold
-// migrated this from cli/cs.APIClient to the generated v2 SDK (sdk/go). It's
-// the proof-of-pattern for the rest of the migration per RFC 0001 §16.
+// RegionDataSource is the `computesphere_region` datasource. It reads region
+// metadata through the computesphere-go v2 client.
 type RegionDataSource struct {
 	client    *csv2.ClientWithResponses
 	accountID string

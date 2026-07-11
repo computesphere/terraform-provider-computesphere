@@ -20,7 +20,7 @@ interactions:
             Content-Type:
                 - application/json
             X-Account-Id:
-                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+                - 11111111-1111-1111-1111-111111111111
         url: https://api.computesphere.com/v2/teams
         method: POST
       response:
@@ -31,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 497
         uncompressed: false
-        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949549Z","members":[{"object":"team_member","id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","email":"garretttom931@hotmail.com","first_name":"Tom","last_name":"Garett"}]}'
+        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"22222222-2222-2222-2222-222222222222","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949549Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
@@ -77,7 +77,7 @@ interactions:
             Authorization:
                 - some-api-token
             X-Account-Id:
-                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+                - 11111111-1111-1111-1111-111111111111
         url: https://api.computesphere.com/v2/teams/b658f667-0862-40d3-bd19-c7346eaf2c66
         method: GET
       response:
@@ -88,7 +88,7 @@ interactions:
         trailer: {}
         content_length: 494
         uncompressed: false
-        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949Z","members":[{"object":"team_member","id":"b21abb1d-0f83-4de1-b6ae-d5ce6767e966","email":"garretttom931@hotmail.com","first_name":"Tom","last_name":"Garett"}]}'
+        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"22222222-2222-2222-2222-222222222222","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -136,7 +136,7 @@ interactions:
             Authorization:
                 - some-api-token
             X-Account-Id:
-                - f94e4c35-09f8-40dc-97c7-64ce613ddd87
+                - 11111111-1111-1111-1111-111111111111
         url: https://api.computesphere.com/v2/teams/b658f667-0862-40d3-bd19-c7346eaf2c66
         method: DELETE
       response:

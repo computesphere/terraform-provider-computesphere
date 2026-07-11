@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// RegionsDataSource is the `computesphere_regions` plural datasource —
-// same Stage 4e migration as the singular sibling.
+// RegionsDataSource is the `computesphere_regions` plural datasource. It lists
+// available regions through the computesphere-go v2 client.
 type RegionsDataSource struct {
 	client    *csv2.ClientWithResponses
 	accountID string
@@ -68,7 +68,7 @@ func (d *RegionsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	// items is guaranteed non-nil by the v2 contract (RFC 0001 §6.1).
+	// items is guaranteed non-nil by the v2 API contract (never null).
 	regions := make([]types.String, 0, len(apiResp.JSON200.Items))
 	for _, r := range apiResp.JSON200.Items {
 		regions = append(regions, types.StringValue(r.Name))

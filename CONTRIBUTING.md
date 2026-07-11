@@ -20,24 +20,17 @@ To build, test, and contribute to this provider, you need:
 ## Getting Started
 
 1. **Fork the repository** and clone your fork.
-2. **Clone the sibling repos** next to this one — both must live at sibling paths because `go.mod` relies on `replace` directives pointing at `../`:
-   ```sh
-   # Expected layout
-   # ~/code/github.com/computesphere/
-   # ├── terraform-provider-computesphere  (this repo)
-   # ├── cli                                (legacy v1 API client)
-   # └── computesphere-api                  (v2 API + sdk/go)
-   git clone git@github.com:computesphere/cli.git
-   git clone git@github.com:computesphere/computesphere-api.git
-   ```
-3. **Create a new branch** from `develop` for your changes.
-4. **Set up the development environment:**
+2. **Create a new branch** from `main` for your changes.
+3. **Set up the development environment:**
    ```sh
    make dev-setup
    ```
-   This automatically:
-   - Adds the necessary `replace` directives to `go.mod` for local development (both `cli/cs` and `computesphere-api/sdk/go`)
-   - Sets up your `~/.terraformrc` (or `%APPDATA%/terraform.rc` on Windows) to use the local provider binary
+   This points your `~/.terraformrc` (or `%APPDATA%/terraform.rc` on Windows)
+   at your locally built provider binary via a `dev_overrides` block. The
+   provider's API client is the published
+   [`github.com/computesphere/computesphere-go`](https://github.com/computesphere/computesphere-go)
+   module, resolved through the Go module proxy — no extra repositories or
+   local `replace` directives are required.
 4. **Run the complete development workflow:**
    ```sh
    make all
@@ -150,9 +143,7 @@ When you're done developing, you can clean up the development environment:
 make clean
 ```
 
-This removes:
-- The replace directive from `go.mod`
-- Generated `terraform.tfvars` files from examples
+This removes generated `terraform.tfvars` files from the examples.
 
 ### Best Practices
 

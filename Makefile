@@ -10,8 +10,8 @@
 #
 # COMMON TARGETS:
 #   all              - Run complete development workflow (setup, format, test, install)
-#   dev-setup        - Set up local development environment (go.mod + terraform.rc)
-#   clean            - Clean up development artifacts (go.mod + terraform.tfvars)
+#   dev-setup        - Set up local development environment (terraform.rc)
+#   clean            - Clean up development artifacts (terraform.tfvars)
 #   test-acceptance  - Run acceptance tests with environment variables
 #   inject-tfvars    - Inject API credentials into example directories
 #   cleanup-tfvars   - Remove generated terraform.tfvars files
@@ -44,8 +44,8 @@ TERRAFORMRC_TEMPLATE := utils/terraformrc.template
 
 # Main target: run all key steps (default target)
 .PHONY: all
-all: setup-replace check-deps fmt tidy test-acceptance generate install
-	@echo "Ran setup-replace, go fmt, go mod tidy, test-acceptance, go generate, and go install."
+all: check-deps fmt tidy test-acceptance generate install
+	@echo "Ran check-deps, go fmt, go mod tidy, test-acceptance, go generate, and go install."
 
 # =============================================================================
 # DEPENDENCY MANAGEMENT
@@ -69,17 +69,11 @@ check-deps:
 # DEVELOPMENT SETUP
 # =============================================================================
 
-# Add replace directives to go.mod for local development.
-# Both the legacy v1 client (cli/cs) and the generated v2 client
-# (computesphere-api/sdk/go) need sibling clones to resolve from
-# module paths until both are published via a registry/tag.
-.PHONY: setup-replace
-setup-replace:
-	@echo "Setting up local development environment..."
-
-# Complete development environment setup
+# Complete development environment setup. The API client is the published
+# computesphere-go module resolved via the Go proxy, so the only local step is
+# wiring terraform.rc to the dev provider binary.
 .PHONY: dev-setup
-dev-setup: setup-replace setup-terraformrc
+dev-setup: setup-terraformrc
 
 # =============================================================================
 # CODE QUALITY & BUILD
@@ -146,24 +140,10 @@ cleanup-tfvars:
 # CLEANUP
 # =============================================================================
 
-# Remove both replace directives from go.mod
-.PHONY: clean-gomod
-clean-gomod:
-	@echo "Cleaning up go.mod..."
-	@if grep -q "replace github.com/computesphere/cli/cs => ../cli/cs" go.mod; then \
-		echo "Removing cli/cs replace directive from go.mod..."; \
-		sed -i '' '/replace github.com\/computesphere\/cli\/cs => ..\/cli\/cs/d' go.mod; \
-	fi
-	@if grep -q "replace github.com/computesphere/computesphere-api/sdk/go => ../computesphere-api/sdk/go" go.mod; then \
-		echo "Removing computesphere-api/sdk/go replace directive from go.mod..."; \
-		sed -i '' '/replace github.com\/computesphere\/computesphere-api\/sdk\/go => ..\/computesphere-api\/sdk\/go/d' go.mod; \
-	fi
-	@echo "Replace directives removed from go.mod"
-
 # Clean up all development artifacts
 .PHONY: clean
-clean: clean-gomod cleanup-tfvars
-	@echo "Cleaned up development environment and terraform.tfvars files."
+clean: cleanup-tfvars
+	@echo "Cleaned up generated terraform.tfvars files."
 
 # =============================================================================
 # TERRAFORM CONFIGURATION
