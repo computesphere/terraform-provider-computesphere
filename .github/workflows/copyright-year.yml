@@ -1,0 +1,72 @@
+name: Copyright Year Review
+
+# Keeps ComputeSphere copyright notices current. Runs every January (and on
+# demand), normalizes every "Copyright (c) <start>[-<end>] ComputeSphere LLC"
+# notice so its end year is the current year, and opens a PR if anything
+# changed. Fully self-contained: no external/third-party actions beyond
+# actions/checkout, no reusable/shared workflows, no secrets — safe for a
+# public repository. Only ComputeSphere LLC notices are touched; third-party
+# copyrights are never modified.
+
+on:
+  schedule:
+    - cron: "0 6 2 1 *" # 06:00 UTC on 2 January, annually
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Normalize copyright years
+        id: bump
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess, datetime, pathlib
+          year = datetime.datetime.now(datetime.timezone.utc).year
+          pat = re.compile(r'(Copyright \(c\) )(\d{4})(?:-(\d{4}))?( ComputeSphere LLC)')
+          def repl(m):
+              start = int(m.group(2))
+              span = str(start) if start >= year else f"{start}-{year}"
+              return f"{m.group(1)}{span}{m.group(4)}"
+          changed = False
+          for f in subprocess.check_output(["git", "ls-files"]).decode().splitlines():
+              p = pathlib.Path(f)
+              try:
+                  txt = p.read_text()
+              except (UnicodeDecodeError, IsADirectoryError, FileNotFoundError):
+                  continue
+              new = pat.sub(repl, txt)
+              if new != txt:
+                  p.write_text(new)
+                  changed = True
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"changed={'true' if changed else 'false'}\n")
+              fh.write(f"year={year}\n")
+          PY
+
+      - name: Open pull request
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YEAR: ${{ steps.bump.outputs.year }}
+        run: |
+          set -euo pipefail
+          BRANCH="chore/copyright-${YEAR}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git commit -am "chore: update ComputeSphere copyright year to ${YEAR}"
+          git push --force-with-lease -u origin "$BRANCH"
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            echo "A PR already exists for $BRANCH."
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore: update copyright year to ${YEAR}" \
+              --body "Automated annual copyright-year review: updates ComputeSphere copyright notices to end at ${YEAR}. Please review and merge. (Required CI checks may need a manual re-run, since PRs opened by the built-in GITHUB_TOKEN do not trigger other workflows.)"
+          fi
