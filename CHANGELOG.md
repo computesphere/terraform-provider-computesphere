@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `computesphere_deployment`: add public docker build args and private-image
+  registry auth. New optional attributes: `build_args` (map of string, PUBLIC
+  values only — baked into image layers, never secrets), `image_type`
+  (`public`|`private`), `image_provider`, `image_username`, `image_password`
+  (sensitive), and `image_url`. Wired into both create and update. Bumps the
+  `computesphere-go` SDK to v0.3.0.
+
 ## 1.0.2
 
 - Relicense under the Mozilla Public License 2.0 (MPL-2.0), the standard

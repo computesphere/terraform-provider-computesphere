@@ -45,6 +45,12 @@ type deploymentResourceModel struct {
 	Type          types.String `tfsdk:"type"`
 	PlanID        types.String `tfsdk:"plan_id"`
 	Image         types.String `tfsdk:"image"`
+	ImageType     types.String `tfsdk:"image_type"`
+	ImageProvider types.String `tfsdk:"image_provider"`
+	ImageUsername types.String `tfsdk:"image_username"`
+	ImagePassword types.String `tfsdk:"image_password"`
+	ImageURL      types.String `tfsdk:"image_url"`
+	BuildArgs     types.Map    `tfsdk:"build_args"`
 	Port          types.Int64  `tfsdk:"port"`
 	SphereCount   types.Int64  `tfsdk:"sphere_count"`
 	EnvVars       types.Map    `tfsdk:"env_vars"`
@@ -67,6 +73,63 @@ func mapToStringPtr(ctx context.Context, m types.Map, diags *diag.Diagnostics) *
 	out := map[string]string{}
 	diags.Append(m.ElementsAs(ctx, &out, false)...)
 	return &out
+}
+
+func strPtr(s types.String) *string {
+	if s.IsNull() || s.IsUnknown() || s.ValueString() == "" {
+		return nil
+	}
+	v := s.ValueString()
+	return &v
+}
+
+// buildUpdateBody assembles the DeploymentUpdateRequest from the model, wiring
+// the container image (name + optional private-registry auth) and any public
+// docker build args. Nil sub-objects are omitted so an update only touches the
+// fields the practitioner actually set.
+func buildUpdateBody(ctx context.Context, plan deploymentResourceModel, diags *diag.Diagnostics) csv2.DeploymentUpdateRequest {
+	upd := csv2.DeploymentUpdateRequest{}
+
+	img := csv2.DeploymentUpdateRequest_Image{}
+	imgSet := false
+	if name := strPtr(plan.Image); name != nil {
+		img.Name = name
+		imgSet = true
+	}
+	if t := strPtr(plan.ImageType); t != nil {
+		it := csv2.DeploymentUpdateRequestImageType(*t)
+		img.Type = &it
+		imgSet = true
+	}
+	if p := strPtr(plan.ImageProvider); p != nil {
+		img.Provider = p
+		imgSet = true
+	}
+	if u := strPtr(plan.ImageUsername); u != nil {
+		img.Username = u
+		imgSet = true
+	}
+	if pw := strPtr(plan.ImagePassword); pw != nil {
+		img.Password = pw
+		imgSet = true
+	}
+	if url := strPtr(plan.ImageURL); url != nil {
+		img.Url = url
+		imgSet = true
+	}
+	if imgSet {
+		upd.Image = &img
+	}
+
+	if args := mapToStringPtr(ctx, plan.BuildArgs, diags); args != nil {
+		upd.BuildConfig = &csv2.DeploymentUpdateRequest_BuildConfig{BuildArgs: args}
+	}
+
+	if !plan.Port.IsNull() {
+		p := int(plan.Port.ValueInt64())
+		upd.Port = &p
+	}
+	return upd
 }
 
 func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -151,11 +214,46 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
+	// Apply private-registry auth and/or public build args via the update
+	// surface before deploying; the create request only carries a flat image
+	// name. Skipped unless one of these fields is set, so the common
+	// public-image path stays a single create+deploy.
+	if deploymentNeedsUpdate(ctx, plan, &resp.Diagnostics) {
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, depID, upd); uerr != nil {
+			resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
+			return
+		} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+			return
+		}
+	}
+
 	if !r.deploy(ctx, depID, plan, &resp.Diagnostics) {
 		return
 	}
 	r.refreshStatus(ctx, depID, &plan, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// deploymentNeedsUpdate reports whether the model sets any field that must be
+// applied through the update surface (private-image auth or public build args)
+// rather than the create request.
+func deploymentNeedsUpdate(ctx context.Context, plan deploymentResourceModel, diags *diag.Diagnostics) bool {
+	if strPtr(plan.ImageType) != nil ||
+		strPtr(plan.ImageProvider) != nil ||
+		strPtr(plan.ImageUsername) != nil ||
+		strPtr(plan.ImagePassword) != nil ||
+		strPtr(plan.ImageURL) != nil {
+		return true
+	}
+	return mapToStringPtr(ctx, plan.BuildArgs, diags) != nil
 }
 
 // deploy triggers a deploy and, when wait_for_ready is set, blocks until the
@@ -298,13 +396,9 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	plan.ID = state.ID
 
-	upd := csv2.DeploymentUpdateRequest{}
-	if !plan.Image.IsNull() && plan.Image.ValueString() != "" {
-		upd.Image = &map[string]interface{}{"name": plan.Image.ValueString()} // update uses object form per SDK
-	}
-	if !plan.Port.IsNull() {
-		p := int(plan.Port.ValueInt64())
-		upd.Port = &p
+	upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 	if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd); uerr != nil {
 		resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
