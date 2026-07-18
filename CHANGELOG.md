@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.1
+
+- Re-release of the build_args + private-image auth change under a clean
+  version (1.1.0 was withdrawn). No functional difference from the withdrawn
+  1.1.0.
 
 - `computesphere_deployment`: add public docker build args and private-image
   registry auth. New optional attributes: `build_args` (map of string, PUBLIC
