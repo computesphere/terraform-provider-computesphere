@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -121,7 +123,7 @@ func (p *ComputeSphereProvider) Schema(_ context.Context, _ provider.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Optional:    true,
-				Description: "The ComputeSphere API URL. Can also be set via the COMPUTESPHERE_API_URL environment variable.",
+				Description: "The ComputeSphere API base URL. Defaults to `" + defaultAPIURL + "`. Values without a scheme or version path are normalized (e.g. `api.computesphere.com` becomes `" + defaultAPIURL + "`). Can also be set via the COMPUTESPHERE_API_URL environment variable. Only set this for non-default topologies.",
 			},
 			"api_token": schema.StringAttribute{
 				Optional:    true,
@@ -212,7 +214,19 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	tflog.Debug(ctx, "Creating ComputeSphere API client")
 
 	// Build the public v2 SDK client used by every resource and datasource.
-	v2Base := v2BaseURL(p.Host)
+	v2Base, urlErr := normalizeAPIURL(p.Host)
+	if urlErr != nil {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("api_url"),
+			"Invalid ComputeSphere API URL",
+			fmt.Sprintf(
+				"The provider cannot create the ComputeSphere API client because the API URL is invalid: %s.\n\n"+
+					"Expected a URL of the form %s. Set a valid value in the configuration or via the COMPUTESPHERE_API_URL environment variable, or omit it to use the default.",
+				urlErr, defaultAPIURL,
+			),
+		)
+		return
+	}
 	v2Opts := []csv2.ClientOption{
 		csv2.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
 			if p.APIToken != "" {
@@ -247,26 +261,46 @@ func (p *ComputeSphereProvider) Configure(ctx context.Context, req provider.Conf
 	resp.ResourceData = data
 }
 
-// v2BaseURL normalizes the provider's Host attribute (which points at the
-// v1 API, e.g. https://api.computesphere.com/api/v1) into the v2 base URL
-// (https://api.computesphere.com/api/v2). If Host is empty or doesn't
-// contain a /api/vX suffix the caller's value is returned unchanged so
-// consumers with unusual topologies can point directly at /api/v2.
-func v2BaseURL(host string) string {
-	if host == "" {
-		return ""
+// defaultAPIURL is the canonical base URL for the ComputeSphere v2 API.
+const defaultAPIURL = "https://api.computesphere.com/v2"
+
+// normalizeAPIURL resolves the raw api_url value (config attribute or
+// COMPUTESPHERE_API_URL) into the v2 base URL the SDK client is built with.
+// An empty value falls back to defaultAPIURL, a schemeless value (e.g.
+// "api.computesphere.com") gets "https://" prepended, and an empty or legacy
+// (/api/v1, /api/v2) path is rewritten to /v2 — the path the live API serves
+// v2 on. Any other explicit path is preserved unchanged so consumers with
+// unusual topologies can point directly at their own base path. Invalid or
+// non-http(s) values return an error so misconfiguration surfaces at
+// provider configure time instead of as a cryptic failure on first apply.
+func normalizeAPIURL(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return defaultAPIURL, nil
 	}
-	// Swap /api/v1 → /api/v2, and /api/v1/ → /api/v2/.
-	swaps := []struct{ old, new string }{
-		{"/api/v1/", "/api/v2/"},
-		{"/api/v1", "/api/v2"},
+	// Bare hosts like "api.computesphere.com" parse as a path, not a host;
+	// assume HTTPS when no scheme was given.
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
 	}
-	for _, s := range swaps {
-		if strings.HasSuffix(host, s.old) {
-			return strings.TrimSuffix(host, s.old) + s.new
-		}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "", fmt.Errorf("could not parse %q: %w", raw, err)
 	}
-	return host
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return "", fmt.Errorf("unsupported scheme %q in %q, expected http or https", u.Scheme, raw)
+	}
+	if u.Host == "" {
+		return "", fmt.Errorf("missing host in %q", raw)
+	}
+	switch strings.TrimSuffix(u.Path, "/") {
+	case "", "/api/v1", "/api/v2":
+		// Default and legacy version paths all map to the live v2 base path.
+		u.Path = "/v2"
+	default:
+		u.Path = strings.TrimSuffix(u.Path, "/")
+	}
+	return u.String(), nil
 }
 
 func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.Resource {

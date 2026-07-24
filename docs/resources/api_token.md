@@ -16,7 +16,8 @@ Manages an API token resource. The token secret is only returned once, at creati
 terraform {
   required_providers {
     computesphere = {
-      source = "computesphere.com/computesphere/computesphere"
+      source  = "computesphere/computesphere"
+      version = "~> 1.1"
     }
   }
 }

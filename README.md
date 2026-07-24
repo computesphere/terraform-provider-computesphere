@@ -21,7 +21,7 @@ This is the official Terraform provider for managing resources on [ComputeSphere
    Make sure you have Terraform and Go installed (see above).
 
 2. **Install the Provider:**  
-   See [CONTRIBUTING.md](./CONTRIBUTING.md) for instructions on building and installing the provider locally.
+   `terraform init` installs the provider from the [Terraform Registry](https://registry.terraform.io/providers/computesphere/computesphere/latest). To build and install a local development version instead, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 3. **Configure the Provider:**  
    Add the following to your Terraform configuration:
@@ -29,7 +29,8 @@ This is the official Terraform provider for managing resources on [ComputeSphere
    terraform {
      required_providers {
        computesphere = {
-         source = "computesphere.com/computesphere/computesphere"
+         source  = "computesphere/computesphere"
+         version = "~> 1.1"
        }
      }
    }

@@ -16,7 +16,8 @@ Manages a deployment: a running instance of a service in an environment. Creatin
 terraform {
   required_providers {
     computesphere = {
-      source = "computesphere.com/computesphere/computesphere"
+      source  = "computesphere/computesphere"
+      version = "~> 1.1"
     }
   }
 }
