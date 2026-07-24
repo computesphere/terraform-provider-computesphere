@@ -1,5 +1,6 @@
 provider "computesphere" {
-  api_token  = "your-api-token"        # or set COMPUTESPHERE_API_TOKEN env variable
-  account_id = "your-account-id"       # or set COMPUTESPHERE_ACCOUNT_ID env variable
-  api_url    = "api.computesphere.com" # or set COMPUTESPHERE_API_URL env variable
+  api_token  = "your-api-token"  # or set COMPUTESPHERE_API_TOKEN
+  account_id = "your-account-id" # or set COMPUTESPHERE_ACCOUNT_ID
+  # api_url defaults to https://api.computesphere.com/v2 — only set it for
+  # non-default topologies, e.g. api_url = "https://api.computesphere.com/v2"
 }

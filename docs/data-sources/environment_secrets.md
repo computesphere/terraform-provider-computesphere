@@ -16,7 +16,8 @@ Secret environment variables for an environment.
 terraform {
   required_providers {
     computesphere = {
-      source = "computesphere.com/computesphere/computesphere"
+      source  = "computesphere/computesphere"
+      version = "~> 1.1"
     }
   }
 }
