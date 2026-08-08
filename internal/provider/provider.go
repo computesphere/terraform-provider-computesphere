@@ -23,6 +23,7 @@ import (
 
 	alertresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/resource"
 	apitokenresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/api_token/resource"
+	customdomainresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/custom_domain/resource"
 	deploymentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/deployment/resource"
 	environmentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/resource"
 	guardrailresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/resource"
@@ -308,6 +309,7 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		notificationresource.NewNotificationSettingResource,
 		alertresource.NewAlertResource,
 		deploymentresource.NewDeploymentResource,
+		customdomainresource.NewCustomDomainResource,
 		environmentresource.NewEnvironmentResource,
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
