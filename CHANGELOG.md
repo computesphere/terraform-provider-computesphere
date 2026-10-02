@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- New resource `computesphere_database`: a SphereDB database (managed
+  PostgreSQL). Set `instance_type` (e.g. `pg-2c-4g`, Standard 2),
+  `high_availability` (`none`, `standby`, `three_zone`) and `storage_gb`;
+  instance type, high availability and storage change in place. `plan` is
+  accepted but deprecated, and conflicts with `instance_type`.
+- New data source `computesphere_database_instance_types`: the instance-type
+  catalog with vCPU, memory, connection limit, included storage and monthly
+  price for an environment's region.
+- Needs the `computesphere-go` SDK release that carries the SphereDB
+  operations (newer than v0.3.0).
+
 ## 1.1.1
 
 - Re-release of the build_args + private-image auth change under a clean

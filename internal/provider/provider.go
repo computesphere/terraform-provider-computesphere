@@ -24,6 +24,7 @@ import (
 	alertresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/resource"
 	apitokenresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/api_token/resource"
 	customdomainresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/custom_domain/resource"
+	databaseresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/database/resource"
 	deploymentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/deployment/resource"
 	environmentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/resource"
 	guardrailresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/resource"
@@ -35,6 +36,7 @@ import (
 	// Datasource imports
 
 	alertdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/datasource"
+	databasedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/database/datasource"
 	environmentdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/datasource"
 	guardraildatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/datasource"
 	notificationdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/datasource"
@@ -310,6 +312,7 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		alertresource.NewAlertResource,
 		deploymentresource.NewDeploymentResource,
 		customdomainresource.NewCustomDomainResource,
+		databaseresource.NewDatabaseResource,
 		environmentresource.NewEnvironmentResource,
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
@@ -324,6 +327,7 @@ func (p *ComputeSphereProvider) DataSources(_ context.Context) []func() datasour
 		notificationdatasource.NewNotificationSettingDataSource,
 		alertdatasource.NewAlertDataSource,
 		alertdatasource.NewAlertsDataSource,
+		databasedatasource.NewInstanceTypesDataSource,
 		environmentdatasource.NewEnvironmentDataSource,
 		environmentdatasource.NewEnvironmentsDataSource,
 		environmentdatasource.NewEnvironmentVariablesDataSource,
