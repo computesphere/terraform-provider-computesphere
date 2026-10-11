@@ -31,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 423
         uncompressed: false
-        body: '{"object":"project","id":"9797c0cc-9e42-4be2-854d-bf982f4893fb","name":"tf-test-project","description":"Test project from acceptance test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:41:04.39812Z","updated_at":"2026-07-11T02:41:04.39812Z"}'
+        body: '{"object":"project","id":"00000001-0000-4000-8000-000000000001","name":"tf-test-project","description":"Test project from acceptance test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:41:04.39812Z","updated_at":"2026-07-11T02:41:04.39812Z"}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
@@ -56,7 +56,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 711a4ab3-6aa1-46b2-93a7-3d7dbfdedc9c
+                - 00000002-0000-4000-8000-000000000002
         status: 201 Created
         code: 201
         duration: 314.692292ms
@@ -78,7 +78,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/projects/9797c0cc-9e42-4be2-854d-bf982f4893fb
+        url: https://api.computesphere.com/v2/projects/00000001-0000-4000-8000-000000000001
         method: GET
       response:
         proto: HTTP/2.0
@@ -88,7 +88,7 @@ interactions:
         trailer: {}
         content_length: 423
         uncompressed: false
-        body: '{"object":"project","id":"9797c0cc-9e42-4be2-854d-bf982f4893fb","name":"tf-test-project","description":"Test project from acceptance test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:41:04.39812Z","updated_at":"2026-07-11T02:41:04.39812Z"}'
+        body: '{"object":"project","id":"00000001-0000-4000-8000-000000000001","name":"tf-test-project","description":"Test project from acceptance test","account_id":"11111111-1111-1111-1111-111111111111","user_id":null,"created_by":null,"active":false,"alert_enabled":false,"service_count":0,"deployment_count":0,"sphere_count":0,"last_opened_at":null,"created_at":"2026-07-11T02:41:04.39812Z","updated_at":"2026-07-11T02:41:04.39812Z"}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -115,7 +115,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 91017e1d-86c7-4f7d-bf1f-f33833433aa2
+                - 00000003-0000-4000-8000-000000000003
         status: 200 OK
         code: 200
         duration: 91.235083ms
@@ -137,7 +137,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/projects/9797c0cc-9e42-4be2-854d-bf982f4893fb?cascade=true
+        url: https://api.computesphere.com/v2/projects/00000001-0000-4000-8000-000000000001?cascade=true
         method: DELETE
       response:
         proto: HTTP/2.0
@@ -168,7 +168,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - d133bd15-0a32-42ab-921e-4c5f13218b85
+                - 00000004-0000-4000-8000-000000000004
         status: 204 No Content
         code: 204
         duration: 97.300417ms
