@@ -31,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 497
         uncompressed: false
-        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"22222222-2222-2222-2222-222222222222","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949549Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}'
+        body: '{"object":"team","id":"00000208-0000-4000-8000-000000000208","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"22222222-2222-2222-2222-222222222222","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949549Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
@@ -56,7 +56,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - b14fdfe6-8dfe-4d43-a01a-8b844ff6da5c
+                - 00000209-0000-4000-8000-000000000209
         status: 201 Created
         code: 201
         duration: 322.236666ms
@@ -78,7 +78,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/teams/b658f667-0862-40d3-bd19-c7346eaf2c66
+        url: https://api.computesphere.com/v2/teams/00000208-0000-4000-8000-000000000208
         method: GET
       response:
         proto: HTTP/2.0
@@ -88,7 +88,7 @@ interactions:
         trailer: {}
         content_length: 494
         uncompressed: false
-        body: '{"object":"team","id":"b658f667-0862-40d3-bd19-c7346eaf2c66","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"22222222-2222-2222-2222-222222222222","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}'
+        body: '{"object":"team","id":"00000208-0000-4000-8000-000000000208","name":"example-team","description":"A sample ComputeSphere team created via Terraform","account_id":"11111111-1111-1111-1111-111111111111","owner_id":"22222222-2222-2222-2222-222222222222","created_at":"2026-07-11T02:39:50.390618Z","updated_at":"2026-07-11T02:39:50.408949Z","members":[{"object":"team_member","id":"22222222-2222-2222-2222-222222222222","email":"member@example.com","first_name":"Ada","last_name":"Lovelace"}]}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -115,7 +115,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 9c3ac837-d846-483d-a1e5-36687b494a14
+                - 0000020a-0000-4000-8000-00000000020a
         status: 200 OK
         code: 200
         duration: 121.815334ms
@@ -137,7 +137,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/teams/b658f667-0862-40d3-bd19-c7346eaf2c66
+        url: https://api.computesphere.com/v2/teams/00000208-0000-4000-8000-000000000208
         method: DELETE
       response:
         proto: HTTP/2.0
@@ -168,7 +168,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 868e9def-2213-4683-b9b6-ddff35e0b38b
+                - 0000020b-0000-4000-8000-00000000020b
         status: 204 No Content
         code: 204
         duration: 97.52525ms

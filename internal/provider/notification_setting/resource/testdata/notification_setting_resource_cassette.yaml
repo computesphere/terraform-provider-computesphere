@@ -31,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 322
         uncompressed: false
-        body: '{"object":"notification_settings","id":"d08b2329-8d9e-4c27-b0af-5153cc2b123f","user_id":"22222222-2222-2222-2222-222222222222","billing":false,"payment":false,"deployment":false,"activity":false,"invites":false,"inapp_enabled":false,"email_enabled":true,"webhook_enabled":false,"emails":["user@example.com"],"webhooks":[]}'
+        body: '{"object":"notification_settings","id":"00000304-0000-4000-8000-000000000304","user_id":"22222222-2222-2222-2222-222222222222","billing":false,"payment":false,"deployment":false,"activity":false,"invites":false,"inapp_enabled":false,"email_enabled":true,"webhook_enabled":false,"emails":["user@example.com"],"webhooks":[]}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -90,7 +90,7 @@ interactions:
         trailer: {}
         content_length: 322
         uncompressed: false
-        body: '{"object":"notification_settings","id":"d08b2329-8d9e-4c27-b0af-5153cc2b123f","user_id":"22222222-2222-2222-2222-222222222222","billing":false,"payment":false,"deployment":false,"activity":false,"invites":false,"inapp_enabled":false,"email_enabled":true,"webhook_enabled":false,"emails":["user@example.com"],"webhooks":[]}'
+        body: '{"object":"notification_settings","id":"00000304-0000-4000-8000-000000000304","user_id":"22222222-2222-2222-2222-222222222222","billing":false,"payment":false,"deployment":false,"activity":false,"invites":false,"inapp_enabled":false,"email_enabled":true,"webhook_enabled":false,"emails":["user@example.com"],"webhooks":[]}'
         headers:
             Accept-Ranges:
                 - bytes

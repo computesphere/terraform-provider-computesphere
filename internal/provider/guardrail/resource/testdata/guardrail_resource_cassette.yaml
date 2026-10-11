@@ -31,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 389
         uncompressed: false
-        body: '{"object":"guardrail","id":"833bb26b-9ba8-4f26-9957-ef7b97b9c018","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]}'
+        body: '{"object":"guardrail","id":"00000301-0000-4000-8000-000000000301","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
@@ -88,7 +88,7 @@ interactions:
         trailer: {}
         content_length: 948
         uncompressed: false
-        body: '{"object":"list","items":[{"object":"guardrail","id":"833bb26b-9ba8-4f26-9957-ef7b97b9c018","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]},{"object":"guardrail","id":"525f19ec-4820-45b2-9c73-349c97d9a57f","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]}],"pagination":{"page":1,"page_size":20,"total":2,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
+        body: '{"object":"list","items":[{"object":"guardrail","id":"00000301-0000-4000-8000-000000000301","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]},{"object":"guardrail","id":"00000303-0000-4000-8000-000000000303","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]}],"pagination":{"page":1,"page_size":20,"total":2,"total_pages":1,"next":null,"prev":null,"next_cursor":null,"prev_cursor":null},"warnings":[]}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -137,7 +137,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/guardrails/833bb26b-9ba8-4f26-9957-ef7b97b9c018
+        url: https://api.computesphere.com/v2/guardrails/00000301-0000-4000-8000-000000000301
         method: GET
       response:
         proto: HTTP/2.0
@@ -147,7 +147,7 @@ interactions:
         trailer: {}
         content_length: 389
         uncompressed: false
-        body: '{"object":"guardrail","id":"833bb26b-9ba8-4f26-9957-ef7b97b9c018","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]}'
+        body: '{"object":"guardrail","id":"00000301-0000-4000-8000-000000000301","account_id":"11111111-1111-1111-1111-111111111111","created_by":"22222222-2222-2222-2222-222222222222","name":"example-guardrail","description":"A sample guardrail for testing","type":"custom","scope":"project","effect":"block","message":"This is a test guardrail.","status":true,"is_predefined_assigned":false,"rules":[]}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -196,7 +196,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/guardrails/833bb26b-9ba8-4f26-9957-ef7b97b9c018
+        url: https://api.computesphere.com/v2/guardrails/00000301-0000-4000-8000-000000000301
         method: DELETE
       response:
         proto: HTTP/2.0
