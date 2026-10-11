@@ -31,7 +31,7 @@ interactions:
         trailer: {}
         content_length: 402
         uncompressed: false
-        body: '{"object":"api_token_created","token":{"object":"api_token","id":"a1a88b49-1f57-41d5-be71-1d9852ec4bbf","name":"example-token","scope":"full","user_id":"22222222-2222-2222-2222-222222222222","account_id":"11111111-1111-1111-1111-111111111111","account_ids":[],"project_ids":[],"expiry":"2027-01-01T00:00:00Z","created_at":"2026-07-11T02:45:09.088712Z"},"secret":"csph_0ts8G8pVCa67jetA7CQtJkO0pQGvzTYP"}'
+        body: '{"object":"api_token_created","token":{"object":"api_token","id":"00000066-0000-4000-8000-000000000066","name":"example-token","scope":"full","user_id":"22222222-2222-2222-2222-222222222222","account_id":"11111111-1111-1111-1111-111111111111","account_ids":[],"project_ids":[],"expiry":"2027-01-01T00:00:00Z","created_at":"2026-07-11T02:45:09.088712Z"},"secret":"csph_REDACTED"}'
         headers:
             Cache-Control:
                 - private, max-age=0, must-revalidate
@@ -56,7 +56,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - a869e1bd-423b-4f6a-8f4b-e03c1c2f1b51
+                - 00000067-0000-4000-8000-000000000067
         status: 201 Created
         code: 201
         duration: 358.302375ms
@@ -78,7 +78,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/api-tokens/a1a88b49-1f57-41d5-be71-1d9852ec4bbf
+        url: https://api.computesphere.com/v2/api-tokens/00000066-0000-4000-8000-000000000066
         method: GET
       response:
         proto: HTTP/2.0
@@ -88,7 +88,7 @@ interactions:
         trailer: {}
         content_length: 314
         uncompressed: false
-        body: '{"object":"api_token","id":"a1a88b49-1f57-41d5-be71-1d9852ec4bbf","name":"example-token","scope":"full","user_id":"22222222-2222-2222-2222-222222222222","account_id":"11111111-1111-1111-1111-111111111111","account_ids":[],"project_ids":[],"expiry":"2027-01-01T00:00:00Z","created_at":"2026-07-11T02:45:09.088712Z"}'
+        body: '{"object":"api_token","id":"00000066-0000-4000-8000-000000000066","name":"example-token","scope":"full","user_id":"22222222-2222-2222-2222-222222222222","account_id":"11111111-1111-1111-1111-111111111111","account_ids":[],"project_ids":[],"expiry":"2027-01-01T00:00:00Z","created_at":"2026-07-11T02:45:09.088712Z"}'
         headers:
             Accept-Ranges:
                 - bytes
@@ -115,7 +115,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 579970a9-c0f6-4437-994a-09136d53f223
+                - 00000068-0000-4000-8000-000000000068
         status: 200 OK
         code: 200
         duration: 96.351333ms
@@ -137,7 +137,7 @@ interactions:
                 - some-api-token
             X-Account-Id:
                 - 11111111-1111-1111-1111-111111111111
-        url: https://api.computesphere.com/v2/api-tokens/a1a88b49-1f57-41d5-be71-1d9852ec4bbf
+        url: https://api.computesphere.com/v2/api-tokens/00000066-0000-4000-8000-000000000066
         method: DELETE
       response:
         proto: HTTP/2.0
@@ -168,7 +168,7 @@ interactions:
             X-Content-Type-Options:
                 - nosniff
             X-Request-Id:
-                - 940af5c7-4dc8-452e-966d-4872a3e9da69
+                - 00000069-0000-4000-8000-000000000069
         status: 204 No Content
         code: 204
         duration: 117.972542ms
