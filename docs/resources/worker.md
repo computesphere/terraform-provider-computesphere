@@ -104,6 +104,7 @@ moved {
 - `dockerfile` (String) Dockerfile path of a Docker build. Changing it creates a new background worker.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes. Changing it creates a new background worker.
+- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Changing it creates a new background worker.
 - `git_url` (String) Repository to build from. Set this or `image`. Changing it creates a new background worker.
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`. Changing it creates a new background worker.
 - `image_password` (String, Sensitive) Registry password or token of a private image. Kept in state as a sensitive value; the API never returns it. Changing it creates a new background worker.

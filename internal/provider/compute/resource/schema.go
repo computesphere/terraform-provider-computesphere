@@ -151,8 +151,10 @@ var attrDefs = map[string]attrDef{
 	"git_url":           optString("Repository to build from. Set this or `image`."),
 	"branch":            optString("Branch to build and to deploy on push."),
 	"git_connection_id": optString("Git connection that clones the repository and delivers pushes."),
-	"root_dir":          optString("The service's directory in a monorepo."),
-	"root_directory":    optString("The site's directory in a monorepo."),
+	"git_repo_id": optString("The repository's id at its git provider, e.g. a GitLab project id. Needed for " +
+		"GitLab sources."),
+	"root_dir":       optString("The service's directory in a monorepo."),
+	"root_directory": optString("The site's directory in a monorepo."),
 	"watch_paths": func(k kind, replace bool) schema.Attribute {
 		return schema.ListAttribute{Optional: true, ElementType: types.StringType, PlanModifiers: listMods(replace),
 			Description: describe(k, replace, "gitignore-style globs; a push builds only when a changed file "+

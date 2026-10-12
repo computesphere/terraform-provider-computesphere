@@ -40,6 +40,7 @@ type model struct {
 	GitURL           types.String `tfsdk:"git_url"`
 	Branch           types.String `tfsdk:"branch"`
 	GitConnectionID  types.String `tfsdk:"git_connection_id"`
+	GitRepoID        types.String `tfsdk:"git_repo_id"`
 	RootDir          types.String `tfsdk:"root_dir"`
 	RootDirectory    types.String `tfsdk:"root_directory"`
 	WatchPaths       types.List   `tfsdk:"watch_paths"`

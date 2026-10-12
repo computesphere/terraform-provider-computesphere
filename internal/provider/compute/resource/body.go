@@ -13,7 +13,8 @@ import (
 // it and it is set, and a field removed from the configuration can be sent
 // as JSON null (the change body's way to clear a saved build setting).
 // Server-only fields (tag, is_build_complete, webhook_id, pipeline_tier, a
-// plan override, custom_domain, db_config, ci_config) are never sent.
+// plan override, custom_domain, db_config) are never sent, and ci_config
+// carries only its customer field git_repo_id.
 
 func setString(body map[string]any, key string, v types.String) {
 	if !v.IsNull() && !v.IsUnknown() && v.ValueString() != "" {
@@ -128,6 +129,9 @@ func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) m
 		b["build_source"] = "git"
 	case present(m.Image) && m.Image.ValueString() != "":
 		b["build_source"] = "image"
+	}
+	if k.has("git_repo_id") && present(m.GitRepoID) && m.GitRepoID.ValueString() != "" {
+		b["ci_config"] = map[string]any{"git_repo_id": m.GitRepoID.ValueString()}
 	}
 	if k.has("root_dir") {
 		setString(b, "root_dir", m.RootDir)

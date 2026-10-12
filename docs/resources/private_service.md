@@ -107,6 +107,7 @@ moved {
 - `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
+- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Changing it creates a new private service.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `health_check` (Attributes) HTTP health check. A spherelet that fails it is taken out of traffic. (see [below for nested schema](#nestedatt--health_check))
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.

@@ -138,9 +138,10 @@ var (
 		"cron-job":          "type schedule build_config log_drains skip_redeploy deploy_policy trigger_on tag_pattern",
 		"static-site":       "type build_config networking skip_redeploy deploy_policy trigger_on tag_pattern",
 	}
-	// Server-only or refused fields; a resource never sends them.
+	// Server-only or refused fields; a resource never sends them. ci_config
+	// is allowed only with its customer field git_repo_id (checked below).
 	forbidden = []string{"tag", "is_build_complete", "webhook_id", "pipeline_tier", "plan_id", "plan",
-		"custom_domain", "db_config", "ci_config"}
+		"custom_domain", "db_config"}
 )
 
 // checkClosed fails when body has a key outside allowed, or a forbidden key.
@@ -154,6 +155,14 @@ func checkClosed(t *testing.T, what string, body map[string]any, allowed string)
 	for k := range body {
 		if !ok[k] {
 			bad = append(bad, k)
+		}
+		if k == "ci_config" {
+			ci, _ := body[k].(map[string]any)
+			for ck := range ci {
+				if ck != "git_repo_id" {
+					bad = append(bad, "ci_config."+ck)
+				}
+			}
 		}
 		for _, f := range forbidden {
 			if k == f {

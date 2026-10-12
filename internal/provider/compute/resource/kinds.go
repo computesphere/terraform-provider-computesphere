@@ -64,7 +64,7 @@ var commonAttrs = map[string]bool{
 
 var (
 	imageAttrs = []string{"image", "image_type", "image_provider", "image_username", "image_password", "image_url"}
-	gitAttrs   = []string{"git_url", "branch", "git_connection_id", "root_dir", "watch_paths", "build_args",
+	gitAttrs   = []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_dir", "watch_paths", "build_args",
 		"runtime_type", "language", "version", "build_command", "start_command", "dockerfile", "context"}
 )
 
@@ -99,7 +99,7 @@ var (
 			"container image or built from a git repository.",
 		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "predeploy_command",
 			"health_check", "autoscaling", "network_access", "url", "internal_url"}),
-		replace: []string{"predeploy_command"},
+		replace: []string{"predeploy_command", "git_repo_id"},
 	}
 	privateService = kind{
 		apiType: "private-service", typeName: "computesphere_private_service",
@@ -108,7 +108,7 @@ var (
 			"only by other services in the environment.",
 		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "predeploy_command",
 			"health_check", "autoscaling", "internal_url"}),
-		replace: []string{"predeploy_command"},
+		replace: []string{"predeploy_command", "git_repo_id"},
 	}
 	worker = kind{
 		apiType: "background-worker", typeName: "computesphere_worker",
@@ -127,7 +127,7 @@ var (
 		summary: "Manages a cron job in an environment: a command run on a schedule, from a container image or " +
 			"a git build.",
 		attrs:   join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command"}),
-		replace: imageAttrs,
+		replace: join(imageAttrs, []string{"git_repo_id"}),
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",

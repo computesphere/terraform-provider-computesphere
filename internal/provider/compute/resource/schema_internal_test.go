@@ -2,6 +2,19 @@ package provider
 
 import "testing"
 
+// git_repo_id is on every git-source kind except the static site, whose
+// create body has no ci_config, and no change body takes it.
+func TestGitRepoID(t *testing.T) {
+	for _, k := range kinds {
+		if k.has("git_repo_id") != !k.is(staticSite) {
+			t.Errorf("%s: git_repo_id presence wrong", k.typeName)
+		}
+		if k.has("git_repo_id") && !k.forcesReplace("git_repo_id") {
+			t.Errorf("%s: git_repo_id must force replacement", k.typeName)
+		}
+	}
+}
+
 // No compute resource exposes a server-only field or a plan override.
 func TestSchemas_noServerOnlyFields(t *testing.T) {
 	for _, k := range kinds {

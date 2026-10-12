@@ -298,6 +298,7 @@ resource "computesphere_private_service" "api" {
 %s
   git_url           = "acme/api"
   git_connection_id = "conn-1"
+  git_repo_id       = "4821"
   runtime_type      = "native"
   language          = "go"
   build_command     = "go build -o app ."
@@ -314,6 +315,10 @@ resource "computesphere_private_service" "api" {
 						checkClosed(t, "private service create", c, createKeys["private-service"])
 						if c["build_source"] != "git" || c["predeploy_command"] != "./app migrate" {
 							return fmt.Errorf("create body = %v", c)
+						}
+						ci, _ := c["ci_config"].(map[string]any)
+						if len(ci) != 1 || ci["git_repo_id"] != "4821" {
+							return fmt.Errorf("ci_config = %v, want only git_repo_id", c["ci_config"])
 						}
 						return nil
 					},
