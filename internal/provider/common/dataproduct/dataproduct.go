@@ -16,8 +16,8 @@ import (
 )
 
 // RefuseChange refuses, at plan time, a change to any of attrs on an
-// existing resource: a data product's engine and version can't change in
-// place, and replacing it would delete its data, so the plan stops with an
+// existing resource: a data product's name, environment, engine and version
+// can't change in place, and replacing it would delete its data, so the plan stops with an
 // error instead of planning a replacement. noun names the resource, e.g.
 // "cache".
 func RefuseChange(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse, noun string, attrs ...string) {
@@ -35,7 +35,7 @@ func RefuseChange(ctx context.Context, req resource.ModifyPlanRequest, resp *res
 			continue
 		}
 		resp.Diagnostics.AddAttributeError(path.Root(attr), fmt.Sprintf("%s can't change on an existing %s", attr, noun),
-			fmt.Sprintf("This %s runs %s %s, and it can't be changed in place. Changing it needs a new %s, which "+
+			fmt.Sprintf("This %s has %s %s, and it can't be changed in place. Changing it needs a new %s, which "+
 				"would start empty: create the new %s as a separate resource, move your data, then remove this one. "+
 				"To keep this %s, set %s back to %q.",
 				noun, attr, stateV.ValueString(), noun, noun, noun, attr, stateV.ValueString()))

@@ -11,7 +11,6 @@ import (
 
 func Schema(ctx context.Context) schema.Schema {
 	keep := []planmodifier.String{stringplanmodifier.UseStateForUnknown()}
-	replace := []planmodifier.String{stringplanmodifier.RequiresReplace()}
 	return schema.Schema{
 		Description: "Manages a SphereQueue broker: a dedicated RabbitMQ message broker the platform runs for you. " +
 			"Pick an instance type (see the `computesphere_queue_instance_types` data source); the platform " +
@@ -22,14 +21,14 @@ func Schema(ctx context.Context) schema.Schema {
 				Description: "Broker identifier.",
 			},
 			"name": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
+				Required: true,
 				Description: "Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. " +
-					"Changing it creates a new broker.",
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"environment_id": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
+				Required: true,
 				Description: "Environment the broker belongs to. Only services in this environment can reach it. " +
-					"Changing it creates a new broker.",
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("rabbitmq"),

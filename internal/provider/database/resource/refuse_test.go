@@ -58,9 +58,9 @@ func (f *fakeDatabasesAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// An engine or version change on an existing database is refused at plan
+// A name, environment, engine or version change on an existing database is refused at plan
 // time, never planned as a replacement that would start an empty database.
-func TestDatabaseResource_versionChangeRefused(t *testing.T) {
+func TestDatabaseResource_immutableChangesRefused(t *testing.T) {
 	dbresource.SetPollIntervalForTest(time.Millisecond)
 	api := &fakeDatabasesAPI{}
 	base := `
@@ -83,6 +83,14 @@ resource "computesphere_database" "example" {
 			{
 				Config:      fmt.Sprintf(base, `  version = "18"`),
 				ExpectError: regexp.MustCompile(`version can't change on an existing database`),
+			},
+			{
+				Config:      strings.Replace(fmt.Sprintf(base, ""), `name           = "app-db"`, `name           = "app-db-renamed"`, 1),
+				ExpectError: regexp.MustCompile(`name can't change on an existing database`),
+			},
+			{
+				Config:      strings.Replace(fmt.Sprintf(base, ""), "33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", 1),
+				ExpectError: regexp.MustCompile(`environment_id can't change on an\s+existing database`),
 			},
 			{
 				Config: fmt.Sprintf(base, `  version = "17"`),

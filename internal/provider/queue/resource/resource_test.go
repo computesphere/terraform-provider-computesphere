@@ -3,6 +3,7 @@ package provider_test
 import (
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -112,9 +113,9 @@ func TestAccQueueResource_basic(t *testing.T) {
 	})
 }
 
-// An engine or version change on an existing broker is refused at plan
+// A name, environment, engine or version change on an existing broker is refused at plan
 // time, never planned as a replacement that would drop its messages.
-func TestQueueResource_versionChangeRefused(t *testing.T) {
+func TestQueueResource_immutableChangesRefused(t *testing.T) {
 	queueresource.SetPollIntervalForTest(time.Millisecond)
 	api := newFakeQueueAPI(t)
 	api.version = "4.2"
@@ -134,10 +135,18 @@ resource "computesphere_queue" "example" {
 				Config:      sprintf(base, `  version = "4.3"`),
 				ExpectError: regexp.MustCompile(`version can't change on an existing broker`),
 			},
+			{
+				Config:      strings.Replace(sprintf(base, ""), `name           = "app-queue"`, `name           = "app-queue-renamed"`, 1),
+				ExpectError: regexp.MustCompile(`name can't change on an existing broker`),
+			},
+			{
+				Config:      strings.Replace(sprintf(base, ""), "33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", 1),
+				ExpectError: regexp.MustCompile(`environment_id can't change on an\s+existing broker`),
+			},
 			{Config: sprintf(base, "")},
 		},
 	})
 	if len(api.creates()) != 1 { // the test's own destroy is the only DELETE
-		t.Fatal("a version change must never replace the broker")
+		t.Fatal("an immutable change must never replace the broker")
 	}
 }

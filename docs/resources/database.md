@@ -76,8 +76,8 @@ output "database_status" {
 
 ### Required
 
-- `environment_id` (String) Environment the database belongs to. Changing it creates a new database.
-- `name` (String) Lowercase letters, digits and hyphens; unique in the environment. Changing it creates a new database.
+- `environment_id` (String) Environment the database belongs to. It can't change after create; a change is refused at plan time.
+- `name` (String) Lowercase letters, digits and hyphens; unique in the environment. It can't change after create; a change is refused at plan time.
 
 ### Optional
 

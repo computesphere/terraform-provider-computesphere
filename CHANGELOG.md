@@ -6,9 +6,10 @@
   PostgreSQL). Set `instance_type` (e.g. `pg-2c-4g`, Standard 2),
   `high_availability` (`none`, `standby`, `three_zone`) and `storage_gb`;
   instance type, high availability and storage change in place. `plan` is
-  accepted but deprecated, and conflicts with `instance_type`. An `engine` or
-  `version` change on an existing database is refused at plan time rather
-  than planned as a replacement, which would start an empty database.
+  accepted but deprecated, and conflicts with `instance_type`. A `name`,
+  `environment_id`, `engine` or `version` change on an existing database is
+  refused at plan time rather than planned as a replacement, which would
+  start an empty database.
 - New data source `computesphere_database_instance_types`: the instance-type
   catalog with vCPU, memory, connection limit, included storage and monthly
   price for an environment's region.
@@ -19,8 +20,8 @@
 - New resource `computesphere_queue`: a SphereQueue broker (managed
   RabbitMQ). Set `instance_type` (e.g. `sq-1c-2g-s20g`; a high-availability
   type, its id ending in `-ha`, runs three members); it changes in place. The password is never stored in state.
-- `computesphere_cache` and `computesphere_queue` refuse an `engine` or
-  `version` change at plan time too.
+- `computesphere_cache` and `computesphere_queue` refuse a `name`,
+  `environment_id`, `engine` or `version` change at plan time too.
 - New data sources `computesphere_cache_instance_types` and
   `computesphere_queue_instance_types`: the size catalogs with prices and
   availability for an environment.

@@ -75,9 +75,9 @@ output "cache_status" {
 
 ### Required
 
-- `environment_id` (String) Environment the cache belongs to. Only services in this environment can reach it. Changing it creates a new cache.
+- `environment_id` (String) Environment the cache belongs to. Only services in this environment can reach it. It can't change after create; a change is refused at plan time.
 - `instance_type` (String) Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` data source. A high-availability instance type (an id ending in `-ha`) adds a standby copy in another zone with automatic failover. Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted (or writes are refused with `noeviction`).
-- `name` (String) Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. Changing it creates a new cache.
+- `name` (String) Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. It can't change after create; a change is refused at plan time.
 
 ### Optional
 

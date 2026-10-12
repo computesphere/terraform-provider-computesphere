@@ -11,7 +11,6 @@ import (
 
 func Schema(ctx context.Context) schema.Schema {
 	keep := []planmodifier.String{stringplanmodifier.UseStateForUnknown()}
-	replace := []planmodifier.String{stringplanmodifier.RequiresReplace()}
 	return schema.Schema{
 		Description: "Manages a SphereCache cache: a managed Valkey cache the platform runs for you. " +
 			"Pick an instance type (see the `computesphere_cache_instance_types` data source) and an eviction " +
@@ -23,14 +22,14 @@ func Schema(ctx context.Context) schema.Schema {
 				Description: "Cache identifier.",
 			},
 			"name": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
+				Required: true,
 				Description: "Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. " +
-					"Changing it creates a new cache.",
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"environment_id": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
+				Required: true,
 				Description: "Environment the cache belongs to. Only services in this environment can reach it. " +
-					"Changing it creates a new cache.",
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("valkey"),

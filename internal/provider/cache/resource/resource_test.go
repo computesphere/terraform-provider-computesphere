@@ -3,6 +3,7 @@ package provider_test
 import (
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -121,9 +122,9 @@ func TestAccCacheResource_basic(t *testing.T) {
 	})
 }
 
-// An engine or version change on an existing cache is refused at plan time,
+// A name, environment, engine or version change on an existing cache is refused at plan time,
 // never planned as a replacement that would empty it.
-func TestCacheResource_versionChangeRefused(t *testing.T) {
+func TestCacheResource_immutableChangesRefused(t *testing.T) {
 	cacheresource.SetPollIntervalForTest(time.Millisecond)
 	api := newFakeCacheAPI(t)
 	api.version = "8.0" // an older version the API created earlier
@@ -144,6 +145,14 @@ resource "computesphere_cache" "example" {
 				ExpectError: regexp.MustCompile(`version can't change on an existing cache`),
 			},
 			{
+				Config:      strings.Replace(sprintf(base, ""), `name           = "app-cache"`, `name           = "app-cache-renamed"`, 1),
+				ExpectError: regexp.MustCompile(`name can't change on an existing cache`),
+			},
+			{
+				Config:      strings.Replace(sprintf(base, ""), "33333333-3333-3333-3333-333333333333", "55555555-5555-5555-5555-555555555555", 1),
+				ExpectError: regexp.MustCompile(`environment_id can't change on an\s+existing cache`),
+			},
+			{
 				// Leaving version out keeps the running one: nothing to do.
 				Config: sprintf(base, ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -153,6 +162,6 @@ resource "computesphere_cache" "example" {
 		},
 	})
 	if len(api.creates()) != 1 { // the test's own destroy is the only DELETE
-		t.Fatal("a version change must never replace the cache")
+		t.Fatal("an immutable change must never replace the cache")
 	}
 }

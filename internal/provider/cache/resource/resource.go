@@ -330,10 +330,11 @@ func (r *CacheResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-// ModifyPlan refuses an engine or version change on an existing cache
+// ModifyPlan refuses a name, environment, engine or version change on an
+// existing cache (no update body takes them)
 // instead of planning a replacement that would delete its data.
 func (r *CacheResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	dataproduct.RefuseChange(ctx, req, resp, "cache", "engine", "version")
+	dataproduct.RefuseChange(ctx, req, resp, "cache", "name", "environment_id", "engine", "version")
 }
 
 func (r *CacheResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

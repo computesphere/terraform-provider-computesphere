@@ -388,10 +388,11 @@ func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-// ModifyPlan refuses an engine or version change on an existing database
+// ModifyPlan refuses a name, environment, engine or version change on an
+// existing database (no update body takes them)
 // instead of planning a replacement that would delete its data.
 func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	dataproduct.RefuseChange(ctx, req, resp, "database", "engine", "version")
+	dataproduct.RefuseChange(ctx, req, resp, "database", "name", "environment_id", "engine", "version")
 }
 
 func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

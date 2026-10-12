@@ -316,10 +316,11 @@ func (r *QueueResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-// ModifyPlan refuses an engine or version change on an existing broker
+// ModifyPlan refuses a name, environment, engine or version change on an
+// existing broker (no update body takes them)
 // instead of planning a replacement that would delete its data.
 func (r *QueueResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	dataproduct.RefuseChange(ctx, req, resp, "broker", "engine", "version")
+	dataproduct.RefuseChange(ctx, req, resp, "broker", "name", "environment_id", "engine", "version")
 }
 
 func (r *QueueResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
