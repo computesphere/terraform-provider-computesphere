@@ -135,3 +135,51 @@ func TestGitToImageRefused(t *testing.T) {
 		})
 	}
 }
+
+// An image only known at apply (here: from a resource replaced in the same
+// run) on a git-built worker whose git_url is gone is refused at plan time
+// too, and no change is sent.
+func TestGitToImageRefused_unknownImage(t *testing.T) {
+	api := newFakeDeploymentsAPI(t)
+	git := `
+resource "terraform_data" "img" {
+  triggers_replace = "a"
+}
+
+resource "computesphere_worker" "x" {
+%s
+  git_url           = "group/app"
+  git_connection_id = "conn-1"
+}
+`
+	toImage := `
+resource "terraform_data" "img" {
+  triggers_replace = "b"
+}
+
+resource "computesphere_worker" "x" {
+%s
+  image = terraform_data.img.id
+}
+`
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{Config: fmt.Sprintf(git, ids)},
+			{
+				PreConfig:   api.reset,
+				Config:      fmt.Sprintf(toImage, ids),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Can't switch from git to an image in place`),
+			},
+			{
+				Config:      fmt.Sprintf(toImage, ids),
+				ExpectError: regexp.MustCompile(`Can't switch from git to an image in place`),
+			},
+			{Config: fmt.Sprintf(git, ids)},
+		},
+	})
+	if n := api.count("PATCH", ""); n != 0 {
+		t.Fatalf("a refused switch sent %d changes", n)
+	}
+}

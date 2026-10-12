@@ -113,29 +113,32 @@ func (r *computeResource) ModifyPlan(ctx context.Context, req resource.ModifyPla
 		return
 	}
 	r.refuseGitRepoIDChange(ctx, req.Plan, req.State, &resp.Diagnostics)
-	r.refuseGitToImage(ctx, req, resp)
+	r.refuseGitToImage(ctx, req.Plan, req.State, &resp.Diagnostics)
 }
 
 // refuseGitToImage refuses switching a git-built service to an image in
 // place. The API applies a change body's image before its build settings
 // and doesn't check the second before writing the first, so the switch
-// could be left half-applied.
-func (r *computeResource) refuseGitToImage(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+// could be left half-applied. At plan time an image that is still unknown
+// counts when git_url is gone or unknown, since it could become a switch;
+// Update checks again with the known values.
+func (r *computeResource) refuseGitToImage(ctx context.Context, plan, state attrGetter, diags *diag.Diagnostics) {
 	if !r.kind.has("image") || !r.kind.has("git_url") {
 		return
 	}
 	var planGit, stateGit, planImage types.String
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("git_url"), &planGit)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("git_url"), &stateGit)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image"), &planImage)...)
-	if resp.Diagnostics.HasError() {
+	diags.Append(plan.GetAttribute(ctx, path.Root("git_url"), &planGit)...)
+	diags.Append(state.GetAttribute(ctx, path.Root("git_url"), &stateGit)...)
+	diags.Append(plan.GetAttribute(ctx, path.Root("image"), &planImage)...)
+	if diags.HasError() {
 		return
 	}
 	set := func(v types.String) bool { return !v.IsNull() && !v.IsUnknown() && v.ValueString() != "" }
-	if !set(stateGit) || set(planGit) || !set(planImage) {
+	mayBeImage := set(planImage) || planImage.IsUnknown()
+	if !set(stateGit) || set(planGit) || !mayBeImage {
 		return
 	}
-	resp.Diagnostics.AddAttributeError(path.Root("image"), "Can't switch from git to an image in place",
+	diags.AddAttributeError(path.Root("image"), "Can't switch from git to an image in place",
 		fmt.Sprintf("This %s builds from git, and the API can't switch it to an image in one change yet. To run "+
 			"an image, create a new %s with it (under another resource name), move traffic or work over, then "+
 			"remove this one. Or keep git_url and leave image out.", r.kind.noun, r.kind.noun))
@@ -499,8 +502,9 @@ func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 	plan.ID = state.ID
-	// A value unknown at plan time is checked here, before any API call.
+	// Values unknown at plan time are checked here, before any API call.
 	r.refuseGitRepoIDChange(ctx, req.Plan, req.State, &resp.Diagnostics)
+	r.refuseGitToImage(ctx, req.Plan, req.State, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
