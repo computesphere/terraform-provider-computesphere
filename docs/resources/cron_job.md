@@ -105,7 +105,7 @@ moved {
 - `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
-- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create. Setting it on an imported or moved resource only records it; changing a recorded value is refused at plan time, because the API can't change it.
+- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create. The provider can't read it back, so on an imported or moved cron job set the id the service already uses; setting it there only records it. Removing it from the configuration keeps the recorded value, and changing a recorded value is refused at plan time, because the API can't change it.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`. Changing it creates a new cron job.
 - `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and increase `image_password_wo_version`.

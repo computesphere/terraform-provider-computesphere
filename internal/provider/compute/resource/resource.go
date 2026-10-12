@@ -234,6 +234,9 @@ func settleUnknowns(m *model) {
 	if m.Name.IsUnknown() {
 		m.Name = types.StringNull()
 	}
+	if m.GitRepoID.IsUnknown() {
+		m.GitRepoID = types.StringNull()
+	}
 }
 
 func waitFor(m model) bool { return m.WaitForReady.IsNull() || m.WaitForReady.ValueBool() }

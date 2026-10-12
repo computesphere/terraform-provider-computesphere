@@ -19,7 +19,8 @@
   pre-deploy command). The plan always comes from the service.
   `git_repo_id` (needed for GitLab sources) is on every type but the static
   site. It's sent at create; on an imported or moved resource, setting it
-  only records it, and changing a recorded value is refused at plan time.
+  only records it. Removing it from the configuration keeps the recorded
+  value, and changing a recorded value is refused at plan time.
 - `image_password` on the per-type resources is write-only (Terraform 1.11
   or later): never stored in state. Increase `image_password_wo_version` to
   rotate it; web and private services take the new password in place. A

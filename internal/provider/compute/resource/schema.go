@@ -162,9 +162,15 @@ var attrDefs = map[string]attrDef{
 	"git_url":           optString("Repository to build from. Set this or `image`."),
 	"branch":            optString("Branch to build and to deploy on push."),
 	"git_connection_id": optString("Git connection that clones the repository and delivers pushes."),
-	"git_repo_id": optString("The repository's id at its git provider, e.g. a GitLab project id. Needed for " +
-		"GitLab sources. Sent at create. Setting it on an imported or moved resource only records it; changing " +
-		"a recorded value is refused at plan time, because the API can't change it."),
+	"git_repo_id": func(k kind, _ bool) schema.Attribute {
+		return schema.StringAttribute{Optional: true, Computed: true,
+			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			Description: "The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab " +
+				"sources. Sent at create. The provider can't read it back, so on an imported or moved " +
+				k.noun + " set the id the service already uses; setting it there only records it. Removing it " +
+				"from the configuration keeps the recorded value, and changing a recorded value is refused at " +
+				"plan time, because the API can't change it."}
+	},
 	"root_dir":       optString("The service's directory in a monorepo."),
 	"root_directory": optString("The site's directory in a monorepo."),
 	"watch_paths": func(k kind, replace bool) schema.Attribute {

@@ -208,3 +208,63 @@ resource "computesphere_worker" "app" {
 		},
 	})
 }
+
+// Removing git_repo_id from the configuration keeps the recorded value, so
+// adding a different one afterwards is a change, and is refused.
+func TestGitRepoID_removeThenAddRefused(t *testing.T) {
+	api := newFakeDeploymentsAPI(t)
+	name := "computesphere_web_service.app"
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{Config: gitWebService("4821")},
+			{
+				Config: gitWebService(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(name, plancheck.ResourceActionNoop)},
+				},
+				Check: resource.TestCheckResourceAttr(name, "git_repo_id", "4821"),
+			},
+			{
+				Config:      gitWebService("9999"),
+				ExpectError: regexp.MustCompile(`git_repo_id can't change on an existing web service`),
+			},
+		},
+	})
+}
+
+// A git_repo_id only known at apply (here: from a resource replaced in the
+// same run) isn't checked when the plan is made; the apply fails with the
+// refusal and nothing reaches the API.
+func TestGitRepoID_unknownAtPlanRefusedAtApply(t *testing.T) {
+	api := newFakeDeploymentsAPI(t)
+	cfg := func(trigger string) string {
+		return fmt.Sprintf(`
+resource "terraform_data" "repo" {
+  triggers_replace = %q
+}
+
+resource "computesphere_web_service" "app" {
+%s
+  git_url           = "group/app"
+  git_connection_id = "conn-1"
+  git_repo_id       = terraform_data.repo.id
+}
+`, trigger, ids)
+	}
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{Config: cfg("a")},
+			{
+				PreConfig:   api.reset,
+				Config:      cfg("b"),
+				ExpectError: regexp.MustCompile(`git_repo_id can't change on an existing web service`),
+			},
+		},
+	})
+	// The test's own destroy is the only DELETE after the reset.
+	if n := api.count("PATCH", "") + api.count("POST", "/deployments") + api.count("PUT", ""); n != 0 {
+		t.Fatalf("a refused git_repo_id change reached the API (%d writes)", n)
+	}
+}
