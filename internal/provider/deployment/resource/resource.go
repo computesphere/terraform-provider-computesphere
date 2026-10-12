@@ -395,26 +395,53 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 	plan.ID = state.ID
+	plan.Name = state.Name
+	plan.Status = state.Status
 
-	upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd); uerr != nil {
-		resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
-		return
-	} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
-		resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+	patch := updateFieldsChanged(plan, state)
+	vars := !plan.EnvVars.Equal(state.EnvVars) || !plan.SecretVars.Equal(state.SecretVars)
+	if !patch && !vars && plan.SphereCount.Equal(state.SphereCount) {
+		// Only wait_for_ready changed: a provider setting, nothing to send.
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 		return
 	}
 
-	envVars := mapToStringPtr(ctx, plan.EnvVars, &resp.Diagnostics)
-	secretVars := mapToStringPtr(ctx, plan.SecretVars, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	if patch {
+		upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if plan.BuildArgs.IsNull() && !state.BuildArgs.IsNull() {
+			// An explicit null clears the saved build args.
+			if upd.BuildConfig == nil {
+				upd.BuildConfig = &csv2.DeploymentUpdateRequest_BuildConfig{}
+			}
+			upd.BuildConfig.Set("build_args", nil)
+		}
+		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd); uerr != nil {
+			resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
+			return
+		} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+			return
+		}
 	}
-	if envVars != nil || secretVars != nil {
-		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, csv2.SetEnvVarsRequest{EnvVars: envVars, SecretVars: secretVars}); everr != nil {
+
+	if vars {
+		// Send only the map that changed: an omitted map is left as it is, and
+		// an empty one clears it, so removing env_vars or secret_vars from the
+		// configuration removes the variables.
+		body := csv2.SetEnvVarsRequest{}
+		if !plan.EnvVars.Equal(state.EnvVars) {
+			body.EnvVars = mapOrEmpty(ctx, plan.EnvVars, &resp.Diagnostics)
+		}
+		if !plan.SecretVars.Equal(state.SecretVars) {
+			body.SecretVars = mapOrEmpty(ctx, plan.SecretVars, &resp.Diagnostics)
+		}
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
@@ -428,6 +455,27 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	r.refreshStatus(ctx, id, &plan, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// updateFieldsChanged reports whether a field sent through the update request
+// (image, registry auth, build args or port) differs between plan and state.
+func updateFieldsChanged(plan, state deploymentResourceModel) bool {
+	return !plan.Image.Equal(state.Image) ||
+		!plan.ImageType.Equal(state.ImageType) ||
+		!plan.ImageProvider.Equal(state.ImageProvider) ||
+		!plan.ImageUsername.Equal(state.ImageUsername) ||
+		!plan.ImagePassword.Equal(state.ImagePassword) ||
+		!plan.ImageURL.Equal(state.ImageURL) ||
+		!plan.BuildArgs.Equal(state.BuildArgs) ||
+		!plan.Port.Equal(state.Port)
+}
+
+// mapOrEmpty is the map's value, or an empty map when it is null.
+func mapOrEmpty(ctx context.Context, m types.Map, diags *diag.Diagnostics) *map[string]string {
+	if v := mapToStringPtr(ctx, m, diags); v != nil {
+		return v
+	}
+	return &map[string]string{}
 }
 
 func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
