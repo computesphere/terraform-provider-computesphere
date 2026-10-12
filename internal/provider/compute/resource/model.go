@@ -35,6 +35,7 @@ type model struct {
 	ImageProvider types.String `tfsdk:"image_provider"`
 	ImageUsername types.String `tfsdk:"image_username"`
 	ImagePassword types.String `tfsdk:"image_password"`
+	ImagePwVer    types.Int64  `tfsdk:"image_password_wo_version"`
 	ImageURL      types.String `tfsdk:"image_url"`
 
 	GitURL           types.String `tfsdk:"git_url"`

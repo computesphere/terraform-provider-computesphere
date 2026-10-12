@@ -38,6 +38,11 @@ func (k kind) forcesReplace(attr string) bool {
 	return false
 }
 
+// rotatesImagePassword reports whether the kind's change body can carry a
+// new registry password. A worker's change body takes no image settings and
+// a cron job's has no image object, so neither can today.
+func (k kind) rotatesImagePassword() bool { return k.is(webService) || k.is(privateService) }
+
 // is reports whether k and o are the same kind.
 func (k kind) is(o kind) bool { return k.apiType == o.apiType }
 
@@ -63,8 +68,12 @@ var commonAttrs = map[string]bool{
 }
 
 var (
-	imageAttrs = []string{"image", "image_type", "image_provider", "image_username", "image_password", "image_url"}
-	gitAttrs   = []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_dir", "watch_paths", "build_args",
+	imageAttrs = []string{"image", "image_type", "image_provider", "image_username", "image_password",
+		"image_password_wo_version", "image_url"}
+	// imageCredAttrs are the write-only registry password and its version:
+	// rotating it is never a reason to replace a resource.
+	imageCredAttrs = []string{"image_password", "image_password_wo_version"}
+	gitAttrs       = []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_dir", "watch_paths", "build_args",
 		"runtime_type", "language", "version", "build_command", "start_command", "dockerfile", "context"}
 )
 
@@ -118,7 +127,7 @@ var (
 		attrs: join(imageAttrs, gitAttrs, []string{"command", "sphere_count", "autoscaling"}),
 		// A worker's change body takes only the deploy settings today, so its
 		// image, command, build and autoscaling are set at create.
-		replace: join(imageAttrs, gitAttrs, []string{"command", "autoscaling"}),
+		replace: join(without(imageAttrs, imageCredAttrs...), gitAttrs, []string{"command", "autoscaling"}),
 	}
 	cronJob = kind{
 		apiType: "cron-job", typeName: "computesphere_cron_job",
@@ -127,7 +136,7 @@ var (
 		summary: "Manages a cron job in an environment: a command run on a schedule, from a container image or " +
 			"a git build.",
 		attrs:   join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command"}),
-		replace: join(imageAttrs, []string{"git_repo_id"}),
+		replace: join(without(imageAttrs, imageCredAttrs...), []string{"git_repo_id"}),
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",

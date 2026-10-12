@@ -114,7 +114,8 @@ func moveFromDeployment(ctx context.Context, k kind, d deploymentState, resp *re
 	carry("image_type", !d.ImageType.IsNull(), func() { m.ImageType = d.ImageType })
 	carry("image_provider", !d.ImageProvider.IsNull(), func() { m.ImageProvider = d.ImageProvider })
 	carry("image_username", !d.ImageUsername.IsNull(), func() { m.ImageUsername = d.ImageUsername })
-	carry("image_password", !d.ImagePassword.IsNull(), func() { m.ImagePassword = d.ImagePassword })
+	// image_password is write-only on the target: it leaves state here and
+	// comes from the configuration from now on.
 	carry("image_url", !d.ImageURL.IsNull(), func() { m.ImageURL = d.ImageURL })
 	carry("build_args", !d.BuildArgs.IsNull(), func() { m.BuildArgs = d.BuildArgs })
 	carry("port", !d.Port.IsNull(), func() { m.Port = d.Port })

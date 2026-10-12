@@ -94,6 +94,8 @@ moved {
 
 ### Optional
 
+> **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
+
 - `branch` (String) Branch to build and to deploy on push.
 - `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`.
 - `build_command` (String) Build command.
@@ -106,7 +108,8 @@ moved {
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Changing it creates a new cron job.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`. Changing it creates a new cron job.
-- `image_password` (String, Sensitive) Registry password or token of a private image. Kept in state as a sensitive value; the API never returns it. Changing it creates a new cron job.
+- `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and increase `image_password_wo_version`.
+- `image_password_wo_version` (Number) Version of `image_password`. A cron job can't take a new registry password after create yet, so changing it is refused at plan time.
 - `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`. Changing it creates a new cron job.
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`. Changing it creates a new cron job.
 - `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password. Changing it creates a new cron job.

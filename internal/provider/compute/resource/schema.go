@@ -140,10 +140,19 @@ var attrDefs = map[string]attrDef{
 		"`image_provider`, `image_username`, `image_password` and `image_url`."),
 	"image_provider": optString("Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`."),
 	"image_username": optString("Registry username of a private image."),
-	"image_password": func(k kind, replace bool) schema.Attribute {
-		return schema.StringAttribute{Optional: true, Sensitive: true, PlanModifiers: strMods(replace),
-			Description: describe(k, replace, "Registry password or token of a private image. Kept in state as a "+
-				"sensitive value; the API never returns it.")}
+	"image_password": func(k kind, _ bool) schema.Attribute {
+		return schema.StringAttribute{Optional: true, Sensitive: true, WriteOnly: true,
+			Description: "Registry password or token of a private image. Write-only: it is sent to the API and " +
+				"never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and " +
+				"increase `image_password_wo_version`."}
+	},
+	"image_password_wo_version": func(k kind, _ bool) schema.Attribute {
+		desc := "Version of `image_password`. Increase it to send a new password; the change applies in place."
+		if !k.rotatesImagePassword() {
+			desc = "Version of `image_password`. A " + k.noun + " can't take a new registry password after " +
+				"create yet, so changing it is refused at plan time."
+		}
+		return schema.Int64Attribute{Optional: true, Description: desc}
 	},
 	"image_url": optString("Registry endpoint of a private image. Needed for providers that sign in with a " +
 		"username and password."),

@@ -57,7 +57,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "web-service", "static-site":
 			d["outputs"] = map[string]any{"url": "https://app.example.test", "internal_url": "app-private.example.test:8080"}
 		case "private-service":
-			d["outputs"] = map[string]any{"internal_url": "app-private.example.test:8080"}
+			// Also return a public address, which the private service
+			// resource must never surface.
+			d["outputs"] = map[string]any{"internal_url": "app-private.example.test:8080", "url": "https://leak.example.test"}
 		}
 		f.deps[id] = d
 		w.WriteHeader(http.StatusCreated)

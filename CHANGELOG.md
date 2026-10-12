@@ -16,7 +16,14 @@
   its type's fields and sends the API's closed create and change bodies; a
   field the API can set only at create forces a new resource (a worker's
   image, command, build and autoscaling; a cron job's image; the
-  pre-deploy command). The plan always comes from the service.
+  pre-deploy command, `git_repo_id`). The plan always comes from the
+  service. `git_repo_id` (needed for GitLab sources) is on every type but
+  the static site.
+- `image_password` on the per-type resources is write-only (Terraform 1.11
+  or later): never stored in state. Increase `image_password_wo_version` to
+  rotate it; web and private services take the new password in place. A
+  worker or cron job can't take a new registry password after create yet,
+  so a rotation there is refused at plan time rather than replacing it.
 - `computesphere_deployment` is deprecated, and so is its `plan_id`. A
   `moved` block carries a deployment over to the resource for its type
   without redeploying it (Terraform 1.8 or later).

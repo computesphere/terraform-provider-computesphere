@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -36,6 +37,7 @@ type computeResource struct {
 var _ resource.Resource = &computeResource{}
 var _ resource.ResourceWithImportState = &computeResource{}
 var _ resource.ResourceWithMoveState = &computeResource{}
+var _ resource.ResourceWithModifyPlan = &computeResource{}
 
 func NewWebServiceResource() resource.Resource     { return &computeResource{kind: webService} }
 func NewPrivateServiceResource() resource.Resource { return &computeResource{kind: privateService} }
@@ -69,8 +71,39 @@ func getModel(ctx context.Context, get func(context.Context, any) diag.Diagnosti
 	return m
 }
 
-// setModel writes the model to state as this kind's object.
+// withConfigPassword copies the write-only image_password from the
+// configuration into m; plan and state never hold it.
+func (r *computeResource) withConfigPassword(ctx context.Context, config tfsdk.Config, m *model, diags *diag.Diagnostics) {
+	if !r.kind.has("image_password") {
+		return
+	}
+	var pw types.String
+	diags.Append(config.GetAttribute(ctx, path.Root("image_password"), &pw)...)
+	m.ImagePassword = pw
+}
+
+// ModifyPlan refuses a registry-password rotation the kind's change body
+// can't carry, instead of replacing the resource for it.
+func (r *computeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() || !r.kind.has("image_password_wo_version") || r.kind.rotatesImagePassword() {
+		return
+	}
+	var planV, stateV types.Int64
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_password_wo_version"), &planV)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("image_password_wo_version"), &stateV)...)
+	if resp.Diagnostics.HasError() || planV.IsUnknown() || planV.Equal(stateV) {
+		return
+	}
+	resp.Diagnostics.AddAttributeError(path.Root("image_password_wo_version"), "Registry password can't change in place",
+		fmt.Sprintf("The API can't take a new registry password for an existing %s yet, and this provider won't "+
+			"replace the %s to rotate it. Keep image_password_wo_version at %s for now.",
+			r.kind.noun, r.kind.noun, stateV.String()))
+}
+
+// setModel writes the model to state as this kind's object. The write-only
+// image_password is always null there.
 func (r *computeResource) setModel(ctx context.Context, set func(context.Context, any) diag.Diagnostics, m model, diags *diag.Diagnostics) {
+	m.ImagePassword = types.StringNull()
 	obj, d := toObject(ctx, r.kind, m)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -89,6 +122,7 @@ func jsonBody(v any) (*bytes.Reader, error) {
 
 func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	plan := getModel(ctx, req.Plan.Get, &resp.Diagnostics)
+	r.withConfigPassword(ctx, req.Config, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -385,6 +419,7 @@ func (r *computeResource) Read(ctx context.Context, req resource.ReadRequest, re
 func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	plan := getModel(ctx, req.Plan.Get, &resp.Diagnostics)
 	state := getModel(ctx, req.State.Get, &resp.Diagnostics)
+	r.withConfigPassword(ctx, req.Config, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

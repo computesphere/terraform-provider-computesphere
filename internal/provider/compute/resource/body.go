@@ -232,7 +232,11 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 			setString(img, "type", plan.ImageType)
 			setString(img, "provider", plan.ImageProvider)
 			setString(img, "username", plan.ImageUsername)
-			setString(img, "password", plan.ImagePassword)
+			// A password left out keeps the saved one; send it only when
+			// its version moved, or the image is new.
+			if !plan.ImagePwVer.Equal(state.ImagePwVer) || !plan.Image.Equal(state.Image) || !plan.ImageURL.Equal(state.ImageURL) {
+				setString(img, "password", plan.ImagePassword)
+			}
 			setString(img, "url", plan.ImageURL)
 			if len(img) > 0 {
 				b["image"] = img
@@ -269,9 +273,11 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 }
 
 func imageChanged(plan, state model) bool {
+	// image_password is write-only, so a rotation shows as a new
+	// image_password_wo_version.
 	return !plan.Image.Equal(state.Image) || !plan.ImageType.Equal(state.ImageType) ||
 		!plan.ImageProvider.Equal(state.ImageProvider) || !plan.ImageUsername.Equal(state.ImageUsername) ||
-		!plan.ImagePassword.Equal(state.ImagePassword) || !plan.ImageURL.Equal(state.ImageURL)
+		!plan.ImagePwVer.Equal(state.ImagePwVer) || !plan.ImageURL.Equal(state.ImageURL)
 }
 
 // buildConfigChange renders build_config: a merge, so only changed fields

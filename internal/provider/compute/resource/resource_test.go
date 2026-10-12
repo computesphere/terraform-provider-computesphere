@@ -310,6 +310,7 @@ resource "computesphere_private_service" "api" {
 `, ids),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "internal_url", "app-private.example.test:8080"),
+					resource.TestCheckNoResourceAttr(name, "url"),
 					func(_ *terraformState) error {
 						c := api.bodies("POST", "/deployments")[0]
 						checkClosed(t, "private service create", c, createKeys["private-service"])
