@@ -31,10 +31,18 @@ var ServiceType = schema.StringAttribute{
 		stringplanmodifier.RequiresReplace(),
 	},
 }
+var ServiceSphereletType = schema.StringAttribute{
+	Optional: true,
+	Computed: true,
+	Description: "The spherelet size the service runs on, e.g. `sl-1c-2g`. List sizes with the " +
+		"`computesphere_spherelet_types` data source. Changing it updates the service in place.",
+}
 var ServicePlanID = schema.StringAttribute{
-	Optional:    true,
-	Computed:    true,
-	Description: "Plan (spherelet shape) assigned to the service. Updatable in place.",
+	Optional:           true,
+	Computed:           true,
+	DeprecationMessage: "Use spherelet_type instead.",
+	Description: "Deprecated: use `spherelet_type`. Plan id of the service's spherelet size; " +
+		"null for sizes that have no plan id. Can't be set together with `spherelet_type`.",
 }
 var ServiceActive = schema.BoolAttribute{
 	Computed:    true,

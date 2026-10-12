@@ -121,10 +121,11 @@ output "deployment_status" {
 - `image_type` (String) Image visibility: "public" (default) or "private". Set to "private" to pull from an authenticated registry using image_provider/image_username/image_password/image_url.
 - `image_url` (String) Registry endpoint for a private image. Required for providers that authenticate with username + password (azure, docker, other, custom).
 - `image_username` (String) Registry username for a private image.
-- `plan_id` (String) Compute tier override; defaults to the service's plan.
+- `plan_id` (String, Deprecated) Deprecated: use `spherelet_type`. Plan id override; defaults to the service's plan. Can't be set together with `spherelet_type`.
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
 - `sphere_count` (Number) Number of spherelets (replicas) to run.
+- `spherelet_type` (String) The spherelet size this deployment runs on, e.g. `sl-1c-2g`; defaults to the service's size. List sizes with the `computesphere_spherelet_types` data source.
 - `wait_for_ready` (Boolean) Wait for the deployment to reach a ready state after deploying.
 
 ### Read-Only

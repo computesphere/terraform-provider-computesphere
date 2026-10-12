@@ -30,8 +30,18 @@ func Schema(ctx context.Context) schema.Schema {
 			"type": schema.StringAttribute{
 				Required: true, Description: "Resource type (must match the service type, e.g. web-service).", PlanModifiers: rr,
 			},
-			"plan_id": schema.StringAttribute{Optional: true, Description: "Compute tier override; defaults to the service's plan."},
-			"image":   schema.StringAttribute{Optional: true, Description: "Container image reference (e.g. nginx:latest) for image-based deployments."},
+			"spherelet_type": schema.StringAttribute{
+				Optional: true, Computed: true,
+				Description: "The spherelet size this deployment runs on, e.g. `sl-1c-2g`; defaults to the service's " +
+					"size. List sizes with the `computesphere_spherelet_types` data source.",
+			},
+			"plan_id": schema.StringAttribute{
+				Optional: true, Computed: true,
+				DeprecationMessage: "Use spherelet_type instead.",
+				Description: "Deprecated: use `spherelet_type`. Plan id override; defaults to the service's plan. " +
+					"Can't be set together with `spherelet_type`.",
+			},
+			"image": schema.StringAttribute{Optional: true, Description: "Container image reference (e.g. nginx:latest) for image-based deployments."},
 			"image_type": schema.StringAttribute{
 				Optional:    true,
 				Description: "Image visibility: \"public\" (default) or \"private\". Set to \"private\" to pull from an authenticated registry using image_provider/image_username/image_password/image_url.",
