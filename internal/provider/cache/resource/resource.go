@@ -276,6 +276,9 @@ func (r *CacheResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "cache", "name", "environment_id", "engine", "version") {
+		return
+	}
 	id := state.ID.ValueString()
 
 	var body updateCacheRequest

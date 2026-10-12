@@ -305,6 +305,9 @@ func (r *DatabaseResource) Update(ctx context.Context, req resource.UpdateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "database", "name", "environment_id", "engine", "version") {
+		return
+	}
 	id, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid database id", err.Error())

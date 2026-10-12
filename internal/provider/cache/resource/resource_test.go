@@ -165,3 +165,37 @@ resource "computesphere_cache" "example" {
 		t.Fatal("an immutable change must never replace the cache")
 	}
 }
+
+// An environment that is only known at apply (here: replaced in the same
+// run) isn't known when the plan is made; the apply fails with the refusal
+// and nothing reaches the API.
+func TestCacheResource_unknownEnvironmentRefusedAtApply(t *testing.T) {
+	cacheresource.SetPollIntervalForTest(time.Millisecond)
+	api := newFakeCacheAPI(t)
+	cfg := func(trigger string) string {
+		return sprintf(`
+resource "terraform_data" "env" {
+  triggers_replace = %q
+}
+
+resource "computesphere_cache" "example" {
+  name           = "app-cache"
+  environment_id = terraform_data.env.id
+  instance_type  = "sc-0.25c-1g"
+}
+`, trigger)
+	}
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{Config: cfg("a")},
+			{
+				Config:      cfg("b"),
+				ExpectError: regexp.MustCompile(`environment_id can't change on an\s+existing cache`),
+			},
+		},
+	})
+	if api.called("PATCH ") || len(api.creates()) != 1 {
+		t.Fatal("a refused environment change must not reach the API")
+	}
+}

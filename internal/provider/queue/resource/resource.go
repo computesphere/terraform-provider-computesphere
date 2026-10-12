@@ -266,6 +266,9 @@ func (r *QueueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "broker", "name", "environment_id", "engine", "version") {
+		return
+	}
 	id := state.ID.ValueString()
 
 	var body updateQueueRequest

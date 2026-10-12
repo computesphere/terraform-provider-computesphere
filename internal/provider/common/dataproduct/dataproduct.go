@@ -15,26 +15,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// attrGetter is what tfsdk.Plan and tfsdk.State share.
+type attrGetter interface {
+	GetAttribute(ctx context.Context, p path.Path, target interface{}) diag.Diagnostics
+}
+
 // RefuseChange refuses, at plan time, a change to any of attrs on an
 // existing resource: a data product's name, environment, engine and version
-// can't change in place, and replacing it would delete its data, so the plan stops with an
-// error instead of planning a replacement. noun names the resource, e.g.
-// "cache".
+// can't change in place, and replacing it would delete its data, so the plan
+// stops with an error instead of planning a replacement. noun names the
+// resource, e.g. "cache". A value still unknown at plan is caught by
+// RefuseChangeInUpdate.
 func RefuseChange(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse, noun string, attrs ...string) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
+	refuse(ctx, req.Plan, req.State, &resp.Diagnostics, noun, attrs)
+}
+
+// RefuseChangeInUpdate is RefuseChange at apply time, for a value that was
+// unknown when the plan was made (e.g. an environment replaced in the same
+// run). It reports whether the update may go on; when it may not, nothing
+// has been sent to the API.
+func RefuseChangeInUpdate(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse, noun string, attrs ...string) bool {
+	refuse(ctx, req.Plan, req.State, &resp.Diagnostics, noun, attrs)
+	return !resp.Diagnostics.HasError()
+}
+
+func refuse(ctx context.Context, plan, state attrGetter, diags *diag.Diagnostics, noun string, attrs []string) {
 	for _, attr := range attrs {
 		var planV, stateV types.String
-		resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(attr), &planV)...)
-		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(attr), &stateV)...)
-		if resp.Diagnostics.HasError() {
+		diags.Append(plan.GetAttribute(ctx, path.Root(attr), &planV)...)
+		diags.Append(state.GetAttribute(ctx, path.Root(attr), &stateV)...)
+		if diags.HasError() {
 			return
 		}
 		if planV.IsUnknown() || planV.IsNull() || stateV.IsNull() || planV.Equal(stateV) {
 			continue
 		}
-		resp.Diagnostics.AddAttributeError(path.Root(attr), fmt.Sprintf("%s can't change on an existing %s", attr, noun),
+		diags.AddAttributeError(path.Root(attr), fmt.Sprintf("%s can't change on an existing %s", attr, noun),
 			fmt.Sprintf("This %s has %s %s, and it can't be changed in place. Changing it needs a new %s, which "+
 				"would start empty: create the new %s as a separate resource, move your data, then remove this one. "+
 				"To keep this %s, set %s back to %q.",
