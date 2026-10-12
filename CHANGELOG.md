@@ -10,6 +10,29 @@
 - New data source `computesphere_database_instance_types`: the instance-type
   catalog with vCPU, memory, connection limit, included storage and monthly
   price for an environment's region.
+- New resources, one per compute type: `computesphere_web_service`,
+  `computesphere_private_service`, `computesphere_worker`,
+  `computesphere_cron_job` and `computesphere_static_site`. Each takes only
+  its type's fields and sends the API's closed create and change bodies; a
+  field the API can set only at create forces a new resource (the
+  pre-deploy command); an image worker's command changes in place. The plan
+  always comes from the service. `git_repo_id` (needed for GitLab sources) is on every
+  type; it's sent at create and read back. Setting it on a service that has
+  none only records it, removing it from the configuration keeps the
+  recorded value, and a value that differs from the service's is refused at
+  plan time.
+- `image_password` on the per-type resources is write-only (Terraform 1.11
+  or later): never stored in state. Increase `image_password_wo_version` to
+  rotate it in place on every type; it is also sent with every image change,
+  since the API keeps a stored password only for the same registry. A first
+  version on an imported or moved resource only records it.
+- Switching a git-built web service, private service, worker or cron job to
+  an image in place is refused at plan time for now: the API could apply
+  the image and then refuse the build change. Create a new resource for the
+  image instead.
+- `computesphere_deployment` is deprecated, and so is its `plan_id`. A
+  `moved` block carries a deployment over to the resource for its type
+  without redeploying it (Terraform 1.8 or later).
 - Needs the `computesphere-go` SDK release that carries the SphereDB
   operations (newer than v0.3.0).
 

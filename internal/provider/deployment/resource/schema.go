@@ -13,9 +13,15 @@ import (
 func Schema(ctx context.Context) schema.Schema {
 	rr := []planmodifier.String{stringplanmodifier.RequiresReplace()}
 	return schema.Schema{
-		Description: "Manages a deployment: a running instance of a service in an environment. " +
+		Description: "Deprecated: use the resource for the service's type (`computesphere_web_service`, " +
+			"`computesphere_private_service`, `computesphere_worker`, `computesphere_cron_job` or " +
+			"`computesphere_static_site`); a `moved` block carries an existing deployment over without " +
+			"redeploying it. Manages a deployment: a running copy of a service in an environment. " +
 			"Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, " +
 			"and (by default) waits for it to become ready.",
+		DeprecationMessage: "Use the resource for the service's type: computesphere_web_service, " +
+			"computesphere_private_service, computesphere_worker, computesphere_cron_job or " +
+			"computesphere_static_site. A moved block carries an existing deployment over without redeploying it.",
 		Attributes: map[string]schema.Attribute{
 			"id":     schema.StringAttribute{Computed: true, Description: "Deployment id.", PlanModifiers: rr},
 			"name":   schema.StringAttribute{Computed: true, Description: "Deployment name (inherited from the service)."},
@@ -30,8 +36,12 @@ func Schema(ctx context.Context) schema.Schema {
 			"type": schema.StringAttribute{
 				Required: true, Description: "Resource type (must match the service type, e.g. web-service).", PlanModifiers: rr,
 			},
-			"plan_id": schema.StringAttribute{Optional: true, Description: "Compute tier override; defaults to the service's plan."},
-			"image":   schema.StringAttribute{Optional: true, Description: "Container image reference (e.g. nginx:latest) for image-based deployments."},
+			"plan_id": schema.StringAttribute{
+				Optional:           true,
+				DeprecationMessage: "The plan comes from the service; the API refuses a deployment plan that differs from it.",
+				Description:        "Deprecated: the plan comes from the service, and the API refuses a deployment plan that differs from it.",
+			},
+			"image": schema.StringAttribute{Optional: true, Description: "Container image reference (e.g. nginx:latest) for image-based deployments."},
 			"image_type": schema.StringAttribute{
 				Optional:    true,
 				Description: "Image visibility: \"public\" (default) or \"private\". Set to \"private\" to pull from an authenticated registry using image_provider/image_username/image_password/image_url.",

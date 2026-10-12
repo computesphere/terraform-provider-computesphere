@@ -23,6 +23,7 @@ import (
 
 	alertresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/resource"
 	apitokenresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/api_token/resource"
+	computeresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/compute/resource"
 	customdomainresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/custom_domain/resource"
 	databaseresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/database/resource"
 	deploymentresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/deployment/resource"
@@ -319,6 +320,11 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		serviceresource.NewServiceResource,
 		apitokenresource.NewApiTokenResource,
 		teamresource.NewTeamResource,
+		computeresource.NewWebServiceResource,
+		computeresource.NewPrivateServiceResource,
+		computeresource.NewWorkerResource,
+		computeresource.NewCronJobResource,
+		computeresource.NewStaticSiteResource,
 	}
 }
 
