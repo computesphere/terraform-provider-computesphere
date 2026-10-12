@@ -10,6 +10,16 @@
 - New data source `computesphere_database_instance_types`: the instance-type
   catalog with vCPU, memory, connection limit, included storage and monthly
   price for an environment's region.
+- New resources, one per compute type: `computesphere_web_service`,
+  `computesphere_private_service`, `computesphere_worker`,
+  `computesphere_cron_job` and `computesphere_static_site`. Each takes only
+  its type's fields and sends the API's closed create and change bodies; a
+  field the API can set only at create forces a new resource (a worker's
+  image, command, build and autoscaling; a cron job's image; the
+  pre-deploy command). The plan always comes from the service.
+- `computesphere_deployment` is deprecated, and so is its `plan_id`. A
+  `moved` block carries a deployment over to the resource for its type
+  without redeploying it (Terraform 1.8 or later).
 - Needs the `computesphere-go` SDK release that carries the SphereDB
   operations (newer than v0.3.0).
 

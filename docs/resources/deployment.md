@@ -3,12 +3,12 @@
 page_title: "computesphere_deployment Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
+  Deprecated: use the resource for the service's type (computesphere_web_service, computesphere_private_service, computesphere_worker, computesphere_cron_job or computesphere_static_site); a moved block carries an existing deployment over without redeploying it. Manages a deployment: a running copy of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
 ---
 
 # computesphere_deployment (Resource)
 
-Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
+Deprecated: use the resource for the service's type (`computesphere_web_service`, `computesphere_private_service`, `computesphere_worker`, `computesphere_cron_job` or `computesphere_static_site`); a `moved` block carries an existing deployment over without redeploying it. Manages a deployment: a running copy of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
 
 ## Example Usage
 
@@ -50,6 +50,17 @@ variable "registry_password" {
   type        = string
   sensitive   = true
 }
+
+# computesphere_deployment is deprecated. Use the resource for the service's
+# type instead: computesphere_web_service, computesphere_private_service,
+# computesphere_worker, computesphere_cron_job or computesphere_static_site.
+# To carry an existing deployment over without redeploying it, replace its
+# block with the new resource and add a moved block, e.g.:
+#
+#   moved {
+#     from = computesphere_deployment.example
+#     to   = computesphere_web_service.example
+#   }
 
 # Public image, optionally with public docker build args.
 resource "computesphere_deployment" "example" {
@@ -121,7 +132,7 @@ output "deployment_status" {
 - `image_type` (String) Image visibility: "public" (default) or "private". Set to "private" to pull from an authenticated registry using image_provider/image_username/image_password/image_url.
 - `image_url` (String) Registry endpoint for a private image. Required for providers that authenticate with username + password (azure, docker, other, custom).
 - `image_username` (String) Registry username for a private image.
-- `plan_id` (String) Compute tier override; defaults to the service's plan.
+- `plan_id` (String, Deprecated) Deprecated: the plan comes from the service, and the API refuses a deployment plan that differs from it.
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
 - `sphere_count` (Number) Number of spherelets (replicas) to run.

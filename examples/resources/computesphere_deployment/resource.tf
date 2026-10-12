@@ -36,6 +36,17 @@ variable "registry_password" {
   sensitive   = true
 }
 
+# computesphere_deployment is deprecated. Use the resource for the service's
+# type instead: computesphere_web_service, computesphere_private_service,
+# computesphere_worker, computesphere_cron_job or computesphere_static_site.
+# To carry an existing deployment over without redeploying it, replace its
+# block with the new resource and add a moved block, e.g.:
+#
+#   moved {
+#     from = computesphere_deployment.example
+#     to   = computesphere_web_service.example
+#   }
+
 # Public image, optionally with public docker build args.
 resource "computesphere_deployment" "example" {
   service_id     = "s1a2b3c4-5678-90ab-cdef-1234567890ab"
