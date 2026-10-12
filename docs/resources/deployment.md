@@ -125,7 +125,7 @@ output "deployment_status" {
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
 - `sphere_count` (Number) Number of spherelets (replicas) to run.
-- `spherelet_type` (String) The spherelet size this deployment runs on, e.g. `sl-1c-2g`; defaults to the service's size. List sizes with the `computesphere_spherelet_types` data source. Changing it updates the deployment in place.
+- `spherelet_type` (String) The spherelet size this deployment runs on, e.g. `sl-1c-2g`; defaults to the service's size. List sizes with the `computesphere_spherelet_types` data source.
 - `wait_for_ready` (Boolean) Wait for the deployment to reach a ready state after deploying.
 
 ### Read-Only

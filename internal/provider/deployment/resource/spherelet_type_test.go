@@ -45,7 +45,7 @@ func checkDepFake(f *th.FakeAPI, prefix string, want int) resource.TestCheckFunc
 	}
 }
 
-// A deployment takes its own spherelet_type, changes it in place, keeps an
+// A deployment takes its own spherelet_type, takes a new one, keeps an
 // alias as written, and inherits the service's type when it sets none.
 func TestAccDeploymentResource_sphereletType(t *testing.T) {
 	factories, fake := th.SetupFakeProvider(t)
@@ -60,15 +60,18 @@ func TestAccDeploymentResource_sphereletType(t *testing.T) {
 				),
 			},
 			{
+				// A deployment change plans a replacement; see the in-place update change.
 				Config: deploymentConfig(`spherelet_type = "PWR"`),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(depName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(depName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(depName, "spherelet_type", "PWR"),
-					checkDepFake(fake, `PATCH /v2/deployments/`, 1),
+					checkDepFake(fake, `DELETE /v2/deployments/`, 1),
+					checkDepFake(fake, `POST /v2/deployments {`, 2),
+					checkDepFake(fake, `PATCH /v2/deployments/`, 0),
 				),
 			},
 			{

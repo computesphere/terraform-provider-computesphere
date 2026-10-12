@@ -17,11 +17,7 @@ func Schema(ctx context.Context) schema.Schema {
 			"Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, " +
 			"and (by default) waits for it to become ready.",
 		Attributes: map[string]schema.Attribute{
-			// The id keeps its value through an update, so an in-place change
-			// (such as spherelet_type) doesn't plan a replacement.
-			"id": schema.StringAttribute{Computed: true, Description: "Deployment id.", PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace(),
-			}},
+			"id":     schema.StringAttribute{Computed: true, Description: "Deployment id.", PlanModifiers: rr},
 			"name":   schema.StringAttribute{Computed: true, Description: "Deployment name (inherited from the service)."},
 			"status": schema.StringAttribute{Computed: true, Description: "Current deployment status."},
 			"service_id": schema.StringAttribute{
@@ -37,8 +33,7 @@ func Schema(ctx context.Context) schema.Schema {
 			"spherelet_type": schema.StringAttribute{
 				Optional: true, Computed: true,
 				Description: "The spherelet size this deployment runs on, e.g. `sl-1c-2g`; defaults to the service's " +
-					"size. List sizes with the `computesphere_spherelet_types` data source. " +
-					"Changing it updates the deployment in place.",
+					"size. List sizes with the `computesphere_spherelet_types` data source.",
 			},
 			"plan_id": schema.StringAttribute{
 				Optional: true, Computed: true,
