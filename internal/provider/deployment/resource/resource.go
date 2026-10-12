@@ -7,6 +7,7 @@ import (
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -22,6 +23,7 @@ type DeploymentResource struct {
 
 var _ resource.Resource = &DeploymentResource{}
 var _ resource.ResourceWithImportState = &DeploymentResource{}
+var _ resource.ResourceWithValidateConfig = &DeploymentResource{}
 
 func NewDeploymentResource() resource.Resource {
 	return &DeploymentResource{}
@@ -43,6 +45,7 @@ type deploymentResourceModel struct {
 	EnvironmentID types.String `tfsdk:"environment_id"`
 	ProjectID     types.String `tfsdk:"project_id"`
 	Type          types.String `tfsdk:"type"`
+	SphereletType types.String `tfsdk:"spherelet_type"`
 	PlanID        types.String `tfsdk:"plan_id"`
 	Image         types.String `tfsdk:"image"`
 	ImageType     types.String `tfsdk:"image_type"`
@@ -64,6 +67,28 @@ func (r *DeploymentResource) Configure(ctx context.Context, req resource.Configu
 		r.client = data.V2Client
 		r.accountID = data.AccountID
 	}
+}
+
+// ValidateConfig rejects spherelet_type and the deprecated plan_id together
+// at plan time.
+func (r *DeploymentResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var c deploymentResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &c)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !c.SphereletType.IsNull() && !c.PlanID.IsNull() {
+		resp.Diagnostics.AddAttributeError(path.Root(spherelet.FieldPlanID), "Conflicting attributes", spherelet.ConflictDetail)
+	}
+}
+
+// applySphereletFields sets spherelet_type and plan_id from a raw deployment
+// response. A field the response doesn't carry keeps its configured value; an
+// alias in the configuration is kept as written.
+func (r *DeploymentResource) applySphereletFields(ctx context.Context, body []byte, m *deploymentResourceModel) {
+	f := spherelet.ReadDeploymentFields(body)
+	m.SphereletType = spherelet.Value(m.SphereletType, f.SphereletType, f.SphereletTypePresent, spherelet.AliasLookup(ctx, r.client))
+	m.PlanID = spherelet.Value(m.PlanID, f.PlanID, f.PlanIDPresent, nil)
 }
 
 func mapToStringPtr(ctx context.Context, m types.Map, diags *diag.Diagnostics) *map[string]string {
@@ -129,6 +154,9 @@ func buildUpdateBody(ctx context.Context, plan deploymentResourceModel, diags *d
 		p := int(plan.Port.ValueInt64())
 		upd.Port = &p
 	}
+	if t := strPtr(plan.SphereletType); t != nil {
+		upd.Set(spherelet.FieldType, *t)
+	}
 	return upd
 }
 
@@ -168,6 +196,9 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 			return
 		}
 		body.PlanId = &planID
+	}
+	if t := strPtr(plan.SphereletType); t != nil {
+		body.Set(spherelet.FieldType, *t)
 	}
 	if !plan.Image.IsNull() && plan.Image.ValueString() != "" {
 		body.Set("image", plan.Image.ValueString())
@@ -342,6 +373,7 @@ func (r *DeploymentResource) refreshStatus(ctx context.Context, id uuid.UUID, m 
 	m.Name = types.StringValue(getResp.JSON200.Name)
 	m.Status = types.StringValue(getResp.JSON200.Status)
 	m.Type = types.StringValue(getResp.JSON200.Type)
+	r.applySphereletFields(ctx, getResp.Body, m)
 
 	if st, serr := r.client.GetDeploymentStatusWithResponse(ctx, id); serr == nil && st.StatusCode() == http.StatusOK && st.JSON200 != nil {
 		m.Status = types.StringValue(st.JSON200.Status)
@@ -376,6 +408,7 @@ func (r *DeploymentResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.Name = types.StringValue(getResp.JSON200.Name)
 	state.Status = types.StringValue(getResp.JSON200.Status)
 	state.Type = types.StringValue(getResp.JSON200.Type)
+	r.applySphereletFields(ctx, getResp.Body, &state)
 	if st, serr := r.client.GetDeploymentStatusWithResponse(ctx, id); serr == nil && st.StatusCode() == http.StatusOK && st.JSON200 != nil {
 		state.Status = types.StringValue(st.JSON200.Status)
 	}
