@@ -12,6 +12,16 @@
   price for an environment's region.
 - Needs the `computesphere-go` SDK release that carries the SphereDB
   operations (newer than v0.3.0).
+- `spherelet_type` on `computesphere_service` and `computesphere_deployment`:
+  the spherelet size, e.g. `sl-1c-2g`. `FLX`, `MAX` and `PWR` are accepted
+  and show no diff once applied. Changing the size updates in place.
+  `plan_id` is deprecated and can't be set together with `spherelet_type`;
+  existing configurations keep working with no diff.
+- New data source `computesphere_spherelet_types`: the spherelet sizes with
+  vCPU, guaranteed vCPU, memory, monthly and annual price, and availability
+  for a region.
+- `computesphere_deployment` changes now update the deployment in place
+  instead of replacing it.
 
 ## 1.1.1
 
