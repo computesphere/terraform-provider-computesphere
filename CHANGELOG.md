@@ -10,6 +10,16 @@
 - New data source `computesphere_database_instance_types`: the instance-type
   catalog with vCPU, memory, connection limit, included storage and monthly
   price for an environment's region.
+- New resource `computesphere_cache`: a SphereCache cache (managed Valkey).
+  Set `instance_type` (e.g. `sc-0.25c-1g`; an `-ha` id adds a standby in
+  another zone) and `eviction` (`allkeys-lru` or `noeviction`); both change
+  in place. The password is never stored in state.
+- New resource `computesphere_queue`: a SphereQueue broker (managed
+  RabbitMQ). Set `instance_type` (e.g. `sq-1c-2g-s20g`; an `-ha` id runs
+  three members); it changes in place. The password is never stored in state.
+- New data sources `computesphere_cache_instance_types` and
+  `computesphere_queue_instance_types`: the size catalogs with prices and
+  availability for an environment.
 - Needs the `computesphere-go` SDK release that carries the SphereDB
   operations (newer than v0.3.0).
 

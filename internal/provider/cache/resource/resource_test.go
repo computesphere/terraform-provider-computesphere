@@ -1,0 +1,122 @@
+package provider_test
+
+import (
+	"os"
+	"regexp"
+	"testing"
+	"time"
+
+	cacheresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/cache/resource"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/checks"
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
+	th "github.com/computesphere/terraform-provider-computesphere/internal/provider/testhelpers"
+)
+
+const cacheConfig = `
+resource "computesphere_cache" "example" {
+  name           = "app-cache"
+  environment_id = "33333333-3333-3333-3333-333333333333"
+  instance_type  = %q
+  eviction       = %q
+}
+`
+
+// Creates a cache against the fake API, resizes it to its high-availability
+// twin and changes the eviction policy in place (no replacement), then
+// destroys it. The connection route is never called: no password reaches
+// state.
+func TestCacheResource_lifecycle(t *testing.T) {
+	cacheresource.SetPollIntervalForTest(time.Millisecond)
+	api := newFakeCacheAPI(t)
+	name := "computesphere_cache.example"
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{
+				Config: sprintf(cacheConfig, "sc-0.25c-1g", "allkeys-lru"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "id", fakeCacheID),
+					resource.TestCheckResourceAttr(name, "engine", "valkey"),
+					resource.TestCheckResourceAttr(name, "version", "8.1"),
+					resource.TestCheckResourceAttr(name, "instance_type", "sc-0.25c-1g"),
+					resource.TestCheckResourceAttr(name, "high_availability", "false"),
+					resource.TestCheckResourceAttr(name, "status", "available"),
+					resource.TestCheckResourceAttr(name, "region", "eastus2"),
+				),
+			},
+			{
+				Config: sprintf(cacheConfig, "sc-1c-3g-ha", "noeviction"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						checks.ExpectNoReplace(),
+						plancheck.ExpectResourceAction(name, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "instance_type", "sc-1c-3g-ha"),
+					resource.TestCheckResourceAttr(name, "eviction", "noeviction"),
+					resource.TestCheckResourceAttr(name, "high_availability", "true"),
+					resource.TestCheckResourceAttr(name, "status", "available"),
+				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+	if api.called("GET /v2/caches/" + fakeCacheID + "/connection") {
+		t.Fatal("the resource must never read the cache connection (it carries the password)")
+	}
+}
+
+func TestCacheResource_validation(t *testing.T) {
+	api := newFakeCacheAPI(t)
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{
+				Config:      sprintf(cacheConfig, "sc-0.25c-1g", "volatile-lru"),
+				ExpectError: regexp.MustCompile(`eviction must be one of allkeys-lru, noeviction`),
+			},
+			{
+				Config: `
+resource "computesphere_cache" "example" {
+  name           = "App_Cache"
+  environment_id = "33333333-3333-3333-3333-333333333333"
+  instance_type  = "sc-0.25c-1g"
+}
+`,
+				ExpectError: regexp.MustCompile(`name must be 1-40 lowercase letters`),
+			},
+		},
+	})
+}
+
+// Records against a live API with UPDATE_RECORDINGS=true once SphereCache is
+// offered there; replays the cassette otherwise and skips until it exists.
+func TestAccCacheResource_basic(t *testing.T) {
+	if os.Getenv("UPDATE_RECORDINGS") != "true" {
+		if _, err := os.Stat("testdata/cache_basic_cassette.yaml"); err != nil {
+			t.Skip("cache_basic_cassette.yaml not recorded yet")
+		}
+		cacheresource.SetPollIntervalForTest(time.Millisecond)
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupRecordingProvider(t, "cache_basic_cassette"),
+		Steps: []resource.TestStep{
+			{
+				ConfigFile: config.StaticFile("./testdata/cache_basic.tf"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("computesphere_cache.example", "status", "available"),
+					resource.TestCheckResourceAttrSet("computesphere_cache.example", "id"),
+				),
+			},
+		},
+	})
+}
