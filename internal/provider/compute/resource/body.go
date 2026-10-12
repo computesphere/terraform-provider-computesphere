@@ -279,6 +279,11 @@ func imageChanged(plan, state model) bool {
 		passwordRotated(plan, state) || !plan.ImageURL.Equal(state.ImageURL)
 }
 
+// hasGitSource reports whether the planned state builds from git.
+func hasGitSource(m model) bool {
+	return !m.GitURL.IsNull() && !m.GitURL.IsUnknown() && m.GitURL.ValueString() != ""
+}
+
 // passwordRotated reports a new image_password_wo_version over a recorded
 // one. A first version on an imported or moved resource only records it.
 func passwordRotated(plan, state model) bool {
@@ -312,13 +317,15 @@ func buildConfigChange(ctx context.Context, k kind, plan, state model, diags *di
 	stringChange(bc, "version", plan.Version, state.Version)
 	stringChange(bc, "dockerfile", plan.Dockerfile, state.Dockerfile)
 	stringChange(bc, "context", plan.Context, state.Context)
-	if k.has("start_command") {
-		stringChange(bc, "run_command", plan.StartCommand, state.StartCommand)
-	}
-	// A worker's run_command is also how an image worker's command changes
-	// in place: sent alone, it replaces the saved command.
-	if k.is(worker) {
+	switch {
+	case k.is(worker) && !hasGitSource(plan):
+		// An image worker's command changes in place as run_command, which
+		// replaces the saved command.
 		stringChange(bc, "run_command", plan.Command, state.Command)
+	case k.has("start_command"):
+		// A git build's start command; on a worker switching from an image
+		// to git, this is the run command from now on.
+		stringChange(bc, "run_command", plan.StartCommand, state.StartCommand)
 	}
 	if !plan.WatchPaths.IsUnknown() && !plan.WatchPaths.Equal(state.WatchPaths) {
 		if plan.WatchPaths.IsNull() {

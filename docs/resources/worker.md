@@ -100,7 +100,7 @@ moved {
 - `branch` (String) Branch to build and to deploy on push.
 - `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`.
 - `build_command` (String) Build command.
-- `command` (String) Command to run instead of the image's own.
+- `command` (String) Command an image worker runs instead of the image's own. A worker built from `git_url` runs `start_command` instead, so setting both is refused.
 - `context` (String) Docker build context directory.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
 - `dockerfile` (String) Dockerfile path of a Docker build.

@@ -38,6 +38,7 @@ var _ resource.Resource = &computeResource{}
 var _ resource.ResourceWithImportState = &computeResource{}
 var _ resource.ResourceWithMoveState = &computeResource{}
 var _ resource.ResourceWithModifyPlan = &computeResource{}
+var _ resource.ResourceWithValidateConfig = &computeResource{}
 
 func NewWebServiceResource() resource.Resource     { return &computeResource{kind: webService} }
 func NewPrivateServiceResource() resource.Resource { return &computeResource{kind: privateService} }
@@ -85,6 +86,23 @@ func (r *computeResource) withConfigPassword(ctx context.Context, config tfsdk.C
 // attrGetter is what tfsdk.Plan and tfsdk.State share.
 type attrGetter interface {
 	GetAttribute(ctx context.Context, p path.Path, target interface{}) diag.Diagnostics
+}
+
+// ValidateConfig refuses a worker that sets both command (an image
+// worker's command) and git_url: a git worker runs start_command.
+func (r *computeResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	if !r.kind.is(worker) {
+		return
+	}
+	var command, gitURL types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("command"), &command)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("git_url"), &gitURL)...)
+	if resp.Diagnostics.HasError() || command.IsNull() || gitURL.IsNull() {
+		return
+	}
+	resp.Diagnostics.AddAttributeError(path.Root("command"), "command and git_url can't both be set",
+		"command is the command an image worker runs. A worker built from git_url runs start_command instead: "+
+			"set start_command and remove command, or remove git_url to run an image.")
 }
 
 // ModifyPlan refuses a git_repo_id that differs from the one the service

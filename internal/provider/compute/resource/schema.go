@@ -193,7 +193,14 @@ var attrDefs = map[string]attrDef{
 	"spa": optBool("Single-page-app fallback: serve `index.html` for paths that match no file. Defaults to " +
 		"true. Changes apply to the live site without a build."),
 
-	"command":           optString("Command to run instead of the image's own."),
+	"command": func(k kind, replace bool) schema.Attribute {
+		desc := "Command to run instead of the image's own."
+		if k.is(worker) {
+			desc = "Command an image worker runs instead of the image's own. A worker built from `git_url` " +
+				"runs `start_command` instead, so setting both is refused."
+		}
+		return schema.StringAttribute{Optional: true, PlanModifiers: strMods(replace), Description: describe(k, replace, desc)}
+	},
 	"schedule":          optString("Cron expression, evaluated in UTC unless it starts with `CRON_TZ=<zone>`, e.g. `CRON_TZ=Europe/London 0 9 * * *`."),
 	"predeploy_command": optString("Command run before each new version starts serving, e.g. database migrations."),
 
