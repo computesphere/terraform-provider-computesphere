@@ -222,31 +222,33 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 	stringChange(b, "trigger_on", plan.TriggerOn, state.TriggerOn)
 	stringChange(b, "tag_pattern", plan.TagPattern, state.TagPattern)
 
-	if k.is(webService) || k.is(privateService) {
-		if present(plan.Port) && !plan.Port.Equal(state.Port) {
-			b["port"] = plan.Port.ValueInt64()
+	if k.has("port") && present(plan.Port) && !plan.Port.Equal(state.Port) {
+		b["port"] = plan.Port.ValueInt64()
+	}
+	if k.has("image") && imageChanged(plan, state) {
+		img := map[string]any{}
+		setString(img, "name", plan.Image)
+		setString(img, "type", plan.ImageType)
+		setString(img, "provider", plan.ImageProvider)
+		setString(img, "username", plan.ImageUsername)
+		// A password left out keeps the saved one; send it only when
+		// its version moved, or the image is new.
+		if passwordRotated(plan, state) || !plan.Image.Equal(state.Image) || !plan.ImageURL.Equal(state.ImageURL) {
+			setString(img, "password", plan.ImagePassword)
 		}
-		if imageChanged(plan, state) {
-			img := map[string]any{}
-			setString(img, "name", plan.Image)
-			setString(img, "type", plan.ImageType)
-			setString(img, "provider", plan.ImageProvider)
-			setString(img, "username", plan.ImageUsername)
-			// A password left out keeps the saved one; send it only when
-			// its version moved, or the image is new.
-			if passwordRotated(plan, state) || !plan.Image.Equal(state.Image) || !plan.ImageURL.Equal(state.ImageURL) {
-				setString(img, "password", plan.ImagePassword)
-			}
-			setString(img, "url", plan.ImageURL)
-			if len(img) > 0 {
-				b["image"] = img
-			}
+		setString(img, "url", plan.ImageURL)
+		if len(img) > 0 {
+			b["image"] = img
 		}
+	}
+	if k.has("health_check") {
 		if present(plan.HealthCheck) && !plan.HealthCheck.Equal(state.HealthCheck) {
 			b["health_check"] = healthCheckBody(ctx, plan.HealthCheck, diags)
 		} else if plan.HealthCheck.IsNull() && present(state.HealthCheck) {
 			b["health_check"] = map[string]any{"enabled": false}
 		}
+	}
+	if k.has("autoscaling") {
 		if present(plan.Autoscaling) && !plan.Autoscaling.Equal(state.Autoscaling) {
 			b["autoscaling"] = autoscalingBody(ctx, plan.Autoscaling, diags)
 		} else if plan.Autoscaling.IsNull() && present(state.Autoscaling) {
@@ -264,10 +266,8 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 			b["schedule"] = sched
 		}
 	}
-	if !k.is(worker) {
-		if bc := buildConfigChange(ctx, k, plan, state, diags); len(bc) > 0 {
-			b["build_config"] = bc
-		}
+	if bc := buildConfigChange(ctx, k, plan, state, diags); len(bc) > 0 {
+		b["build_config"] = bc
 	}
 	return b
 }

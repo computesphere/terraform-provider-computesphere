@@ -87,29 +87,14 @@ type attrGetter interface {
 	GetAttribute(ctx context.Context, p path.Path, target interface{}) diag.Diagnostics
 }
 
-// ModifyPlan refuses what the API can't change in place, instead of
-// replacing a running service for it: a different recorded git_repo_id, and
-// a registry-password rotation on a kind whose change body can't carry one.
-// A first value on an imported or moved resource (null in state) is only
-// recorded.
+// ModifyPlan refuses a git_repo_id that differs from the one the service
+// has, which the API can't change, instead of replacing a running service
+// for it. A first value over null in state is only recorded.
 func (r *computeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
 	r.refuseGitRepoIDChange(ctx, req.Plan, req.State, &resp.Diagnostics)
-	if !r.kind.has("image_password_wo_version") || r.kind.rotatesImagePassword() {
-		return
-	}
-	var planV, stateV types.Int64
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_password_wo_version"), &planV)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("image_password_wo_version"), &stateV)...)
-	if resp.Diagnostics.HasError() || planV.IsUnknown() || planV.IsNull() || stateV.IsNull() || planV.Equal(stateV) {
-		return
-	}
-	resp.Diagnostics.AddAttributeError(path.Root("image_password_wo_version"), "Registry password can't change in place",
-		fmt.Sprintf("The API can't take a new registry password for an existing %s yet, and this provider won't "+
-			"replace the %s to rotate it. Keep image_password_wo_version at %s for now.",
-			r.kind.noun, r.kind.noun, stateV.String()))
 }
 
 // refuseGitRepoIDChange refuses a git_repo_id that differs from a recorded
@@ -126,7 +111,7 @@ func (r *computeResource) refuseGitRepoIDChange(ctx context.Context, plan, state
 		return
 	}
 	diags.AddAttributeError(path.Root("git_repo_id"), "git_repo_id can't change on an existing "+r.kind.noun,
-		fmt.Sprintf("This %s was created with git_repo_id %q, and the API can't change it in place. This provider "+
+		fmt.Sprintf("This %s has git_repo_id %q, and the API can't change it in place. This provider "+
 			"won't replace a running %s for it. Set git_repo_id back to %q.",
 			r.kind.noun, stateV.ValueString(), r.kind.noun, stateV.ValueString()))
 }
@@ -416,6 +401,13 @@ func (r *computeResource) refresh(ctx context.Context, id uuid.UUID, m *model, d
 			}
 			if v, ok := d.Raw.AdditionalProperties[key].(string); ok && v != "" {
 				*dst = types.StringValue(v)
+			}
+		}
+		// git_repo_id is read back; "" means the service has none, which
+		// keeps a value recorded here (after an import or a move).
+		if ci, ok := d.Raw.AdditionalProperties["ci_config"].(map[string]any); ok && r.kind.has("git_repo_id") {
+			if v, ok := ci["git_repo_id"].(string); ok && v != "" {
+				m.GitRepoID = types.StringValue(v)
 			}
 		}
 		fill(&m.ServiceID, "service_id")

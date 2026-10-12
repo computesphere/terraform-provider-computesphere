@@ -147,14 +147,9 @@ var attrDefs = map[string]attrDef{
 				"increase `image_password_wo_version`."}
 	},
 	"image_password_wo_version": func(k kind, _ bool) schema.Attribute {
-		desc := "Version of `image_password`. Increase it to send a new password; the change applies in place. " +
-			"Setting it for the first time on an imported or moved resource only records it."
-		if !k.rotatesImagePassword() {
-			desc = "Version of `image_password`. A " + k.noun + " can't take a new registry password after " +
-				"create yet, so changing a recorded version is refused at plan time. Setting it for the first time " +
-				"on an imported or moved resource only records it."
-		}
-		return schema.Int64Attribute{Optional: true, Description: desc}
+		return schema.Int64Attribute{Optional: true,
+			Description: "Version of `image_password`. Increase it to send a new password; the change applies in " +
+				"place. Setting it for the first time on an imported or moved resource only records it."}
 	},
 	"image_url": optString("Registry endpoint of a private image. Needed for providers that sign in with a " +
 		"username and password."),
@@ -166,10 +161,10 @@ var attrDefs = map[string]attrDef{
 		return schema.StringAttribute{Optional: true, Computed: true,
 			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			Description: "The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab " +
-				"sources. Sent at create. The provider can't read it back, so on an imported or moved " +
-				k.noun + " set the id the service already uses; setting it there only records it. Removing it " +
-				"from the configuration keeps the recorded value, and changing a recorded value is refused at " +
-				"plan time, because the API can't change it."}
+				"sources. Sent at create, and read back. If the " + k.noun + " has none at ComputeSphere (e.g. one " +
+				"created without it), setting it only records it here. Removing it from the configuration keeps " +
+				"the recorded value, and a value that differs from the " + k.noun + "'s is refused at plan time, " +
+				"because the API can't change it."}
 	},
 	"root_dir":       optString("The service's directory in a monorepo."),
 	"root_directory": optString("The site's directory in a monorepo."),

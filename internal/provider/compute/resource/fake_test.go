@@ -51,7 +51,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		typ, _ := body["type"].(string)
 		d := map[string]any{
 			"object": "deployment", "id": id, "type": typ, "name": "app", "status": "deploying",
-			"raw": map[string]any{"service_id": body["service_id"], "environment_id": body["environment_id"], "project_id": body["project_id"]},
+			"raw": map[string]any{"service_id": body["service_id"], "environment_id": body["environment_id"], "project_id": body["project_id"],
+				// The read always carries ci_config.git_repo_id, "" when unset.
+				"ci_config": map[string]any{"git_repo_id": repoID(body)}},
 		}
 		switch typ {
 		case "web-service", "static-site":
@@ -104,7 +106,16 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // seed adds a deployment the API already has (as for an import) and
 // returns its id.
-func (f *fakeDeploymentsAPI) seed(typ string) string {
+func repoID(body map[string]any) string {
+	ci, _ := body["ci_config"].(map[string]any)
+	v, _ := ci["git_repo_id"].(string)
+	return v
+}
+
+func (f *fakeDeploymentsAPI) seed(typ string) string { return f.seedWithRepo(typ, "") }
+
+// seedWithRepo is seed for a deployment whose git_repo_id is repo.
+func (f *fakeDeploymentsAPI) seedWithRepo(typ, repo string) string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.seq++
@@ -113,7 +124,8 @@ func (f *fakeDeploymentsAPI) seed(typ string) string {
 		"object": "deployment", "id": id, "type": typ, "name": "app", "status": "running",
 		"outputs": map[string]any{"url": "https://app.example.test", "internal_url": "app-private.example.test:8080"},
 		"raw": map[string]any{"service_id": "44444444-4444-4444-4444-444444444444",
-			"environment_id": "33333333-3333-3333-3333-333333333333", "project_id": "22222222-2222-2222-2222-222222222222"},
+			"environment_id": "33333333-3333-3333-3333-333333333333", "project_id": "22222222-2222-2222-2222-222222222222",
+			"ci_config": map[string]any{"git_repo_id": repo}},
 	}
 	return id
 }
@@ -147,13 +159,13 @@ var (
 		"private-service":   "type name project_id environment_id env_id service_id plan_id plan port sphere_count spherelets image image_type image_provider image_username image_password image_url image_name image_pending build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config predeploy_command pipeline_tier health_check health_check_path health_check_port health_check_delay health_check_period health_check_timeout health_check_readiness_failures env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target stor environment_spherestor",
 		"background-worker": "type name project_id environment_id env_id service_id plan_id plan sphere_count spherelets image image_type image_provider image_username image_password image_url image_name command build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target stor environment_spherestor",
 		"cron-job":          "type name project_id environment_id env_id service_id plan_id plan schedule command image image_type image_provider image_username image_password image_url image_name build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config env_vars secret_vars environment_variables secret_variables",
-		"static-site":       "type name project_id environment_id env_id service_id plan_id plan build_source git_url branch git_connection_id root_directory root_dir install_command build_command publish_directory spa env_vars secret_vars environment_variables secret_variables custom_domain",
+		"static-site":       "type name project_id environment_id env_id service_id plan_id plan build_source git_url branch git_connection_id root_directory root_dir install_command build_command publish_directory spa ci_config env_vars secret_vars environment_variables secret_variables custom_domain",
 	}
 	changeKeys = map[string]string{
 		"web-service":       "type port image health_check autoscaling networking build_config log_drains skip_redeploy deploy_policy trigger_on tag_pattern",
 		"private-service":   "type port image health_check autoscaling build_config log_drains skip_redeploy deploy_policy trigger_on tag_pattern",
-		"background-worker": "type skip_redeploy deploy_policy trigger_on tag_pattern",
-		"cron-job":          "type schedule build_config log_drains skip_redeploy deploy_policy trigger_on tag_pattern",
+		"background-worker": "type image autoscaling build_config log_drains skip_redeploy deploy_policy trigger_on tag_pattern",
+		"cron-job":          "type schedule image build_config log_drains skip_redeploy deploy_policy trigger_on tag_pattern",
 		"static-site":       "type build_config networking skip_redeploy deploy_policy trigger_on tag_pattern",
 	}
 	// Server-only or refused fields; a resource never sends them. ci_config

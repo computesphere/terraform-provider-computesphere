@@ -109,7 +109,7 @@ moved {
 - `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
-- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create. The provider can't read it back, so on an imported or moved private service set the id the service already uses; setting it there only records it. Removing it from the configuration keeps the recorded value, and changing a recorded value is refused at plan time, because the API can't change it.
+- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the private service has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the private service's is refused at plan time, because the API can't change it.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `health_check` (Attributes) HTTP health check. A spherelet that fails it is taken out of traffic. (see [below for nested schema](#nestedatt--health_check))
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.

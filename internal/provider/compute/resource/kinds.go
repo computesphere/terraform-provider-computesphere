@@ -38,11 +38,6 @@ func (k kind) forcesReplace(attr string) bool {
 	return false
 }
 
-// rotatesImagePassword reports whether the kind's change body can carry a
-// new registry password. A worker's change body takes no image settings and
-// a cron job's has no image object, so neither can today.
-func (k kind) rotatesImagePassword() bool { return k.is(webService) || k.is(privateService) }
-
 // is reports whether k and o are the same kind.
 func (k kind) is(o kind) bool { return k.apiType == o.apiType }
 
@@ -70,10 +65,7 @@ var commonAttrs = map[string]bool{
 var (
 	imageAttrs = []string{"image", "image_type", "image_provider", "image_username", "image_password",
 		"image_password_wo_version", "image_url"}
-	// imageCredAttrs are the write-only registry password and its version:
-	// rotating it is never a reason to replace a resource.
-	imageCredAttrs = []string{"image_password", "image_password_wo_version"}
-	gitAttrs       = []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_dir", "watch_paths", "build_args",
+	gitAttrs = []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_dir", "watch_paths", "build_args",
 		"runtime_type", "language", "version", "build_command", "start_command", "dockerfile", "context"}
 )
 
@@ -125,9 +117,10 @@ var (
 		summary: "Manages a background worker in an environment: a long-running process with no port, health " +
 			"check or address, run from a container image or built from a git repository.",
 		attrs: join(imageAttrs, gitAttrs, []string{"command", "sphere_count", "autoscaling"}),
-		// A worker's change body takes only the deploy settings today, so its
-		// image, command, build and autoscaling are set at create.
-		replace: join(without(imageAttrs, imageCredAttrs...), without(gitAttrs, "git_repo_id"), []string{"command", "autoscaling"}),
+		// The change body takes image, autoscaling and build settings (the
+		// git start command as build_config.run_command), but not the
+		// command an image worker runs.
+		replace: []string{"command"},
 	}
 	cronJob = kind{
 		apiType: "cron-job", typeName: "computesphere_cron_job",
@@ -135,15 +128,14 @@ var (
 		noun:    "cron job",
 		summary: "Manages a cron job in an environment: a command run on a schedule, from a container image or " +
 			"a git build.",
-		attrs:   join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command"}),
-		replace: without(imageAttrs, imageCredAttrs...),
+		attrs: join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command"}),
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",
 		noun: "static site",
 		summary: "Manages a static site in an environment, always built from a git repository and served from " +
 			"the directory the build emits.",
-		attrs: []string{"git_url", "branch", "git_connection_id", "root_directory", "install_command",
+		attrs: []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_directory", "install_command",
 			"build_command", "publish_directory", "spa", "network_access", "url"},
 	}
 )

@@ -3,6 +3,7 @@ package provider_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -127,9 +128,9 @@ func TestWebService_lifecycle(t *testing.T) {
 	})
 }
 
-// A worker's change body takes only deploy settings, so a new image
-// replaces it.
-func TestWorker_imageForcesReplacement(t *testing.T) {
+// A worker's image changes in place through the change body's image
+// object; its command still forces a new worker.
+func TestWorker_imageChangesInPlace(t *testing.T) {
 	api := newFakeDeploymentsAPI(t)
 	cfg := func(image string) string {
 		return fmt.Sprintf(`
@@ -158,7 +159,29 @@ resource "computesphere_worker" "jobs" {
 				},
 			},
 			{
-				Config: cfg("acme/worker:2"),
+				PreConfig: api.reset,
+				Config:    cfg("acme/worker:2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						checks.ExpectNoReplace(),
+						plancheck.ExpectResourceAction("computesphere_worker.jobs", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: func(_ *terraformState) error {
+					p := api.bodies("PATCH", "")
+					if len(p) != 1 {
+						return fmt.Errorf("want 1 change, got %v", p)
+					}
+					checkClosed(t, "worker change", p[0], changeKeys["background-worker"])
+					img, _ := p[0]["image"].(map[string]any)
+					if img["name"] != "acme/worker:2" || len(p[0]) != 2 {
+						return fmt.Errorf("change body = %v", p[0])
+					}
+					return nil
+				},
+			},
+			{
+				Config: strings.Replace(cfg("acme/worker:2"), "bin/worker", "bin/worker --fast", 1),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("computesphere_worker.jobs", plancheck.ResourceActionReplace),

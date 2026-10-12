@@ -153,8 +153,8 @@ resource "computesphere_web_service" "app" {
 }
 
 // After a move, image_password_wo_version is null in state. Setting a first
-// version on a worker records it without a rotation (which its change body
-// can't carry) and without an API write.
+// version on a worker records it without a rotation or any API write; a
+// later version rotates in place.
 func TestPasswordVersion_adoptedAfterMove(t *testing.T) {
 	api := newFakeDeploymentsAPI(t)
 	name := "computesphere_worker.app"
@@ -192,7 +192,8 @@ resource "computesphere_worker" "app" {
 				),
 			},
 			{
-				// A real rotation after that is still refused.
+				// A real rotation after that goes in place.
+				PreConfig: api.reset,
 				Config: fmt.Sprintf(`
 resource "computesphere_worker" "app" {
 %s
@@ -203,7 +204,17 @@ resource "computesphere_worker" "app" {
   image_password_wo_version = 2
 }
 `, ids),
-				ExpectError: regexp.MustCompile(`Registry password can't change in place`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{checks.ExpectNoReplace()},
+				},
+				Check: func(*terraformState) error {
+					p := api.bodies("PATCH", "")
+					img, _ := p[0]["image"].(map[string]any)
+					if len(p) != 1 || img["password"] != "registry-secret-2" {
+						return fmt.Errorf("rotation change = %v", p)
+					}
+					return nil
+				},
 			},
 		},
 	})
@@ -267,4 +278,83 @@ resource "computesphere_web_service" "app" {
 	if n := api.count("PATCH", "") + api.count("POST", "/deployments") + api.count("PUT", ""); n != 0 {
 		t.Fatalf("a refused git_repo_id change reached the API (%d writes)", n)
 	}
+}
+
+// An imported service reads its real git_repo_id: the same value plans no
+// change, and a different one is drift the API can't fix, so it's refused.
+func TestGitRepoID_importReadsRealValue(t *testing.T) {
+	api := newFakeDeploymentsAPI(t)
+	id := api.seedWithRepo("web-service", "4821")
+	name := "computesphere_web_service.app"
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{
+				Config:             gitWebService("4821"),
+				ResourceName:       name,
+				ImportState:        true,
+				ImportStateId:      id,
+				ImportStatePersist: true,
+				ImportStateCheck: func(s []*terraformInstanceState) error {
+					if got := s[0].Attributes["git_repo_id"]; got != "4821" {
+						return fmt.Errorf("imported git_repo_id = %q, want the service's 4821", got)
+					}
+					return nil
+				},
+			},
+			{
+				Config:      gitWebService("9999"),
+				ExpectError: regexp.MustCompile(`This web service has git_repo_id "4821"`),
+			},
+			{
+				PreConfig: api.reset,
+				Config:    gitWebService("4821"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{checks.ExpectNoReplace()},
+				},
+				Check: resource.TestCheckResourceAttr(name, "git_repo_id", "4821"),
+			},
+		},
+	})
+}
+
+// A static site takes git_repo_id at create (in ci_config, alone) and
+// refuses a change to it.
+func TestGitRepoID_staticSite(t *testing.T) {
+	api := newFakeDeploymentsAPI(t)
+	cfg := func(repo string) string {
+		return fmt.Sprintf(`
+resource "computesphere_static_site" "docs" {
+%s
+  git_url       = "group/docs"
+  build_command = "npm run build"
+  git_repo_id   = %q
+}
+`, ids, repo)
+	}
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{
+				Config: cfg("77"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("computesphere_static_site.docs", "git_repo_id", "77"),
+					func(*terraformState) error {
+						c := api.bodies("POST", "/deployments")[0]
+						checkClosed(t, "static site create", c, createKeys["static-site"])
+						ci, _ := c["ci_config"].(map[string]any)
+						if len(ci) != 1 || ci["git_repo_id"] != "77" {
+							return fmt.Errorf("ci_config = %v", c["ci_config"])
+						}
+						return nil
+					},
+				),
+			},
+			{
+				Config:      cfg("78"),
+				ExpectError: regexp.MustCompile(`git_repo_id can't change on an existing static site`),
+			},
+			{Config: cfg("77")},
+		},
+	})
 }

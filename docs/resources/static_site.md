@@ -107,6 +107,7 @@ moved {
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
+- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the static site has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the static site's is refused at plan time, because the API can't change it.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `install_command` (String) Dependency install command, e.g. `npm ci`.
 - `network_access` (Attributes) Who can reach the static site. (see [below for nested schema](#nestedatt--network_access))

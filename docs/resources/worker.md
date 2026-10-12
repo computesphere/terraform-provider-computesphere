@@ -96,36 +96,36 @@ moved {
 
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
-- `autoscaling` (Attributes) CPU autoscaling between a fewest and a most spherelets. Team plan and above. Changing it creates a new background worker. (see [below for nested schema](#nestedatt--autoscaling))
-- `branch` (String) Branch to build and to deploy on push. Changing it creates a new background worker.
-- `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`. Changing it creates a new background worker.
-- `build_command` (String) Build command. Changing it creates a new background worker.
+- `autoscaling` (Attributes) CPU autoscaling between a fewest and a most spherelets. Team plan and above. (see [below for nested schema](#nestedatt--autoscaling))
+- `branch` (String) Branch to build and to deploy on push.
+- `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`.
+- `build_command` (String) Build command.
 - `command` (String) Command to run instead of the image's own. Changing it creates a new background worker.
-- `context` (String) Docker build context directory. Changing it creates a new background worker.
+- `context` (String) Docker build context directory.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
-- `dockerfile` (String) Dockerfile path of a Docker build. Changing it creates a new background worker.
+- `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
-- `git_connection_id` (String) Git connection that clones the repository and delivers pushes. Changing it creates a new background worker.
-- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create. The provider can't read it back, so on an imported or moved background worker set the id the service already uses; setting it there only records it. Removing it from the configuration keeps the recorded value, and changing a recorded value is refused at plan time, because the API can't change it.
-- `git_url` (String) Repository to build from. Set this or `image`. Changing it creates a new background worker.
-- `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`. Changing it creates a new background worker.
+- `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
+- `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the background worker has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the background worker's is refused at plan time, because the API can't change it.
+- `git_url` (String) Repository to build from. Set this or `image`.
+- `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.
 - `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and increase `image_password_wo_version`.
-- `image_password_wo_version` (Number) Version of `image_password`. A background worker can't take a new registry password after create yet, so changing a recorded version is refused at plan time. Setting it for the first time on an imported or moved resource only records it.
-- `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`. Changing it creates a new background worker.
-- `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`. Changing it creates a new background worker.
-- `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password. Changing it creates a new background worker.
-- `image_username` (String) Registry username of a private image. Changing it creates a new background worker.
-- `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`. Changing it creates a new background worker.
-- `root_dir` (String) The service's directory in a monorepo. Changing it creates a new background worker.
-- `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out. Changing it creates a new background worker.
+- `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an imported or moved resource only records it.
+- `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`.
+- `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
+- `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password.
+- `image_username` (String) Registry username of a private image.
+- `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
+- `root_dir` (String) The service's directory in a monorepo.
+- `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
 - `sphere_count` (Number) Spherelets to run. Defaults to 1. Changing it scales in place.
-- `start_command` (String) Start command of a git build. Changing it creates a new background worker.
+- `start_command` (String) Start command of a git build.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
-- `version` (String) Language version of a native build, e.g. `20` for Node.js. Changing it creates a new background worker.
+- `version` (String) Language version of a native build, e.g. `20` for Node.js.
 - `wait_for_ready` (Boolean) Wait for the background worker to finish deploying after create and change.
-- `watch_paths` (List of String) gitignore-style globs; a push builds only when a changed file matches one. Defaults to `root_dir`, else every push. Changing it creates a new background worker.
+- `watch_paths` (List of String) gitignore-style globs; a push builds only when a changed file matches one. Defaults to `root_dir`, else every push.
 
 ### Read-Only
 

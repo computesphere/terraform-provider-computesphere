@@ -2,7 +2,6 @@ package provider_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/checks"
@@ -94,41 +93,69 @@ func TestWebService_passwordRotatesInPlace(t *testing.T) {
 	})
 }
 
-// A worker's and a cron job's change bodies can't carry a registry
-// password, so a rotation is refused at plan time; the resource is never
-// replaced for it.
-func TestPasswordRotationRefused(t *testing.T) {
-	for _, tc := range []struct{ res, extra string }{
-		{"computesphere_worker", `  command = "bin/worker"`},
-		{"computesphere_cron_job", "  schedule = \"0 2 * * *\"\n  command  = \"bin/report\""},
+// A worker and a cron job rotate the registry password in place too: the
+// change body carries only the image object, with the credentials, and the
+// resource is never replaced.
+func TestPasswordRotatesInPlace_workerAndCron(t *testing.T) {
+	for _, tc := range []struct{ res, apiType, extra string }{
+		{"computesphere_worker", "background-worker", `  command = "bin/worker"`},
+		{"computesphere_cron_job", "cron-job", "  schedule = \"0 2 * * *\"\n  command  = \"bin/report\""},
 	} {
 		t.Run(tc.res, func(t *testing.T) {
 			api := newFakeDeploymentsAPI(t)
+			name := tc.res + ".app"
 			resource.UnitTest(t, resource.TestCase{
 				TerraformVersionChecks:   writeOnlyVersions,
 				ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
 				Steps: []resource.TestStep{
 					{
 						Config: privateImageConfig(tc.res, "first-secret", 1, tc.extra),
-						Check:  resource.TestCheckNoResourceAttr(tc.res+".app", "image_password"),
+						Check:  resource.TestCheckNoResourceAttr(name, "image_password"),
 					},
 					{
-						Config:      privateImageConfig(tc.res, "second-secret", 2, tc.extra),
-						ExpectError: regexp.MustCompile(`Registry password can't change in place`),
+						PreConfig: api.reset,
+						Config:    privateImageConfig(tc.res, "second-secret", 2, tc.extra),
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								checks.ExpectNoReplace(),
+								plancheck.ExpectResourceAction(name, plancheck.ResourceActionUpdate),
+							},
+						},
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckNoResourceAttr(name, "image_password"),
+							func(_ *terraformState) error {
+								p := api.bodies("PATCH", "")
+								if len(p) != 1 {
+									return fmt.Errorf("want 1 change, got %v", p)
+								}
+								checkClosed(t, tc.res+" change", p[0], changeKeys[tc.apiType])
+								if len(p[0]) != 2 {
+									return fmt.Errorf("change body = %v, want only type and image", p[0])
+								}
+								img, _ := p[0]["image"].(map[string]any)
+								want := map[string]any{"name": "registry.example.test/app:1", "type": "private",
+									"provider": "docker", "username": "deploy", "password": "second-secret",
+									"url": "registry.example.test"}
+								if fmt.Sprint(img) != fmt.Sprint(want) {
+									return fmt.Errorf("image = %v, want %v", img, want)
+								}
+								return nil
+							},
+						),
 					},
 					{
 						// The same version with a new value plans nothing.
-						Config: privateImageConfig(tc.res, "second-secret", 1, tc.extra),
+						Config: privateImageConfig(tc.res, "third-secret", 2, tc.extra),
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
-								plancheck.ExpectResourceAction(tc.res+".app", plancheck.ResourceActionNoop),
+								plancheck.ExpectResourceAction(name, plancheck.ResourceActionNoop),
 							},
 						},
 					},
 				},
 			})
-			if n := api.count("POST", "/deployments"); n != 1 {
-				t.Fatalf("want exactly 1 create (no replacement), got %d", n)
+			if n := api.count("POST", "/deployments"); n != 0 {
+				t.Fatalf("the rotation re-created the %s", tc.res)
 			}
 		})
 	}

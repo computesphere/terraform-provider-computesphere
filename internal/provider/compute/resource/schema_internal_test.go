@@ -7,12 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
 
-// git_repo_id is on every git-source kind except the static site, whose
-// create body has no ci_config; it never forces replacement (a change to a
-// recorded value is refused at plan instead).
+// git_repo_id is on every compute kind (all build from git); it never
+// forces replacement (a change to a recorded value is refused at plan).
 func TestGitRepoID(t *testing.T) {
 	for _, k := range kinds {
-		if k.has("git_repo_id") != !k.is(staticSite) {
+		if !k.has("git_repo_id") {
 			t.Errorf("%s: git_repo_id presence wrong", k.typeName)
 		}
 		if k.forcesReplace("git_repo_id") {
