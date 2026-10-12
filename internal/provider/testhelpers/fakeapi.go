@@ -56,7 +56,7 @@ var FakePlanIDs = map[string]string{
 var fakeCatalog = []fakeSphereletType{
 	{"sl-0.25c-512m", "spherelet_type", "Flex 512 MB", "flex", 0.25, 0.25, 512, 10, 100, true, []string{"FLX"}, FakePlanIDs["sl-0.25c-512m"]},
 	{"sl-1c-2g", "spherelet_type", "Standard 1", "standard", 1, 1, 2048, 20, 200, true, []string{"MAX"}, FakePlanIDs["sl-1c-2g"]},
-	{"sl-2c-4g", "spherelet_type", "Standard 2", "standard", 2, 2, 4096, 30, 300, true, []string{"PWR"}, FakePlanIDs["sl-2c-4g"]},
+	{"sl-2c-4g", "spherelet_type", "Performance", "standard", 2, 2, 4096, 30, 300, true, []string{"PWR"}, FakePlanIDs["sl-2c-4g"]},
 }
 
 // SetupFakeProvider starts a FakeAPI and returns provider factories pointed
