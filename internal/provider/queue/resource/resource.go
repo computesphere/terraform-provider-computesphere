@@ -76,6 +76,7 @@ var _ resource.Resource = &QueueResource{}
 var _ resource.ResourceWithImportState = &QueueResource{}
 var _ resource.ResourceWithIdentity = &QueueResource{}
 var _ resource.ResourceWithValidateConfig = &QueueResource{}
+var _ resource.ResourceWithModifyPlan = &QueueResource{}
 
 func NewQueueResource() resource.Resource {
 	return &QueueResource{}
@@ -313,6 +314,12 @@ func (r *QueueResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	default:
 		resp.Diagnostics.AddError("Error deleting broker", cstypes.ProblemSummary(raw, status))
 	}
+}
+
+// ModifyPlan refuses an engine or version change on an existing broker
+// instead of planning a replacement that would delete its data.
+func (r *QueueResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	dataproduct.RefuseChange(ctx, req, resp, "broker", "engine", "version")
 }
 
 func (r *QueueResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

@@ -86,7 +86,7 @@ Read-Only:
 - `memory_mb` (Number) Memory per member in MB; null on shared types.
 - `monthly_price_cents` (Number) Monthly price in USD cents for the region's price group; null until prices are published.
 - `name` (String) Display name, e.g. `Queue 1`.
-- `nodes` (Number) Members of the broker's cluster: 1, or 3 on an `-ha` type (across three zones, with quorum queues).
+- `nodes` (Number) Members of the broker's cluster: 1, or 3 on a high-availability type (an id ending in `-ha`), across three zones with quorum queues.
 - `price_group` (String) `standard` or `premium`.
 - `storage_gb` (Number) Disk included per member for queued messages; null on shared types.
 - `unavailable_reason` (String) Why it's unavailable; null when available.

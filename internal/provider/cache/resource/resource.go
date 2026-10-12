@@ -80,6 +80,7 @@ var _ resource.Resource = &CacheResource{}
 var _ resource.ResourceWithImportState = &CacheResource{}
 var _ resource.ResourceWithIdentity = &CacheResource{}
 var _ resource.ResourceWithValidateConfig = &CacheResource{}
+var _ resource.ResourceWithModifyPlan = &CacheResource{}
 
 func NewCacheResource() resource.Resource {
 	return &CacheResource{}
@@ -327,6 +328,12 @@ func (r *CacheResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	default:
 		resp.Diagnostics.AddError("Error deleting cache", cstypes.ProblemSummary(raw, status))
 	}
+}
+
+// ModifyPlan refuses an engine or version change on an existing cache
+// instead of planning a replacement that would delete its data.
+func (r *CacheResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	dataproduct.RefuseChange(ctx, req, resp, "cache", "engine", "version")
 }
 
 func (r *CacheResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

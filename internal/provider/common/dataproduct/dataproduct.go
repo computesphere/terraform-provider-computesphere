@@ -10,7 +10,37 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+// RefuseChange refuses, at plan time, a change to any of attrs on an
+// existing resource: a data product's engine and version can't change in
+// place, and replacing it would delete its data, so the plan stops with an
+// error instead of planning a replacement. noun names the resource, e.g.
+// "cache".
+func RefuseChange(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse, noun string, attrs ...string) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+	for _, attr := range attrs {
+		var planV, stateV types.String
+		resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(attr), &planV)...)
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(attr), &stateV)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if planV.IsUnknown() || planV.IsNull() || stateV.IsNull() || planV.Equal(stateV) {
+			continue
+		}
+		resp.Diagnostics.AddAttributeError(path.Root(attr), fmt.Sprintf("%s can't change on an existing %s", attr, noun),
+			fmt.Sprintf("This %s runs %s %s, and it can't be changed in place. Changing it needs a new %s, which "+
+				"would start empty: create the new %s as a separate resource, move your data, then remove this one. "+
+				"To keep this %s, set %s back to %q.",
+				noun, attr, stateV.ValueString(), noun, noun, noun, attr, stateV.ValueString()))
+	}
+}
 
 // NameRe is the name rule of the typed data-product creates: lowercase
 // letters, digits and hyphens, starting with a letter, 1-40 characters.

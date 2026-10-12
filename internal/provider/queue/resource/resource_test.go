@@ -111,3 +111,33 @@ func TestAccQueueResource_basic(t *testing.T) {
 		},
 	})
 }
+
+// An engine or version change on an existing broker is refused at plan
+// time, never planned as a replacement that would drop its messages.
+func TestQueueResource_versionChangeRefused(t *testing.T) {
+	queueresource.SetPollIntervalForTest(time.Millisecond)
+	api := newFakeQueueAPI(t)
+	api.version = "4.2"
+	base := `
+resource "computesphere_queue" "example" {
+  name           = "app-queue"
+  environment_id = "33333333-3333-3333-3333-333333333333"
+  instance_type  = "sq-1c-2g-s20g"
+%s
+}
+`
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{Config: sprintf(base, "")},
+			{
+				Config:      sprintf(base, `  version = "4.3"`),
+				ExpectError: regexp.MustCompile(`version can't change on an existing broker`),
+			},
+			{Config: sprintf(base, "")},
+		},
+	})
+	if len(api.creates()) != 1 { // the test's own destroy is the only DELETE
+		t.Fatal("a version change must never replace the broker")
+	}
+}

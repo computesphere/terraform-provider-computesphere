@@ -50,7 +50,7 @@ func (d *InstanceTypesDataSource) Schema(ctx context.Context, req datasource.Sch
 					"vcpu":                   schema.Float64Attribute{Computed: true, Description: "vCPU per member; null on shared types."},
 					"memory_mb":              schema.Int64Attribute{Computed: true, Description: "Memory per member in MB; null on shared types."},
 					"storage_gb":             schema.Int64Attribute{Computed: true, Description: "Disk included per member for queued messages; null on shared types."},
-					"nodes":                  schema.Int64Attribute{Computed: true, Description: "Members of the broker's cluster: 1, or 3 on an `-ha` type (across three zones, with quorum queues)."},
+					"nodes":                  schema.Int64Attribute{Computed: true, Description: "Members of the broker's cluster: 1, or 3 on a high-availability type (an id ending in `-ha`), across three zones with quorum queues."},
 					"high_availability":      schema.BoolAttribute{Computed: true, Description: "True on a three-member type."},
 					"high_availability_type": schema.StringAttribute{Computed: true, Description: "The three-member twin of a one-member size; null when there is none."},
 					"max_connections":        schema.Int64Attribute{Computed: true, Description: "Connection limit; 0 means no fixed limit."},

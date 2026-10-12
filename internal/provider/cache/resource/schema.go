@@ -34,18 +34,17 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("valkey"),
-				PlanModifiers: replace,
-				Description:   "Cache engine. Only `valkey` today.",
+				Description: "Cache engine. Only `valkey` today. It can't change after create; a change is refused at plan time.",
 			},
 			"version": schema.StringAttribute{
 				Optional: true, Computed: true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
-				Description:   "Valkey version, e.g. `8.1`. Defaults to the latest supported. Changing it creates a new cache.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Description:   "Valkey version, e.g. `8.1`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.",
 			},
 			"instance_type": schema.StringAttribute{
 				Required: true,
 				Description: "Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` " +
-					"data source; an id ending in `-ha` adds a standby copy in another zone with automatic failover. " +
+					"data source. A high-availability instance type (an id ending in `-ha`) adds a standby copy in another zone with automatic failover. " +
 					"Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted " +
 					"(or writes are refused with `noeviction`).",
 			},
@@ -56,7 +55,7 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"high_availability": schema.BoolAttribute{
 				Computed:    true,
-				Description: "True when the cache has a standby copy in another zone (an `-ha` instance type).",
+				Description: "True when the cache has high availability: a standby copy in another zone (a high-availability instance type, its id ending in `-ha`).",
 			},
 			"status":     schema.StringAttribute{Computed: true, Description: "Current status, e.g. `available`."},
 			"region":     schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Region of the environment."},

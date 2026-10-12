@@ -33,13 +33,12 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("postgresql"),
-				PlanModifiers: replace,
-				Description:   "Database engine. Only `postgresql` today.",
+				Description: "Database engine. Only `postgresql` today. It can't change after create; a change is refused at plan time.",
 			},
 			"version": schema.StringAttribute{
 				Optional: true, Computed: true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
-				Description:   "Major version. Defaults to the latest supported. Changing it creates a new database.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Description:   "Major version. Defaults to the latest supported. It can't change after create; a change is refused at plan time.",
 			},
 			"instance_type": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: keep,

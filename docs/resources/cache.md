@@ -76,19 +76,19 @@ output "cache_status" {
 ### Required
 
 - `environment_id` (String) Environment the cache belongs to. Only services in this environment can reach it. Changing it creates a new cache.
-- `instance_type` (String) Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` data source; an id ending in `-ha` adds a standby copy in another zone with automatic failover. Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted (or writes are refused with `noeviction`).
+- `instance_type` (String) Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` data source. A high-availability instance type (an id ending in `-ha`) adds a standby copy in another zone with automatic failover. Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted (or writes are refused with `noeviction`).
 - `name` (String) Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. Changing it creates a new cache.
 
 ### Optional
 
-- `engine` (String) Cache engine. Only `valkey` today.
+- `engine` (String) Cache engine. Only `valkey` today. It can't change after create; a change is refused at plan time.
 - `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. Changes apply in place.
-- `version` (String) Valkey version, e.g. `8.1`. Defaults to the latest supported. Changing it creates a new cache.
+- `version` (String) Valkey version, e.g. `8.1`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
 
 - `created_at` (String) Creation timestamp.
-- `high_availability` (Boolean) True when the cache has a standby copy in another zone (an `-ha` instance type).
+- `high_availability` (Boolean) True when the cache has high availability: a standby copy in another zone (a high-availability instance type, its id ending in `-ha`).
 - `id` (String) Cache identifier.
 - `project_id` (String) Project the cache belongs to.
 - `region` (String) Region of the environment.

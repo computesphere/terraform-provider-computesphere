@@ -81,13 +81,13 @@ output "database_status" {
 
 ### Optional
 
-- `engine` (String) Database engine. Only `postgresql` today.
+- `engine` (String) Database engine. Only `postgresql` today. It can't change after create; a change is refused at plan time.
 - `high_availability` (String) `none` (one instance), `standby` (a standby in another zone with automatic failover) or `three_zone` (two standbys across three zones, synchronous). Standbys need an instance type with 1 vCPU or more.
 - `inject` (Boolean) At create, give every service in the environment the pooled connection string as `DATABASE_URL`. Only applies when the database is created.
 - `instance_type` (String) Instance type id, e.g. `pg-2c-4g` (Standard 2). List them with the `computesphere_database_instance_types` data source. Changing it resizes the database in place with a short restart.
 - `plan` (String, Deprecated) Deprecated: use `instance_type` and `high_availability`. `hobby` is Standard 1, `standard` is Standard 2 on zone-redundant storage, `ha` is Standard 2 with `three_zone`.
 - `storage_gb` (Number) Storage in GB. Defaults to 10. It can only grow.
-- `version` (String) Major version. Defaults to the latest supported. Changing it creates a new database.
+- `version` (String) Major version. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
 

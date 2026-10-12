@@ -75,19 +75,19 @@ output "queue_members" {
 ### Required
 
 - `environment_id` (String) Environment the broker belongs to. Only services in this environment can reach it. Changing it creates a new broker.
-- `instance_type` (String) Instance type id, e.g. `sq-1c-2g-s20g` (Queue 1). List them with the `computesphere_queue_instance_types` data source; an id ending in `-ha` runs three members across zones with quorum queues. Changing it resizes the broker in place; a size with less disk than the current one is refused.
+- `instance_type` (String) Instance type id, e.g. `sq-1c-2g-s20g` (Queue 1). List them with the `computesphere_queue_instance_types` data source. A high-availability instance type (an id ending in `-ha`) runs three members across zones with quorum queues. Changing it resizes the broker in place; a size with less disk than the current one is refused.
 - `name` (String) Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. Changing it creates a new broker.
 
 ### Optional
 
-- `engine` (String) Broker engine. Only `rabbitmq` today.
-- `version` (String) RabbitMQ version, e.g. `4.3`. Defaults to the latest supported. Changing it creates a new broker.
+- `engine` (String) Broker engine. Only `rabbitmq` today. It can't change after create; a change is refused at plan time.
+- `version` (String) RabbitMQ version, e.g. `4.3`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
 
 - `created_at` (String) Creation timestamp.
 - `id` (String) Broker identifier.
-- `nodes` (Number) Members of the broker's cluster: 1, or 3 on an `-ha` instance type.
+- `nodes` (Number) Members of the broker's cluster: 1, or 3 on a high-availability instance type (an id ending in `-ha`).
 - `project_id` (String) Project the broker belongs to.
 - `region` (String) Region of the environment.
 - `status` (String) Current status, e.g. `available`.

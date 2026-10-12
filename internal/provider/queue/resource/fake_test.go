@@ -13,6 +13,7 @@ import (
 // spec doesn't list fails the test. A read after a create or resize reports
 // the transitional status once, then available.
 type fakeQueueAPI struct {
+	version string // version the API reports for a new queue
 	t       *testing.T
 	mu      sync.Mutex
 	queues  map[string]map[string]any
@@ -21,7 +22,7 @@ type fakeQueueAPI struct {
 }
 
 func newFakeQueueAPI(t *testing.T) *fakeQueueAPI {
-	return &fakeQueueAPI{t: t, queues: map[string]map[string]any{}, pending: map[string]bool{}}
+	return &fakeQueueAPI{version: "4.3", t: t, queues: map[string]map[string]any{}, pending: map[string]bool{}}
 }
 
 const fakeQueueID = "0b5d6a8e-2c1f-4e7a-9d3b-6f0e1c2a3b4c"
@@ -49,7 +50,7 @@ func (f *fakeQueueAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		c := map[string]any{
-			"object": "queue", "id": fakeQueueID, "name": body.Name, "engine": body.Engine, "version": "4.3",
+			"object": "queue", "id": fakeQueueID, "name": body.Name, "engine": body.Engine, "version": f.version,
 			"instance_type": body.InstanceType, "nodes": nodes(body.InstanceType),
 			"status": "provisioning", "read_only": false,
 			"account_id": "11111111-1111-1111-1111-111111111111", "project_id": "22222222-2222-2222-2222-222222222222",
@@ -134,4 +135,16 @@ func nodes(instanceType string) int {
 		return 3
 	}
 	return 1
+}
+
+func (f *fakeQueueAPI) creates() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var out []string
+	for _, c := range f.calls {
+		if strings.HasPrefix(c, "POST ") {
+			out = append(out, c)
+		}
+	}
+	return out
 }

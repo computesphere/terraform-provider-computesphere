@@ -7,6 +7,7 @@ import (
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/dataproduct"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -36,6 +37,7 @@ var _ resource.Resource = &DatabaseResource{}
 var _ resource.ResourceWithImportState = &DatabaseResource{}
 var _ resource.ResourceWithIdentity = &DatabaseResource{}
 var _ resource.ResourceWithValidateConfig = &DatabaseResource{}
+var _ resource.ResourceWithModifyPlan = &DatabaseResource{}
 
 func NewDatabaseResource() resource.Resource {
 	return &DatabaseResource{}
@@ -384,6 +386,12 @@ func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteReques
 	default:
 		resp.Diagnostics.AddError("Error deleting database", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 	}
+}
+
+// ModifyPlan refuses an engine or version change on an existing database
+// instead of planning a replacement that would delete its data.
+func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	dataproduct.RefuseChange(ctx, req, resp, "database", "engine", "version")
 }
 
 func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

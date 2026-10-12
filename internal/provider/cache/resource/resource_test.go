@@ -120,3 +120,39 @@ func TestAccCacheResource_basic(t *testing.T) {
 		},
 	})
 }
+
+// An engine or version change on an existing cache is refused at plan time,
+// never planned as a replacement that would empty it.
+func TestCacheResource_versionChangeRefused(t *testing.T) {
+	cacheresource.SetPollIntervalForTest(time.Millisecond)
+	api := newFakeCacheAPI(t)
+	api.version = "8.0" // an older version the API created earlier
+	base := `
+resource "computesphere_cache" "example" {
+  name           = "app-cache"
+  environment_id = "33333333-3333-3333-3333-333333333333"
+  instance_type  = "sc-0.25c-1g"
+%s
+}
+`
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{Config: sprintf(base, "")},
+			{
+				Config:      sprintf(base, `  version = "8.1"`),
+				ExpectError: regexp.MustCompile(`version can't change on an existing cache`),
+			},
+			{
+				// Leaving version out keeps the running one: nothing to do.
+				Config: sprintf(base, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction("computesphere_cache.example", plancheck.ResourceActionNoop)},
+				},
+			},
+		},
+	})
+	if len(api.creates()) != 1 { // the test's own destroy is the only DELETE
+		t.Fatal("a version change must never replace the cache")
+	}
+}
