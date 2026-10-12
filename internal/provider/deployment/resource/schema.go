@@ -30,9 +30,10 @@ func Schema(ctx context.Context) schema.Schema {
 		Description: "Manages a deployment: a running instance of a service in an environment. " +
 			"Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, " +
 			"and (by default) waits for it to become ready. " +
-			"Changes to the image, registry auth, build args, port, sphere count and env/secret vars update " +
-			"the deployment in place. Changing service_id, environment_id, project_id, type or plan_id, or " +
-			"removing the image, an image_* setting, port or sphere_count, replaces it.",
+			"Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update " +
+			"the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet " +
+			"size (plan_id), or removing the image, an image_* setting, port or the spherelet count " +
+			"(sphere_count), replaces it.",
 		Attributes: map[string]schema.Attribute{
 			// The id stays the same through an in-place update.
 			"id": schema.StringAttribute{Computed: true, Description: "Deployment id.", PlanModifiers: []planmodifier.String{

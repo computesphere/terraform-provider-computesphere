@@ -14,10 +14,11 @@
   operations (newer than v0.3.0).
 - `computesphere_deployment` changes that the API can apply in place now
   update the deployment instead of replacing it: image, registry auth, build
-  args, port, sphere count and env/secret vars. Removing `env_vars`,
+  args, port, spherelet count and env/secret vars. Removing `env_vars`,
   `secret_vars` or `build_args` clears them, and a `wait_for_ready` change
-  alone sends nothing. Changing `plan_id`, or removing `image`, an `image_*`
-  setting, `port` or `sphere_count`, still replaces the deployment.
+  alone sends nothing. Changing the spherelet size (`plan_id`), or removing
+  `image`, an `image_*` setting, `port` or the spherelet count
+  (`sphere_count`), still replaces the deployment.
 
 ## 1.1.1
 

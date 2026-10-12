@@ -3,12 +3,12 @@
 page_title: "computesphere_deployment Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, sphere count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or plan_id, or removing the image, an image_* setting, port or sphere_count, replaces it.
+  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 ---
 
 # computesphere_deployment (Resource)
 
-Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, sphere count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or plan_id, or removing the image, an image_* setting, port or sphere_count, replaces it.
+Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 
 ## Example Usage
 
