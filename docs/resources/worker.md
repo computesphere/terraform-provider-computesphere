@@ -100,7 +100,7 @@ moved {
 - `branch` (String) Branch to build and to deploy on push.
 - `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`.
 - `build_command` (String) Build command.
-- `command` (String) Command to run instead of the image's own. Changing it creates a new background worker.
+- `command` (String) Command to run instead of the image's own.
 - `context` (String) Docker build context directory.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
 - `dockerfile` (String) Dockerfile path of a Docker build.
@@ -109,7 +109,7 @@ moved {
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the background worker has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the background worker's is refused at plan time, because the API can't change it.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.
-- `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and increase `image_password_wo_version`.
+- `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). It goes with every image change, because the API keeps a stored password only while the registry stays the same. To rotate it, set the new value and increase `image_password_wo_version`.
 - `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an imported or moved resource only records it.
 - `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`.
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.

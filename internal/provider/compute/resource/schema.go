@@ -143,8 +143,9 @@ var attrDefs = map[string]attrDef{
 	"image_password": func(k kind, _ bool) schema.Attribute {
 		return schema.StringAttribute{Optional: true, Sensitive: true, WriteOnly: true,
 			Description: "Registry password or token of a private image. Write-only: it is sent to the API and " +
-				"never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and " +
-				"increase `image_password_wo_version`."}
+				"never stored in state or plan (Terraform 1.11 or later). It goes with every image change, because " +
+				"the API keeps a stored password only while the registry stays the same. To rotate it, set the " +
+				"new value and increase `image_password_wo_version`."}
 	},
 	"image_password_wo_version": func(k kind, _ bool) schema.Attribute {
 		return schema.Int64Attribute{Optional: true,

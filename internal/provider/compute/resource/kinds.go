@@ -117,10 +117,9 @@ var (
 		summary: "Manages a background worker in an environment: a long-running process with no port, health " +
 			"check or address, run from a container image or built from a git repository.",
 		attrs: join(imageAttrs, gitAttrs, []string{"command", "sphere_count", "autoscaling"}),
-		// The change body takes image, autoscaling and build settings (the
-		// git start command as build_config.run_command), but not the
-		// command an image worker runs.
-		replace: []string{"command"},
+		// The change body takes image, autoscaling and build settings, and
+		// the start command (git) or the command an image worker runs, both
+		// as build_config.run_command, so nothing forces a new worker.
 	}
 	cronJob = kind{
 		apiType: "cron-job", typeName: "computesphere_cron_job",

@@ -129,7 +129,7 @@ func TestWebService_lifecycle(t *testing.T) {
 }
 
 // A worker's image changes in place through the change body's image
-// object; its command still forces a new worker.
+// object, and an image worker's command through build_config.run_command.
 func TestWorker_imageChangesInPlace(t *testing.T) {
 	api := newFakeDeploymentsAPI(t)
 	cfg := func(image string) string {
@@ -181,11 +181,30 @@ resource "computesphere_worker" "jobs" {
 				},
 			},
 			{
-				Config: strings.Replace(cfg("acme/worker:2"), "bin/worker", "bin/worker --fast", 1),
+				// An image worker's command changes in place too: the change
+				// body is build_config.run_command alone.
+				PreConfig: api.reset,
+				Config:    strings.Replace(cfg("acme/worker:2"), "bin/worker", "bin/worker --fast", 1),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("computesphere_worker.jobs", plancheck.ResourceActionReplace),
+						checks.ExpectNoReplace(),
+						plancheck.ExpectResourceAction("computesphere_worker.jobs", plancheck.ResourceActionUpdate),
 					},
+				},
+				Check: func(_ *terraformState) error {
+					p := api.bodies("PATCH", "")
+					if len(p) != 1 {
+						return fmt.Errorf("want 1 change, got %v", p)
+					}
+					checkClosed(t, "worker change", p[0], changeKeys["background-worker"])
+					bc, _ := p[0]["build_config"].(map[string]any)
+					if len(p[0]) != 2 || len(bc) != 1 || bc["run_command"] != "bin/worker --fast" {
+						return fmt.Errorf("change body = %v, want {type, build_config:{run_command}}", p[0])
+					}
+					if api.count("POST", "/deployments") != 0 || api.count("DELETE", "") != 0 {
+						return fmt.Errorf("a command change re-created the worker")
+					}
+					return nil
 				},
 			},
 		},

@@ -231,11 +231,10 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 		setString(img, "type", plan.ImageType)
 		setString(img, "provider", plan.ImageProvider)
 		setString(img, "username", plan.ImageUsername)
-		// A password left out keeps the saved one; send it only when
-		// its version moved, or the image is new.
-		if passwordRotated(plan, state) || !plan.Image.Equal(state.Image) || !plan.ImageURL.Equal(state.ImageURL) {
-			setString(img, "password", plan.ImagePassword)
-		}
+		// The API keeps a stored password left out only while the registry
+		// stays the same, so the configured password goes with every image
+		// change: a rotation, a new tag, or a new registry.
+		setString(img, "password", plan.ImagePassword)
 		setString(img, "url", plan.ImageURL)
 		if len(img) > 0 {
 			b["image"] = img
@@ -315,6 +314,11 @@ func buildConfigChange(ctx context.Context, k kind, plan, state model, diags *di
 	stringChange(bc, "context", plan.Context, state.Context)
 	if k.has("start_command") {
 		stringChange(bc, "run_command", plan.StartCommand, state.StartCommand)
+	}
+	// A worker's run_command is also how an image worker's command changes
+	// in place: sent alone, it replaces the saved command.
+	if k.is(worker) {
+		stringChange(bc, "run_command", plan.Command, state.Command)
 	}
 	if !plan.WatchPaths.IsUnknown() && !plan.WatchPaths.Equal(state.WatchPaths) {
 		if plan.WatchPaths.IsNull() {

@@ -14,11 +14,14 @@ import (
 // routes the compute resources call. It records each request body so tests
 // can check it against the type's closed create and change bodies.
 type fakeDeploymentsAPI struct {
-	t     *testing.T
-	mu    sync.Mutex
-	deps  map[string]map[string]any
-	seq   int
-	calls []call
+	// rejectImage answers 422 to a change body with an image object, as the
+	// API does until a type's backend takes image changes.
+	rejectImage bool
+	t           *testing.T
+	mu          sync.Mutex
+	deps        map[string]map[string]any
+	seq         int
+	calls       []call
 }
 
 type call struct {
@@ -88,6 +91,12 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodPatch && action == "":
 		if t, ok := body["type"].(string); ok && t != d["type"] {
 			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		if _, ok := body["image"]; ok && f.rejectImage {
+			w.Header().Set("Content-Type", "application/problem+json")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			_, _ = w.Write([]byte(`{"title":"Unprocessable","status":422,"detail":"image changes aren't available for this type yet"}`))
 			return
 		}
 		_ = json.NewEncoder(w).Encode(d)

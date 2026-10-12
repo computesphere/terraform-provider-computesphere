@@ -113,7 +113,7 @@ moved {
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `health_check` (Attributes) HTTP health check. A spherelet that fails it is taken out of traffic. (see [below for nested schema](#nestedatt--health_check))
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.
-- `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). To rotate it, set the new value and increase `image_password_wo_version`.
+- `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). It goes with every image change, because the API keeps a stored password only while the registry stays the same. To rotate it, set the new value and increase `image_password_wo_version`.
 - `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an imported or moved resource only records it.
 - `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`.
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
