@@ -102,6 +102,22 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// seed adds a deployment the API already has (as for an import) and
+// returns its id.
+func (f *fakeDeploymentsAPI) seed(typ string) string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.seq++
+	id := fmt.Sprintf("00000000-0000-4000-8000-%012d", f.seq)
+	f.deps[id] = map[string]any{
+		"object": "deployment", "id": id, "type": typ, "name": "app", "status": "running",
+		"outputs": map[string]any{"url": "https://app.example.test", "internal_url": "app-private.example.test:8080"},
+		"raw": map[string]any{"service_id": "44444444-4444-4444-4444-444444444444",
+			"environment_id": "33333333-3333-3333-3333-333333333333", "project_id": "22222222-2222-2222-2222-222222222222"},
+	}
+	return id
+}
+
 // bodies returns the bodies of the calls matching method and a path suffix.
 func (f *fakeDeploymentsAPI) bodies(method, suffix string) []map[string]any {
 	f.mu.Lock()

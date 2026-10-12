@@ -234,7 +234,7 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 			setString(img, "username", plan.ImageUsername)
 			// A password left out keeps the saved one; send it only when
 			// its version moved, or the image is new.
-			if !plan.ImagePwVer.Equal(state.ImagePwVer) || !plan.Image.Equal(state.Image) || !plan.ImageURL.Equal(state.ImageURL) {
+			if passwordRotated(plan, state) || !plan.Image.Equal(state.Image) || !plan.ImageURL.Equal(state.ImageURL) {
 				setString(img, "password", plan.ImagePassword)
 			}
 			setString(img, "url", plan.ImageURL)
@@ -277,7 +277,13 @@ func imageChanged(plan, state model) bool {
 	// image_password_wo_version.
 	return !plan.Image.Equal(state.Image) || !plan.ImageType.Equal(state.ImageType) ||
 		!plan.ImageProvider.Equal(state.ImageProvider) || !plan.ImageUsername.Equal(state.ImageUsername) ||
-		!plan.ImagePwVer.Equal(state.ImagePwVer) || !plan.ImageURL.Equal(state.ImageURL)
+		passwordRotated(plan, state) || !plan.ImageURL.Equal(state.ImageURL)
+}
+
+// passwordRotated reports a new image_password_wo_version over a recorded
+// one. A first version on an imported or moved resource only records it.
+func passwordRotated(plan, state model) bool {
+	return !state.ImagePwVer.IsNull() && !plan.ImagePwVer.IsNull() && !plan.ImagePwVer.Equal(state.ImagePwVer)
 }
 
 // buildConfigChange renders build_config: a merge, so only changed fields

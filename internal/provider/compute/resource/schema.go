@@ -147,10 +147,12 @@ var attrDefs = map[string]attrDef{
 				"increase `image_password_wo_version`."}
 	},
 	"image_password_wo_version": func(k kind, _ bool) schema.Attribute {
-		desc := "Version of `image_password`. Increase it to send a new password; the change applies in place."
+		desc := "Version of `image_password`. Increase it to send a new password; the change applies in place. " +
+			"Setting it for the first time on an imported or moved resource only records it."
 		if !k.rotatesImagePassword() {
 			desc = "Version of `image_password`. A " + k.noun + " can't take a new registry password after " +
-				"create yet, so changing it is refused at plan time."
+				"create yet, so changing a recorded version is refused at plan time. Setting it for the first time " +
+				"on an imported or moved resource only records it."
 		}
 		return schema.Int64Attribute{Optional: true, Description: desc}
 	},
@@ -161,7 +163,8 @@ var attrDefs = map[string]attrDef{
 	"branch":            optString("Branch to build and to deploy on push."),
 	"git_connection_id": optString("Git connection that clones the repository and delivers pushes."),
 	"git_repo_id": optString("The repository's id at its git provider, e.g. a GitLab project id. Needed for " +
-		"GitLab sources."),
+		"GitLab sources. Sent at create. Setting it on an imported or moved resource only records it; changing " +
+		"a recorded value is refused at plan time, because the API can't change it."),
 	"root_dir":       optString("The service's directory in a monorepo."),
 	"root_directory": optString("The site's directory in a monorepo."),
 	"watch_paths": func(k kind, replace bool) schema.Attribute {

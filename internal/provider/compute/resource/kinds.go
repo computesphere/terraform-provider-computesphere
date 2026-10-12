@@ -108,7 +108,7 @@ var (
 			"container image or built from a git repository.",
 		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "predeploy_command",
 			"health_check", "autoscaling", "network_access", "url", "internal_url"}),
-		replace: []string{"predeploy_command", "git_repo_id"},
+		replace: []string{"predeploy_command"},
 	}
 	privateService = kind{
 		apiType: "private-service", typeName: "computesphere_private_service",
@@ -117,7 +117,7 @@ var (
 			"only by other services in the environment.",
 		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "predeploy_command",
 			"health_check", "autoscaling", "internal_url"}),
-		replace: []string{"predeploy_command", "git_repo_id"},
+		replace: []string{"predeploy_command"},
 	}
 	worker = kind{
 		apiType: "background-worker", typeName: "computesphere_worker",
@@ -127,7 +127,7 @@ var (
 		attrs: join(imageAttrs, gitAttrs, []string{"command", "sphere_count", "autoscaling"}),
 		// A worker's change body takes only the deploy settings today, so its
 		// image, command, build and autoscaling are set at create.
-		replace: join(without(imageAttrs, imageCredAttrs...), gitAttrs, []string{"command", "autoscaling"}),
+		replace: join(without(imageAttrs, imageCredAttrs...), without(gitAttrs, "git_repo_id"), []string{"command", "autoscaling"}),
 	}
 	cronJob = kind{
 		apiType: "cron-job", typeName: "computesphere_cron_job",
@@ -136,7 +136,7 @@ var (
 		summary: "Manages a cron job in an environment: a command run on a schedule, from a container image or " +
 			"a git build.",
 		attrs:   join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command"}),
-		replace: join(without(imageAttrs, imageCredAttrs...), []string{"git_repo_id"}),
+		replace: without(imageAttrs, imageCredAttrs...),
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",

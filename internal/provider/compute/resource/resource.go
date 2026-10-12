@@ -82,22 +82,53 @@ func (r *computeResource) withConfigPassword(ctx context.Context, config tfsdk.C
 	m.ImagePassword = pw
 }
 
-// ModifyPlan refuses a registry-password rotation the kind's change body
-// can't carry, instead of replacing the resource for it.
+// attrGetter is what tfsdk.Plan and tfsdk.State share.
+type attrGetter interface {
+	GetAttribute(ctx context.Context, p path.Path, target interface{}) diag.Diagnostics
+}
+
+// ModifyPlan refuses what the API can't change in place, instead of
+// replacing a running service for it: a different recorded git_repo_id, and
+// a registry-password rotation on a kind whose change body can't carry one.
+// A first value on an imported or moved resource (null in state) is only
+// recorded.
 func (r *computeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() || !r.kind.has("image_password_wo_version") || r.kind.rotatesImagePassword() {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+	r.refuseGitRepoIDChange(ctx, req.Plan, req.State, &resp.Diagnostics)
+	if !r.kind.has("image_password_wo_version") || r.kind.rotatesImagePassword() {
 		return
 	}
 	var planV, stateV types.Int64
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_password_wo_version"), &planV)...)
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("image_password_wo_version"), &stateV)...)
-	if resp.Diagnostics.HasError() || planV.IsUnknown() || planV.Equal(stateV) {
+	if resp.Diagnostics.HasError() || planV.IsUnknown() || planV.IsNull() || stateV.IsNull() || planV.Equal(stateV) {
 		return
 	}
 	resp.Diagnostics.AddAttributeError(path.Root("image_password_wo_version"), "Registry password can't change in place",
 		fmt.Sprintf("The API can't take a new registry password for an existing %s yet, and this provider won't "+
 			"replace the %s to rotate it. Keep image_password_wo_version at %s for now.",
 			r.kind.noun, r.kind.noun, stateV.String()))
+}
+
+// refuseGitRepoIDChange refuses a git_repo_id that differs from a recorded
+// one: no change body takes it. Null in state (after an import or a move)
+// isn't a change; the value is recorded without an API call.
+func (r *computeResource) refuseGitRepoIDChange(ctx context.Context, plan, state attrGetter, diags *diag.Diagnostics) {
+	if !r.kind.has("git_repo_id") {
+		return
+	}
+	var planV, stateV types.String
+	diags.Append(plan.GetAttribute(ctx, path.Root("git_repo_id"), &planV)...)
+	diags.Append(state.GetAttribute(ctx, path.Root("git_repo_id"), &stateV)...)
+	if diags.HasError() || planV.IsUnknown() || planV.IsNull() || stateV.IsNull() || stateV.ValueString() == "" || planV.Equal(stateV) {
+		return
+	}
+	diags.AddAttributeError(path.Root("git_repo_id"), "git_repo_id can't change on an existing "+r.kind.noun,
+		fmt.Sprintf("This %s was created with git_repo_id %q, and the API can't change it in place. This provider "+
+			"won't replace a running %s for it. Set git_repo_id back to %q.",
+			r.kind.noun, stateV.ValueString(), r.kind.noun, stateV.ValueString()))
 }
 
 // setModel writes the model to state as this kind's object. The write-only
@@ -429,6 +460,11 @@ func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 	plan.ID = state.ID
+	// A value unknown at plan time is checked here, before any API call.
+	r.refuseGitRepoIDChange(ctx, req.Plan, req.State, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	rolled := false // a step that already rolls the change out ran
 	if body := changeBody(ctx, r.kind, plan, state, &resp.Diagnostics); len(body) > 0 {
