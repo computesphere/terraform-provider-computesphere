@@ -26,6 +26,10 @@
   rotate it in place on every type; it is also sent with every image change,
   since the API keeps a stored password only for the same registry. A first
   version on an imported or moved resource only records it.
+- Switching a git-built web service, private service, worker or cron job to
+  an image in place is refused at plan time for now: the API could apply
+  the image and then refuse the build change. Create a new resource for the
+  image instead.
 - `computesphere_deployment` is deprecated, and so is its `plan_id`. A
   `moved` block carries a deployment over to the resource for its type
   without redeploying it (Terraform 1.8 or later).

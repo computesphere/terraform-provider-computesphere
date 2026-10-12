@@ -322,6 +322,11 @@ func buildConfigChange(ctx context.Context, k kind, plan, state model, diags *di
 		// An image worker's command changes in place as run_command, which
 		// replaces the saved command.
 		stringChange(bc, "run_command", plan.Command, state.Command)
+	case k.is(worker) && !hasGitSource(state) && (plan.StartCommand.IsNull() || plan.StartCommand.ValueString() == ""):
+		// A worker switching from an image to git with no start command:
+		// the API would carry the image's command into the git build, so
+		// clear it explicitly.
+		bc["run_command"] = nil
 	case k.has("start_command"):
 		// A git build's start command; on a worker switching from an image
 		// to git, this is the run command from now on.

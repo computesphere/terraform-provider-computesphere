@@ -91,3 +91,47 @@ func TestWorker_commandWithGitRefused(t *testing.T) {
 		}},
 	})
 }
+
+// (d) Switching an image worker to git with no start command clears the
+// run command explicitly, so the image's command isn't carried into the
+// git build.
+func TestWorkerChange_imageToGitWithoutStartCommand(t *testing.T) {
+	changeBodyIs(t,
+		"  image   = \"acme/worker:1\"\n  command = \"bin/worker\"",
+		"  git_url           = \"group/worker\"\n  git_connection_id = \"conn-1\"",
+		map[string]any{"type": "background-worker", "build_config": map[string]any{
+			"git_url": "group/worker", "git_connection_id": "conn-1", "run_command": nil}})
+}
+
+// Switching a git-built service to an image is refused at plan time: the
+// API could apply the image and then refuse the build change.
+func TestGitToImageRefused(t *testing.T) {
+	for _, tc := range []struct{ res, extra string }{
+		{"computesphere_worker", ""},
+		{"computesphere_web_service", ""},
+		{"computesphere_cron_job", "  schedule = \"0 2 * * *\"\n  command  = \"bin/report\"\n"},
+	} {
+		t.Run(tc.res, func(t *testing.T) {
+			api := newFakeDeploymentsAPI(t)
+			cfg := func(src string) string {
+				return fmt.Sprintf("resource %q \"x\" {\n%s\n%s%s\n}\n", tc.res, ids, tc.extra, src)
+			}
+			git := "  git_url           = \"group/app\"\n  git_connection_id = \"conn-1\""
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+				Steps: []resource.TestStep{
+					{Config: cfg(git)},
+					{
+						PreConfig:   api.reset,
+						Config:      cfg("  image = \"acme/app:1\""),
+						ExpectError: regexp.MustCompile(`Can't switch from git to an image in place`),
+					},
+					{Config: cfg(git)},
+				},
+			})
+			if n := api.count("PATCH", ""); n != 0 {
+				t.Fatalf("a refused switch sent %d changes", n)
+			}
+		})
+	}
+}
