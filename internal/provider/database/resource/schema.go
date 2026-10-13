@@ -62,7 +62,7 @@ func Schema(ctx context.Context) schema.Schema {
 			"storage_gb": schema.Int64Attribute{
 				Optional: true, Computed: true,
 				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
-				Description:   "Storage in GB. Defaults to 10. It can only grow.",
+				Description:   "Storage in GB. Defaults to the instance type's included storage. It can only grow.",
 			},
 			"inject": schema.BoolAttribute{
 				Optional: true, Computed: true, Default: booldefault.StaticBool(true),
