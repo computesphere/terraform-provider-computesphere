@@ -86,7 +86,7 @@ output "database_status" {
 - `inject` (Boolean) At create, give every service in the environment the pooled connection string as `DATABASE_URL`. Only applies when the database is created.
 - `instance_type` (String) Instance type id, e.g. `pg-2c-4g` (Standard 2). List them with the `computesphere_database_instance_types` data source. Changing it resizes the database in place with a short restart.
 - `plan` (String, Deprecated) Deprecated: use `instance_type` and `high_availability`. `hobby` is Standard 1, `standard` is Standard 2 on zone-redundant storage, `ha` is Standard 2 with `three_zone`.
-- `storage_gb` (Number) Storage in GB. Defaults to 10. It can only grow.
+- `storage_gb` (Number) Storage in GB. Defaults to the instance type's included storage. It can only grow.
 - `version` (String) Major version. Defaults to the latest supported. Changing it creates a new database.
 
 ### Read-Only
