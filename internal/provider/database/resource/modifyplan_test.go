@@ -8,9 +8,8 @@ import (
 )
 
 func TestThreeZoneRequested(t *testing.T) {
-	assert.True(t, threeZoneRequested(types.StringValue("three_zone"), types.StringNull()))
-	assert.True(t, threeZoneRequested(types.StringNull(), types.StringValue("ha")))
-	assert.False(t, threeZoneRequested(types.StringValue("standby"), types.StringNull()))
-	assert.False(t, threeZoneRequested(types.StringNull(), types.StringValue("standard")))
-	assert.False(t, threeZoneRequested(types.StringUnknown(), types.StringNull()))
+	assert.True(t, threeZoneRequested(types.StringValue("three_zone")))
+	assert.False(t, threeZoneRequested(types.StringValue("standby")))
+	assert.False(t, threeZoneRequested(types.StringNull()))
+	assert.False(t, threeZoneRequested(types.StringUnknown()))
 }

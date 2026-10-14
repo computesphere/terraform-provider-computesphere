@@ -12,28 +12,24 @@ var _ resource.ResourceWithModifyPlan = &DatabaseResource{}
 
 const threeZoneWarning = "three_zone is no longer offered for new databases. Use none or standby."
 
-// ModifyPlan warns at plan time when a new database asks for three zones, by
-// high_availability or by the deprecated plan ha. Existing databases that
-// already have three zones aren't warned.
+// ModifyPlan warns at plan time when a new database asks for three zones. The
+// API refuses it, so the apply would fail. Existing databases that already have
+// three zones aren't warned. The deprecated plan ha isn't three zones; it maps
+// to Standard 2 with a standby.
 func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var ha, plan types.String
+	var ha types.String
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("high_availability"), &ha)...)
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("plan"), &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if threeZoneRequested(ha, plan) {
-		attr := path.Root("high_availability")
-		if plan.ValueString() == "ha" {
-			attr = path.Root("plan")
-		}
-		resp.Diagnostics.AddAttributeWarning(attr, threeZoneWarning, "")
+	if threeZoneRequested(ha) {
+		resp.Diagnostics.AddAttributeWarning(path.Root("high_availability"), threeZoneWarning, "")
 	}
 }
 
-func threeZoneRequested(ha, plan types.String) bool {
-	return ha.ValueString() == "three_zone" || plan.ValueString() == "ha"
+func threeZoneRequested(ha types.String) bool {
+	return ha.ValueString() == "three_zone"
 }
