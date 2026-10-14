@@ -42,18 +42,18 @@ func Schema(ctx context.Context) schema.Schema {
 				Description:   "Major version. Defaults to the latest supported. Changing it creates a new database.",
 			},
 			"instance_type": schema.StringAttribute{
-				Optional: true, Computed: true, PlanModifiers: keep,
+				Optional: true, Computed: true, PlanModifiers: sizing("instance_type"),
 				Description: "Instance type id, e.g. `pg-2c-4g` (Standard 2). List them with the " +
 					"`computesphere_database_instance_types` data source. Changing it resizes the database " +
 					"in place with a short restart.",
 			},
 			"high_availability": schema.StringAttribute{
-				Optional: true, Computed: true, PlanModifiers: keep,
+				Optional: true, Computed: true, PlanModifiers: sizing("high_availability"),
 				Description: "`none` (one instance) or `standby` (a standby in another zone with automatic failover). " +
 					"Standbys need an instance type with 1 vCPU or more.",
 			},
 			"plan": schema.StringAttribute{
-				Optional: true, Computed: true, PlanModifiers: keep,
+				Optional: true, Computed: true, PlanModifiers: sizing("plan"),
 				DeprecationMessage: "Use instance_type and high_availability instead.",
 				Description: "Deprecated: use `instance_type` and `high_availability`. `hobby` is Standard 1, " +
 					"`standard` is Standard 2 on zone-redundant storage.",
