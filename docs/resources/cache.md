@@ -82,7 +82,7 @@ output "cache_status" {
 ### Optional
 
 - `engine` (String) Cache engine. Only `valkey` today. It can't change after create; a change is refused at plan time.
-- `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. Changes apply in place.
+- `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. It is set when the cache is created.
 - `version` (String) Valkey version, e.g. `8.1`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only

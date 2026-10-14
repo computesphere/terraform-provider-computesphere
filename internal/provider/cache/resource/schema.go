@@ -50,7 +50,7 @@ func Schema(ctx context.Context) schema.Schema {
 			"eviction": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: keep,
 				Description: "What happens when memory is full: `allkeys-lru` (the default) evicts the least recently " +
-					"used keys; `noeviction` refuses writes until memory is freed. Changes apply in place.",
+					"used keys; `noeviction` refuses writes until memory is freed. It is set when the cache is created.",
 			},
 			"high_availability": schema.BoolAttribute{
 				Computed:    true,

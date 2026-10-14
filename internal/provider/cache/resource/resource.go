@@ -276,7 +276,7 @@ func (r *CacheResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "cache", "name", "environment_id", "engine", "version") {
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "cache", "name", "environment_id", "engine", "version", "eviction") {
 		return
 	}
 	id := state.ID.ValueString()
@@ -337,7 +337,7 @@ func (r *CacheResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 // existing cache (no update body takes them)
 // instead of planning a replacement that would delete its data.
 func (r *CacheResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	dataproduct.RefuseChange(ctx, req, resp, "cache", "name", "environment_id", "engine", "version")
+	dataproduct.RefuseChange(ctx, req, resp, "cache", "name", "environment_id", "engine", "version", "eviction")
 }
 
 func (r *CacheResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

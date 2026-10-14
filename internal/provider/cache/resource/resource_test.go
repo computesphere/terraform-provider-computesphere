@@ -26,8 +26,8 @@ resource "computesphere_cache" "example" {
 `
 
 // Creates a cache against the fake API, resizes it to its high-availability
-// twin and changes the eviction policy in place (no replacement), then
-// destroys it. The connection route is never called: no password reaches
+// twin in place (no replacement), refuses an eviction change at plan time (the
+// API can't change it on a running cache), then destroys it. The connection route is never called: no password reaches
 // state.
 func TestCacheResource_lifecycle(t *testing.T) {
 	cacheresource.SetPollIntervalForTest(time.Millisecond)
@@ -50,7 +50,7 @@ func TestCacheResource_lifecycle(t *testing.T) {
 				),
 			},
 			{
-				Config: sprintf(cacheConfig, "sc-1c-3g-ha", "noeviction"),
+				Config: sprintf(cacheConfig, "sc-1c-3g-ha", "allkeys-lru"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						checks.ExpectNoReplace(),
@@ -59,10 +59,14 @@ func TestCacheResource_lifecycle(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "instance_type", "sc-1c-3g-ha"),
-					resource.TestCheckResourceAttr(name, "eviction", "noeviction"),
+					resource.TestCheckResourceAttr(name, "eviction", "allkeys-lru"),
 					resource.TestCheckResourceAttr(name, "high_availability", "true"),
 					resource.TestCheckResourceAttr(name, "status", "available"),
 				),
+			},
+			{
+				Config:      sprintf(cacheConfig, "sc-1c-3g-ha", "noeviction"),
+				ExpectError: regexp.MustCompile(`eviction can't change on an existing cache`),
 			},
 			{
 				ResourceName:      name,

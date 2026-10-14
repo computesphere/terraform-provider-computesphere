@@ -4,9 +4,9 @@
 
 - New resource `computesphere_cache`: a SphereCache cache (managed Valkey).
   Set `instance_type` (e.g. `sc-0.25c-1g`; a high-availability type, its id
-  ending in `-ha`, adds a standby in another zone) and `eviction`
-  (`allkeys-lru` or `noeviction`); both change in place. The password is
-  never stored in state.
+  ending in `-ha`, adds a standby in another zone), which changes in place,
+  and `eviction` (`allkeys-lru` or `noeviction`), set when the cache is
+  created. The password is never stored in state.
 - New resource `computesphere_queue`: a SphereQueue broker (managed
   RabbitMQ). Set `instance_type` (e.g. `sq-1c-2g-s20g`; a high-availability
   type, its id ending in `-ha`, runs three instances); it changes in place.
@@ -16,7 +16,8 @@
   availability for an environment.
 - `computesphere_database`, `computesphere_cache` and `computesphere_queue`
   refuse a `name`, `environment_id`, `engine` or `version` change at plan
-  time, rather than planning a replacement that would start an empty one.
+  time (a cache's `eviction` too), rather than planning a replacement that
+  would start an empty one.
 
 ## 1.2.0
 
