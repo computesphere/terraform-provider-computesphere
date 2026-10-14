@@ -59,7 +59,7 @@ func (d *InstanceTypesDataSource) Schema(ctx context.Context, req datasource.Sch
 					"included_storage_gb":       schema.Int64Attribute{Computed: true, Description: "Storage included in the price."},
 					"monthly_price_cents":       schema.Int64Attribute{Computed: true, Description: "Monthly price in USD cents for the region's price group."},
 					"price_group":               schema.StringAttribute{Computed: true, Description: "`standard` or `premium` (25% more)."},
-					"high_availability_allowed": schema.BoolAttribute{Computed: true, Description: "Whether `standby` and `three_zone` are offered."},
+					"high_availability_allowed": schema.BoolAttribute{Computed: true, Description: "Whether `standby` is offered."},
 					"available":                 schema.BoolAttribute{Computed: true, Description: "False when the type can't be created in the environment's region."},
 					"unavailable_reason":        schema.StringAttribute{Computed: true, Description: "Why it's unavailable; null when available."},
 				}},

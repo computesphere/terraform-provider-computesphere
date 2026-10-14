@@ -78,8 +78,10 @@ func (r *DatabaseResource) Configure(ctx context.Context, req resource.Configure
 var (
 	validEngines  = map[string]bool{"postgresql": true}
 	validVersions = map[string]bool{"16": true, "17": true, "18": true}
-	validHA       = map[string]bool{"none": true, "standby": true, "three_zone": true}
-	validPlans    = map[string]bool{"hobby": true, "standard": true, "ha": true}
+	// three_zone and the plan ha are no longer offered or listed, but stay valid so
+	// existing configurations that set them keep planning.
+	validHA    = map[string]bool{"none": true, "standby": true, "three_zone": true}
+	validPlans = map[string]bool{"hobby": true, "standard": true, "ha": true}
 )
 
 // ValidateConfig mirrors the API's create rules so mistakes surface at plan
@@ -111,8 +113,8 @@ func (r *DatabaseResource) ValidateConfig(ctx context.Context, req resource.Vali
 	}
 	check("engine", c.Engine, validEngines, "postgresql")
 	check("version", c.Version, validVersions, "16, 17, 18")
-	check("high_availability", c.HighAvailability, validHA, "none, standby, three_zone")
-	check("plan", c.Plan, validPlans, "hobby, standard, ha")
+	check("high_availability", c.HighAvailability, validHA, "none, standby")
+	check("plan", c.Plan, validPlans, "hobby, standard")
 	if !c.StorageGB.IsNull() && !c.StorageGB.IsUnknown() && (c.StorageGB.ValueInt64() < 1 || c.StorageGB.ValueInt64() > 2048) {
 		resp.Diagnostics.AddAttributeError(path.Root("storage_gb"), "Invalid value", "storage_gb must be between 1 and 2048.")
 	}
