@@ -7,6 +7,7 @@ import (
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/dataproduct"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -313,6 +314,9 @@ func (r *DatabaseResource) Update(ctx context.Context, req resource.UpdateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "database", "name", "environment_id", "engine", "version") {
+		return
+	}
 	id, err := uuid.Parse(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid database id", err.Error())
@@ -395,6 +399,10 @@ func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteReques
 		resp.Diagnostics.AddError("Error deleting database", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 	}
 }
+
+// ModifyPlan refuses a name, environment, engine or version change on an
+// existing database (no update body takes them)
+// instead of planning a replacement that would delete its data.
 
 func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)

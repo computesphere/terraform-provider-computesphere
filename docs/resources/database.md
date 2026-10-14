@@ -76,18 +76,18 @@ output "database_status" {
 
 ### Required
 
-- `environment_id` (String) Environment the database belongs to. Changing it creates a new database.
-- `name` (String) Lowercase letters, digits and hyphens; unique in the environment. Changing it creates a new database.
+- `environment_id` (String) Environment the database belongs to. It can't change after create; a change is refused at plan time.
+- `name` (String) Lowercase letters, digits and hyphens; unique in the environment. It can't change after create; a change is refused at plan time.
 
 ### Optional
 
-- `engine` (String) Database engine. Only `postgresql` today.
+- `engine` (String) Database engine. Only `postgresql` today. It can't change after create; a change is refused at plan time.
 - `high_availability` (String) `none` (one instance) or `standby` (a standby in another zone with automatic failover). Standbys need an instance type with 1 vCPU or more.
 - `inject` (Boolean) At create, give every service in the environment the pooled connection string as `DATABASE_URL`. Only applies when the database is created.
 - `instance_type` (String) Instance type id, e.g. `pg-2c-4g` (Standard 2). List them with the `computesphere_database_instance_types` data source. Changing it resizes the database in place with a short restart.
 - `plan` (String, Deprecated) Deprecated: use `instance_type` and `high_availability`. `hobby` is Standard 1, `standard` is Standard 2 on zone-redundant storage.
 - `storage_gb` (Number) Storage in GB. Defaults to 10. It can only grow.
-- `version` (String) Major version. Defaults to the latest supported. Changing it creates a new database.
+- `version` (String) Major version. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
 
