@@ -34,7 +34,7 @@ func (r *CustomDomainResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 // customDomainResourceModel exposes only the server-issued id and hostname. The
-// internal dom-<hash> slug is never mapped into state (ADR 0132 guardrail).
+// internal dom-<hash> slug is never mapped into state.
 type customDomainResourceModel struct {
 	ID           types.String `tfsdk:"id"`
 	DeploymentID types.String `tfsdk:"deployment_id"`
