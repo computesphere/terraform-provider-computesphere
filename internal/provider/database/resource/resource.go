@@ -294,6 +294,13 @@ func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, r
 		resp.State.RemoveResource(ctx)
 		return
 	}
+	if state.Inject.IsNull() {
+		// Just imported: take inject from the database's current injection so
+		// the first plan doesn't show a change. Kept as the default on failure.
+		if inj, err := r.client.GetDatabaseInjectionWithResponse(ctx, id); err == nil && inj.JSON200 != nil {
+			state.Inject = types.BoolValue(inj.JSON200.Mode != csv2.DatabaseInjectionModeNone)
+		}
+	}
 	state.apply(db)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
