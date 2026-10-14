@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,9 +27,11 @@ func Schema(ctx context.Context) schema.Schema {
 				PlanModifiers: rr,
 			},
 			"domain": schema.StringAttribute{
-				Required:      true,
-				Description:   "Fully-qualified hostname to bind to the deployment.",
-				PlanModifiers: rr,
+				Required:    true,
+				Description: "Fully-qualified hostname to bind to the deployment.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIf(replaceIfHostnameDiffers,
+					"Changing the hostname replaces the domain; a change of letter case doesn't.",
+					"Changing the hostname replaces the domain; a change of letter case doesn't.")},
 			},
 			"hostname": schema.StringAttribute{
 				Computed:      true,
@@ -46,3 +49,12 @@ func Schema(ctx context.Context) schema.Schema {
 		},
 	}
 }
+
+// Hostnames are case-insensitive: the API may hold a different spelling than
+// the configuration (after an import, say), and that alone mustn't replace the
+// domain.
+func replaceIfHostnameDiffers(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	resp.RequiresReplace = hostnameDiffers(req.StateValue.ValueString(), req.PlanValue.ValueString())
+}
+
+func hostnameDiffers(a, b string) bool { return !strings.EqualFold(a, b) }

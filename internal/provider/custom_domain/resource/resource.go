@@ -143,14 +143,17 @@ func (r *CustomDomainResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *CustomDomainResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Both deployment_id and domain force replacement, so every attribute is
-	// immutable; update only carries state forward.
-	var plan customDomainResourceModel
+	// deployment_id and any real hostname change force replacement, so the only
+	// update is a change of letter case in domain: take the new spelling and
+	// carry everything else forward. Nothing is sent to the API.
+	var plan, state customDomainResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	state.Domain = plan.Domain
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *CustomDomainResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
