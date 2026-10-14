@@ -37,7 +37,6 @@ var _ resource.Resource = &DatabaseResource{}
 var _ resource.ResourceWithImportState = &DatabaseResource{}
 var _ resource.ResourceWithIdentity = &DatabaseResource{}
 var _ resource.ResourceWithValidateConfig = &DatabaseResource{}
-var _ resource.ResourceWithModifyPlan = &DatabaseResource{}
 
 func NewDatabaseResource() resource.Resource {
 	return &DatabaseResource{}
@@ -80,8 +79,11 @@ func (r *DatabaseResource) Configure(ctx context.Context, req resource.Configure
 var (
 	validEngines  = map[string]bool{"postgresql": true}
 	validVersions = map[string]bool{"16": true, "17": true, "18": true}
-	validHA       = map[string]bool{"none": true, "standby": true, "three_zone": true}
-	validPlans    = map[string]bool{"hobby": true, "standard": true, "ha": true}
+	// three_zone isn't offered for new databases (the API refuses it; see
+	// ModifyPlan) and the deprecated plan ha isn't listed, but both stay valid so
+	// existing configurations keep planning.
+	validHA    = map[string]bool{"none": true, "standby": true, "three_zone": true}
+	validPlans = map[string]bool{"hobby": true, "standard": true, "ha": true}
 )
 
 // ValidateConfig mirrors the API's create rules so mistakes surface at plan
@@ -113,8 +115,8 @@ func (r *DatabaseResource) ValidateConfig(ctx context.Context, req resource.Vali
 	}
 	check("engine", c.Engine, validEngines, "postgresql")
 	check("version", c.Version, validVersions, "16, 17, 18")
-	check("high_availability", c.HighAvailability, validHA, "none, standby, three_zone")
-	check("plan", c.Plan, validPlans, "hobby, standard, ha")
+	check("high_availability", c.HighAvailability, validHA, "none, standby")
+	check("plan", c.Plan, validPlans, "hobby, standard")
 	if !c.StorageGB.IsNull() && !c.StorageGB.IsUnknown() && (c.StorageGB.ValueInt64() < 1 || c.StorageGB.ValueInt64() > 2048) {
 		resp.Diagnostics.AddAttributeError(path.Root("storage_gb"), "Invalid value", "storage_gb must be between 1 and 2048.")
 	}
@@ -294,6 +296,13 @@ func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, r
 		resp.State.RemoveResource(ctx)
 		return
 	}
+	if state.Inject.IsNull() {
+		// Just imported: take inject from the database's current injection so
+		// the first plan doesn't show a change. Kept as the default on failure.
+		if inj, err := r.client.GetDatabaseInjectionWithResponse(ctx, id); err == nil && inj.JSON200 != nil {
+			state.Inject = types.BoolValue(inj.JSON200.Mode != csv2.DatabaseInjectionModeNone)
+		}
+	}
 	state.apply(db)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -394,9 +403,6 @@ func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteReques
 // ModifyPlan refuses a name, environment, engine or version change on an
 // existing database (no update body takes them)
 // instead of planning a replacement that would delete its data.
-func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	dataproduct.RefuseChange(ctx, req, resp, "database", "name", "environment_id", "engine", "version")
-}
 
 func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)

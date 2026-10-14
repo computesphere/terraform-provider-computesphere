@@ -2,31 +2,47 @@
 
 ## Unreleased
 
-- New resource `computesphere_database`: a SphereDB database (managed
-  PostgreSQL). Set `instance_type` (e.g. `pg-2c-4g`, Standard 2),
-  `high_availability` (`none`, `standby`, `three_zone`) and `storage_gb`;
-  instance type, high availability and storage change in place. `plan` is
-  accepted but deprecated, and conflicts with `instance_type`. A `name`,
-  `environment_id`, `engine` or `version` change on an existing database is
-  refused at plan time rather than planned as a replacement, which would
-  start an empty database.
-- New data source `computesphere_database_instance_types`: the instance-type
-  catalog with vCPU, memory, connection limit, included storage and monthly
-  price for an environment's region.
 - New resource `computesphere_cache`: a SphereCache cache (managed Valkey).
   Set `instance_type` (e.g. `sc-0.25c-1g`; a high-availability type, its id
-  ending in `-ha`, adds a standby in another zone) and `eviction` (`allkeys-lru` or `noeviction`); both change
-  in place. The password is never stored in state.
+  ending in `-ha`, adds a standby in another zone) and `eviction`
+  (`allkeys-lru` or `noeviction`); both change in place. The password is
+  never stored in state.
 - New resource `computesphere_queue`: a SphereQueue broker (managed
   RabbitMQ). Set `instance_type` (e.g. `sq-1c-2g-s20g`; a high-availability
-  type, its id ending in `-ha`, runs three members); it changes in place. The password is never stored in state.
-- `computesphere_cache` and `computesphere_queue` refuse a `name`,
-  `environment_id`, `engine` or `version` change at plan time too.
+  type, its id ending in `-ha`, runs three instances); it changes in place.
+  The password is never stored in state.
 - New data sources `computesphere_cache_instance_types` and
   `computesphere_queue_instance_types`: the size catalogs with prices and
   availability for an environment.
-- Needs the `computesphere-go` SDK release that carries the SphereDB
-  operations (newer than v0.3.0).
+- `computesphere_database`, `computesphere_cache` and `computesphere_queue`
+  refuse a `name`, `environment_id`, `engine` or `version` change at plan
+  time, rather than planning a replacement that would start an empty one.
+
+## 1.2.0
+
+- New resource `computesphere_database`: a SphereDB database (managed
+  PostgreSQL). Set `instance_type` (e.g. `pg-2c-4g`, Standard 2),
+  `high_availability` (`none` or `standby`) and `storage_gb`; instance type,
+  high availability and storage change in place. `plan` is accepted but
+  deprecated, and conflicts with `instance_type`.
+- New data source `computesphere_database_instance_types`: the instance-type
+  catalog with vCPU, memory, connection limit, included storage and monthly
+  price for an environment's region.
+- New resource `computesphere_custom_domain`: a custom domain on a
+  deployment, one resource per hostname. Changing the deployment or the
+  hostname replaces it.
+- Built with Go 1.26.9 (the security update also shipped in 1.1.3). Building
+  from source needs Go 1.26 or later.
+
+## 1.1.3
+
+- Security update: built with Go 1.26.9; `golang.org/x/net` v0.60.0 and
+  `google.golang.org/grpc` v1.83.2. No changes to resources or data sources.
+
+## 1.1.2
+
+- `api_url` defaults to the production API and is normalized to `/v2`; the
+  registry source in the docs is corrected.
 
 ## 1.1.1
 

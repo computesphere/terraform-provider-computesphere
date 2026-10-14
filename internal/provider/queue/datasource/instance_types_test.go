@@ -17,8 +17,8 @@ func TestQueueInstanceTypesDataSource(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"object":"list","items":[` +
-			`{"object":"queue_instance_type","id":"sq-shared","engine":"rabbitmq","name":"Queue Shared","family":"shared","vcpu":null,"memory_mb":null,"storage_gb":null,"nodes":1,"high_availability":false,"high_availability_type":null,"max_connections":20,"max_queues":10,"monthly_price":{"amount":0,"currency":"usd"},"price_group":"standard","available":true,"unavailable_reason":null},` +
-			`{"object":"queue_instance_type","id":"sq-1c-2g-s20g","engine":"rabbitmq","name":"Queue 1","family":"dedicated","vcpu":1,"memory_mb":2048,"storage_gb":20,"nodes":1,"high_availability":false,"high_availability_type":"sq-1c-2g-s20g-ha","max_connections":0,"max_queues":0,"monthly_price":null,"price_group":"standard","available":true,"unavailable_reason":null}` +
+			`{"object":"queue_instance_type","id":"sq-shared","engine":"rabbitmq","name":"Queue Shared","family":"shared","vcpu":null,"memory_mb":null,"storage_gb":null,"instances":1,"high_availability":false,"high_availability_type":null,"max_connections":20,"max_queues":10,"monthly_price":{"amount":0,"currency":"usd"},"price_group":"standard","available":true,"unavailable_reason":null},` +
+			`{"object":"queue_instance_type","id":"sq-1c-2g-s20g","engine":"rabbitmq","name":"Queue 1","family":"dedicated","vcpu":1,"memory_mb":2048,"storage_gb":20,"instances":1,"high_availability":false,"high_availability_type":"sq-1c-2g-s20g-ha","max_connections":0,"max_queues":0,"monthly_price":null,"price_group":"standard","available":true,"unavailable_reason":null}` +
 			`],"pagination":{},"warnings":[]}`))
 	})
 	name := "data.computesphere_queue_instance_types.all"

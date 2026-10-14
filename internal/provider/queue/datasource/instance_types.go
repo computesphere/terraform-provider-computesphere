@@ -32,7 +32,7 @@ func (d *InstanceTypesDataSource) Metadata(ctx context.Context, req datasource.M
 
 func (d *InstanceTypesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Lists SphereQueue instance types: vCPU, memory, included disk, cluster size, limits and the " +
+		Description: "Lists SphereQueue instance types: vCPU, memory, included disk, instance count, limits and the " +
 			"monthly price. Pass `environment_id` to get availability and prices for that environment.",
 		Attributes: map[string]schema.Attribute{
 			"environment_id": schema.StringAttribute{
@@ -50,7 +50,7 @@ func (d *InstanceTypesDataSource) Schema(ctx context.Context, req datasource.Sch
 					"vcpu":                   schema.Float64Attribute{Computed: true, Description: "vCPU per member; null on shared types."},
 					"memory_mb":              schema.Int64Attribute{Computed: true, Description: "Memory per member in MB; null on shared types."},
 					"storage_gb":             schema.Int64Attribute{Computed: true, Description: "Disk included per member for queued messages; null on shared types."},
-					"nodes":                  schema.Int64Attribute{Computed: true, Description: "Members of the broker's cluster: 1, or 3 on a high-availability type (an id ending in `-ha`), across three zones with quorum queues."},
+					"instances":              schema.Int64Attribute{Computed: true, Description: "Instances in the broker: 1, or 3 on a high-availability type (an id ending in `-ha`), across three zones with quorum queues."},
 					"high_availability":      schema.BoolAttribute{Computed: true, Description: "True on a three-member type."},
 					"high_availability_type": schema.StringAttribute{Computed: true, Description: "The three-member twin of a one-member size; null when there is none."},
 					"max_connections":        schema.Int64Attribute{Computed: true, Description: "Connection limit; 0 means no fixed limit."},
@@ -77,7 +77,7 @@ type apiInstanceType struct {
 	VCPU                 *float64  `json:"vcpu"`
 	MemoryMB             *int64    `json:"memory_mb"`
 	StorageGB            *int64    `json:"storage_gb"`
-	Nodes                int64     `json:"nodes"`
+	Instances            int64     `json:"instances"`
 	HighAvailability     bool      `json:"high_availability"`
 	HighAvailabilityType *string   `json:"high_availability_type"`
 	MaxConnections       int64     `json:"max_connections"`
@@ -96,7 +96,7 @@ type instanceTypeModel struct {
 	VCPU                 types.Float64 `tfsdk:"vcpu"`
 	MemoryMB             types.Int64   `tfsdk:"memory_mb"`
 	StorageGB            types.Int64   `tfsdk:"storage_gb"`
-	Nodes                types.Int64   `tfsdk:"nodes"`
+	Instances            types.Int64   `tfsdk:"instances"`
 	HighAvailability     types.Bool    `tfsdk:"high_availability"`
 	HighAvailabilityType types.String  `tfsdk:"high_availability_type"`
 	MaxConnections       types.Int64   `tfsdk:"max_connections"`
@@ -156,7 +156,7 @@ func (d *InstanceTypesDataSource) Read(ctx context.Context, req datasource.ReadR
 			VCPU:                 types.Float64PointerValue(t.VCPU),
 			MemoryMB:             types.Int64PointerValue(t.MemoryMB),
 			StorageGB:            types.Int64PointerValue(t.StorageGB),
-			Nodes:                types.Int64Value(t.Nodes),
+			Instances:            types.Int64Value(t.Instances),
 			HighAvailability:     types.BoolValue(t.HighAvailability),
 			HighAvailabilityType: types.StringPointerValue(t.HighAvailabilityType),
 			MaxConnections:       types.Int64Value(t.MaxConnections),

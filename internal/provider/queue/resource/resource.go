@@ -43,7 +43,7 @@ type apiQueue struct {
 	Engine        string  `json:"engine"`
 	Version       *string `json:"version"`
 	InstanceType  *string `json:"instance_type"`
-	Nodes         int64   `json:"nodes"`
+	Instances     int64   `json:"instances"`
 	Status        string  `json:"status"`
 	ReadOnly      bool    `json:"read_only"`
 	ProjectID     string  `json:"project_id"`
@@ -97,7 +97,7 @@ type queueResourceModel struct {
 	Engine        types.String `tfsdk:"engine"`
 	Version       types.String `tfsdk:"version"`
 	InstanceType  types.String `tfsdk:"instance_type"`
-	Nodes         types.Int64  `tfsdk:"nodes"`
+	Instances     types.Int64  `tfsdk:"instances"`
 	Status        types.String `tfsdk:"status"`
 	Region        types.String `tfsdk:"region"`
 	ProjectID     types.String `tfsdk:"project_id"`
@@ -143,7 +143,7 @@ func (m *queueResourceModel) apply(c *apiQueue) {
 	m.Engine = types.StringValue(c.Engine)
 	m.Version = types.StringPointerValue(c.Version)
 	m.InstanceType = types.StringPointerValue(c.InstanceType)
-	m.Nodes = types.Int64Value(c.Nodes)
+	m.Instances = types.Int64Value(c.Instances)
 	m.Status = types.StringValue(c.Status)
 	m.Region = types.StringValue(c.Region)
 	m.ProjectID = types.StringValue(c.ProjectID)

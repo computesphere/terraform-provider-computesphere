@@ -49,6 +49,6 @@ output "queue_id" {
   value = computesphere_queue.example.id
 }
 
-output "queue_members" {
-  value = computesphere_queue.example.nodes
+output "queue_instances" {
+  value = computesphere_queue.example.instances
 }

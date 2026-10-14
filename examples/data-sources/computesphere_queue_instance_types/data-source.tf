@@ -40,5 +40,5 @@ variable "environment_id" {
 }
 
 output "three_member_queue_sizes" {
-  value = [for t in data.computesphere_queue_instance_types.example.instance_types : "${t.name} (${t.id})" if t.available && t.nodes == 3]
+  value = [for t in data.computesphere_queue_instance_types.example.instance_types : "${t.name} (${t.id})" if t.available && t.instances == 3]
 }

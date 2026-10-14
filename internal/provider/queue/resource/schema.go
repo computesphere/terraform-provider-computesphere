@@ -42,11 +42,11 @@ func Schema(ctx context.Context) schema.Schema {
 			"instance_type": schema.StringAttribute{
 				Required: true,
 				Description: "Instance type id, e.g. `sq-1c-2g-s20g` (Queue 1). List them with the " +
-					"`computesphere_queue_instance_types` data source. A high-availability instance type (an id ending in `-ha`) runs three members across " +
+					"`computesphere_queue_instance_types` data source. A high-availability instance type (an id ending in `-ha`) runs three instances across " +
 					"zones with quorum queues. Changing it resizes the broker in place; a size with less disk than " +
 					"the current one is refused.",
 			},
-			"nodes":      schema.Int64Attribute{Computed: true, Description: "Members of the broker's cluster: 1, or 3 on a high-availability instance type (an id ending in `-ha`)."},
+			"instances":  schema.Int64Attribute{Computed: true, Description: "Instances in the broker: 1, or 3 on a high-availability instance type (an id ending in `-ha`)."},
 			"status":     schema.StringAttribute{Computed: true, Description: "Current status, e.g. `available`."},
 			"region":     schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Region of the environment."},
 			"project_id": schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Project the broker belongs to."},

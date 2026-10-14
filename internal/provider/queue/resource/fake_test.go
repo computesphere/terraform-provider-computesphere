@@ -51,7 +51,7 @@ func (f *fakeQueueAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		c := map[string]any{
 			"object": "queue", "id": fakeQueueID, "name": body.Name, "engine": body.Engine, "version": f.version,
-			"instance_type": body.InstanceType, "nodes": nodes(body.InstanceType),
+			"instance_type": body.InstanceType, "instances": instances(body.InstanceType),
 			"status": "provisioning", "read_only": false,
 			"account_id": "11111111-1111-1111-1111-111111111111", "project_id": "22222222-2222-2222-2222-222222222222",
 			"environment_id": body.EnvironmentID, "region": "eastus2", "error": "",
@@ -91,7 +91,7 @@ func (f *fakeQueueAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			if body.InstanceType != nil {
 				c["instance_type"] = *body.InstanceType
-				c["nodes"] = nodes(*body.InstanceType)
+				c["instances"] = instances(*body.InstanceType)
 			}
 			c["status"] = "resizing"
 			f.pending[id] = true
@@ -130,7 +130,7 @@ func (f *fakeQueueAPI) called(prefix string) bool {
 	return false
 }
 
-func nodes(instanceType string) int {
+func instances(instanceType string) int {
 	if strings.HasSuffix(instanceType, "-ha") {
 		return 3
 	}

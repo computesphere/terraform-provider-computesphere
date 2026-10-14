@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the ComputeSphere Terraform Provi
 ## Local Development Requirements
 
 To build, test, and contribute to this provider, you need:
-- [Go](https://golang.org/dl/) (1.23+)
+- [Go](https://golang.org/dl/) (1.26+)
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) (1.0+)
 - `sed` (for Makefile automation)
   - **macOS/Linux:** Pre-installed

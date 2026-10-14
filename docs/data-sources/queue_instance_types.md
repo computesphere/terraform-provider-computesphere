@@ -3,12 +3,12 @@
 page_title: "computesphere_queue_instance_types Data Source - computesphere"
 subcategory: ""
 description: |-
-  Lists SphereQueue instance types: vCPU, memory, included disk, cluster size, limits and the monthly price. Pass environment_id to get availability and prices for that environment.
+  Lists SphereQueue instance types: vCPU, memory, included disk, instance count, limits and the monthly price. Pass environment_id to get availability and prices for that environment.
 ---
 
 # computesphere_queue_instance_types (Data Source)
 
-Lists SphereQueue instance types: vCPU, memory, included disk, cluster size, limits and the monthly price. Pass `environment_id` to get availability and prices for that environment.
+Lists SphereQueue instance types: vCPU, memory, included disk, instance count, limits and the monthly price. Pass `environment_id` to get availability and prices for that environment.
 
 ## Example Usage
 
@@ -55,7 +55,7 @@ variable "environment_id" {
 }
 
 output "three_member_queue_sizes" {
-  value = [for t in data.computesphere_queue_instance_types.example.instance_types : "${t.name} (${t.id})" if t.available && t.nodes == 3]
+  value = [for t in data.computesphere_queue_instance_types.example.instance_types : "${t.name} (${t.id})" if t.available && t.instances == 3]
 }
 ```
 
@@ -81,12 +81,12 @@ Read-Only:
 - `high_availability` (Boolean) True on a three-member type.
 - `high_availability_type` (String) The three-member twin of a one-member size; null when there is none.
 - `id` (String) Instance type id used on `computesphere_queue`, e.g. `sq-1c-2g-s20g`.
+- `instances` (Number) Instances in the broker: 1, or 3 on a high-availability type (an id ending in `-ha`), across three zones with quorum queues.
 - `max_connections` (Number) Connection limit; 0 means no fixed limit.
 - `max_queues` (Number) Queue limit; 0 means no fixed limit.
 - `memory_mb` (Number) Memory per member in MB; null on shared types.
 - `monthly_price_cents` (Number) Monthly price in USD cents for the region's price group; null until prices are published.
 - `name` (String) Display name, e.g. `Queue 1`.
-- `nodes` (Number) Members of the broker's cluster: 1, or 3 on a high-availability type (an id ending in `-ha`), across three zones with quorum queues.
 - `price_group` (String) `standard` or `premium`.
 - `storage_gb` (Number) Disk included per member for queued messages; null on shared types.
 - `unavailable_reason` (String) Why it's unavailable; null when available.

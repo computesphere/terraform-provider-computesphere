@@ -41,7 +41,7 @@ func TestQueueResource_lifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "id", fakeQueueID),
 					resource.TestCheckResourceAttr(name, "engine", "rabbitmq"),
 					resource.TestCheckResourceAttr(name, "version", "4.3"),
-					resource.TestCheckResourceAttr(name, "nodes", "1"),
+					resource.TestCheckResourceAttr(name, "instances", "1"),
 					resource.TestCheckResourceAttr(name, "status", "available"),
 				),
 			},
@@ -55,7 +55,7 @@ func TestQueueResource_lifecycle(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "instance_type", "sq-1c-2g-s20g-ha"),
-					resource.TestCheckResourceAttr(name, "nodes", "3"),
+					resource.TestCheckResourceAttr(name, "instances", "3"),
 					resource.TestCheckResourceAttr(name, "status", "available"),
 				),
 			},

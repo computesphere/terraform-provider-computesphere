@@ -29,7 +29,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.7'
+          go-version: '1.26.9'
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -45,11 +45,11 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.7'
+          go-version: '1.26.9'
       - name: GoLang Lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.3.0
+          version: v2.14.0
       - name: vet
         run: go vet ./...
       - name: lint
@@ -70,7 +70,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.7'
+          go-version: '1.26.9'
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
