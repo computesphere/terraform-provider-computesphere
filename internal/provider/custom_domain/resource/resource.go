@@ -60,6 +60,11 @@ func (m *customDomainResourceModel) apply(d *csv2.Domain) {
 	if d.Id != nil {
 		m.ID = types.StringValue(*d.Id)
 	}
+	// After an import only the ids are in state; take the domain from the
+	// server so the next plan doesn't replace it.
+	if m.Domain.IsNull() || m.Domain.IsUnknown() {
+		m.Domain = types.StringValue(d.Domain)
+	}
 	// Hostname is an alias of domain; fall back to the domain field when the
 	// server omits the alias.
 	if d.Hostname != nil {
@@ -138,14 +143,17 @@ func (r *CustomDomainResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *CustomDomainResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Both deployment_id and domain force replacement, so every attribute is
-	// immutable; update only carries state forward.
-	var plan customDomainResourceModel
+	// deployment_id and any real hostname change force replacement, so the only
+	// update is a change of letter case in domain: take the new spelling and
+	// carry everything else forward. Nothing is sent to the API.
+	var plan, state customDomainResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	state.Domain = plan.Domain
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *CustomDomainResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
