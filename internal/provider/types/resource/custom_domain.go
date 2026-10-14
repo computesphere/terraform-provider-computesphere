@@ -5,7 +5,7 @@ import (
 )
 
 // Attribute definitions for the computesphere_custom_domain resource. A custom
-// domain is an imperative sub-resource of a deployment (ADR 0132): one resource
+// domain is an imperative sub-resource of a deployment: one resource
 // instance per hostname, so the resource is for_each-friendly. Only the
 // server-issued id and hostname are exposed — the internal dom-<hash> slug is
 // never surfaced in the schema or state.
