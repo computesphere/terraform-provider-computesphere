@@ -49,15 +49,14 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"high_availability": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: keep,
-				Description: "`none` (one instance), `standby` (a standby in another zone with automatic failover) or " +
-					"`three_zone` (two standbys across three zones, synchronous). Standbys need an instance type " +
-					"with 1 vCPU or more.",
+				Description: "`none` (one instance) or `standby` (a standby in another zone with automatic failover). " +
+					"Standbys need an instance type with 1 vCPU or more.",
 			},
 			"plan": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: keep,
 				DeprecationMessage: "Use instance_type and high_availability instead.",
 				Description: "Deprecated: use `instance_type` and `high_availability`. `hobby` is Standard 1, " +
-					"`standard` is Standard 2 on zone-redundant storage, `ha` is Standard 2 with `three_zone`.",
+					"`standard` is Standard 2 on zone-redundant storage.",
 			},
 			"storage_gb": schema.Int64Attribute{
 				Optional: true, Computed: true,
