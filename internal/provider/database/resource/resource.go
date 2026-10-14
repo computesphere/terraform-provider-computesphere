@@ -78,8 +78,9 @@ func (r *DatabaseResource) Configure(ctx context.Context, req resource.Configure
 var (
 	validEngines  = map[string]bool{"postgresql": true}
 	validVersions = map[string]bool{"16": true, "17": true, "18": true}
-	// three_zone and the plan ha are no longer offered or listed, but stay valid so
-	// existing configurations that set them keep planning.
+	// three_zone isn't offered for new databases (the API refuses it; see
+	// ModifyPlan) and the deprecated plan ha isn't listed, but both stay valid so
+	// existing configurations keep planning.
 	validHA    = map[string]bool{"none": true, "standby": true, "three_zone": true}
 	validPlans = map[string]bool{"hobby": true, "standard": true, "ha": true}
 )
