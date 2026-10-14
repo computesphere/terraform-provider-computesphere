@@ -60,6 +60,11 @@ func (m *customDomainResourceModel) apply(d *csv2.Domain) {
 	if d.Id != nil {
 		m.ID = types.StringValue(*d.Id)
 	}
+	// After an import only the ids are in state; take the domain from the
+	// server so the next plan doesn't replace it.
+	if m.Domain.IsNull() || m.Domain.IsUnknown() {
+		m.Domain = types.StringValue(d.Domain)
+	}
 	// Hostname is an alias of domain; fall back to the domain field when the
 	// server omits the alias.
 	if d.Hostname != nil {
