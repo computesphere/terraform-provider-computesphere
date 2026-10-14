@@ -12,9 +12,8 @@ import (
 func Schema(ctx context.Context) schema.Schema {
 	rr := []planmodifier.String{stringplanmodifier.RequiresReplace()}
 	return schema.Schema{
-		Description: "Manages a custom domain bound to a deployment. Modeled as an " +
-			"imperative sub-resource — one instance per hostname, so it is for_each-friendly. " +
-			"Both the deployment and the hostname are immutable; changing either forces replacement.",
+		Description: "Manages a custom domain on a deployment. Use one resource per hostname (for_each works well). " +
+			"Changing the deployment or the hostname replaces the domain.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:      true,

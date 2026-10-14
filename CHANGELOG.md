@@ -1,17 +1,30 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
 - New resource `computesphere_database`: a SphereDB database (managed
   PostgreSQL). Set `instance_type` (e.g. `pg-2c-4g`, Standard 2),
-  `high_availability` (`none`, `standby`, `three_zone`) and `storage_gb`;
-  instance type, high availability and storage change in place. `plan` is
-  accepted but deprecated, and conflicts with `instance_type`.
+  `high_availability` (`none` or `standby`) and `storage_gb`; instance type,
+  high availability and storage change in place. `plan` is accepted but
+  deprecated, and conflicts with `instance_type`.
 - New data source `computesphere_database_instance_types`: the instance-type
   catalog with vCPU, memory, connection limit, included storage and monthly
   price for an environment's region.
-- Needs the `computesphere-go` SDK release that carries the SphereDB
-  operations (newer than v0.3.0).
+- New resource `computesphere_custom_domain`: a custom domain on a
+  deployment, one resource per hostname. Changing the deployment or the
+  hostname replaces it.
+- Built with Go 1.26.9 (the security update also shipped in 1.1.3). Building
+  from source needs Go 1.26 or later.
+
+## 1.1.3
+
+- Security update: built with Go 1.26.9; `golang.org/x/net` v0.60.0 and
+  `google.golang.org/grpc` v1.83.2. No changes to resources or data sources.
+
+## 1.1.2
+
+- `api_url` defaults to the production API and is normalized to `/v2`; the
+  registry source in the docs is corrected.
 
 ## 1.1.1
 
