@@ -125,10 +125,11 @@ func (r *DatabaseResource) ValidateConfig(ctx context.Context, req resource.Vali
 }
 
 // engineVersionError says why a version doesn't fit the engine, or "".
-// The documentdb engine runs version 18 only.
+// On the documentdb engine, version is the PostgreSQL major it runs on:
+// 18 only, and the default when left unset.
 func engineVersionError(engine, version string) string {
 	if engine == "documentdb" && version != "18" {
-		return "version must be 18 for the documentdb engine."
+		return "version must be 18 (the PostgreSQL version the DocumentDB engine runs on), or left unset."
 	}
 	return ""
 }

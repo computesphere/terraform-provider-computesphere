@@ -81,7 +81,7 @@ output "database_status" {
 
 ### Optional
 
-- `engine` (String) Database engine: `postgresql` (the default), or `documentdb` for SphereDB built on the open-source DocumentDB engine (beta, where offered; version 18; no extensions or public access yet). Changing it creates a new database.
+- `engine` (String) Database engine: `postgresql` (the default), or `documentdb` for SphereDB built on the open-source DocumentDB engine (beta, where offered; no extensions or public access yet). Changing it creates a new database.
 - `high_availability` (String) `none` (one instance) or `standby` (a standby in another zone with automatic failover). Standbys need an instance type with 1 vCPU or more.
 - `inject` (Boolean) At create, give every service in the environment the pooled connection string as `DATABASE_URL` (`MONGODB_URI` on the `documentdb` engine). Only applies when the database is created.
 - `instance_type` (String) Instance type id, e.g. `pg-2c-4g` (Standard 2; `docdb-2c-4g` on the `documentdb` engine). List them with the `computesphere_database_instance_types` data source. Changing it resizes the database in place with a short restart.

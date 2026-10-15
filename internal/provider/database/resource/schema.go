@@ -35,7 +35,7 @@ func Schema(ctx context.Context) schema.Schema {
 				Optional: true, Computed: true, Default: stringdefault.StaticString("postgresql"),
 				PlanModifiers: replace,
 				Description: "Database engine: `postgresql` (the default), or `documentdb` for SphereDB built on the " +
-					"open-source DocumentDB engine (beta, where offered; version 18; no extensions or public access yet). " +
+					"open-source DocumentDB engine (beta, where offered; no extensions or public access yet). " +
 					"Changing it creates a new database.",
 			},
 			"version": schema.StringAttribute{

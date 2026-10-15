@@ -3,8 +3,8 @@
 ## Unreleased
 
 - `computesphere_database` accepts `engine = "documentdb"`: SphereDB built on
-  the open-source DocumentDB engine (beta, where offered). It runs version 18,
-  has its own instance types (`docdb-...`; list them with
+  the open-source DocumentDB engine (beta, where offered). It has its own
+  instance types (`docdb-...`; list them with
   `computesphere_database_instance_types` and `engine = "documentdb"`), and
   services get `MONGODB_URI` instead of `DATABASE_URL`.
 
