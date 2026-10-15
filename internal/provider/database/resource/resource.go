@@ -76,7 +76,7 @@ func (r *DatabaseResource) Configure(ctx context.Context, req resource.Configure
 }
 
 var (
-	validEngines  = map[string]bool{"postgresql": true}
+	validEngines  = map[string]bool{"postgresql": true, "documentdb": true}
 	validVersions = map[string]bool{"16": true, "17": true, "18": true}
 	// three_zone isn't offered for new databases (the API refuses it; see
 	// ModifyPlan) and the deprecated plan ha isn't listed, but both stay valid so
@@ -112,13 +112,25 @@ func (r *DatabaseResource) ValidateConfig(ctx context.Context, req resource.Vali
 			resp.Diagnostics.AddAttributeError(path.Root(attr), "Invalid value", fmt.Sprintf("%s must be one of %s.", attr, list))
 		}
 	}
-	check("engine", c.Engine, validEngines, "postgresql")
+	check("engine", c.Engine, validEngines, "postgresql, documentdb")
 	check("version", c.Version, validVersions, "16, 17, 18")
+	if msg := engineVersionError(c.Engine.ValueString(), c.Version.ValueString()); set(c.Engine) && set(c.Version) && msg != "" {
+		resp.Diagnostics.AddAttributeError(path.Root("version"), "Invalid value", msg)
+	}
 	check("high_availability", c.HighAvailability, validHA, "none, standby")
 	check("plan", c.Plan, validPlans, "hobby, standard")
 	if !c.StorageGB.IsNull() && !c.StorageGB.IsUnknown() && (c.StorageGB.ValueInt64() < 1 || c.StorageGB.ValueInt64() > 2048) {
 		resp.Diagnostics.AddAttributeError(path.Root("storage_gb"), "Invalid value", "storage_gb must be between 1 and 2048.")
 	}
+}
+
+// engineVersionError says why a version doesn't fit the engine, or "".
+// The documentdb engine runs version 18 only.
+func engineVersionError(engine, version string) string {
+	if engine == "documentdb" && version != "18" {
+		return "version must be 18 for the documentdb engine."
+	}
+	return ""
 }
 
 // apply maps a v2 Database into Terraform state. inject is create-only and
