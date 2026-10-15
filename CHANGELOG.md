@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- `computesphere_database` accepts `engine = "documentdb"`: SphereDB built on
+  the open-source DocumentDB engine (beta, where offered). It has its own
+  instance types (`docdb-...`; list them with
+  `computesphere_database_instance_types` and `engine = "documentdb"`), and
+  services get `MONGODB_URI` instead of `DATABASE_URL`.
+
 ## 1.2.0
 
 - New resource `computesphere_database`: a SphereDB database (managed
