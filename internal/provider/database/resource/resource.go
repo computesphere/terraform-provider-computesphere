@@ -117,6 +117,10 @@ func (r *DatabaseResource) ValidateConfig(ctx context.Context, req resource.Vali
 	if msg := engineVersionError(c.Engine.ValueString(), c.Version.ValueString()); set(c.Engine) && set(c.Version) && msg != "" {
 		resp.Diagnostics.AddAttributeError(path.Root("version"), "Invalid value", msg)
 	}
+	if set(c.Plan) && c.Engine.ValueString() == "documentdb" {
+		resp.Diagnostics.AddAttributeError(path.Root("plan"), "Invalid value",
+			"plan is deprecated and not available on the documentdb engine; set instance_type.")
+	}
 	check("high_availability", c.HighAvailability, validHA, "none, standby")
 	check("plan", c.Plan, validPlans, "hobby, standard")
 	if !c.StorageGB.IsNull() && !c.StorageGB.IsUnknown() && (c.StorageGB.ValueInt64() < 1 || c.StorageGB.ValueInt64() > 2048) {
