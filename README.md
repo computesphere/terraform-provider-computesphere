@@ -101,7 +101,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 </p>
 
 ---
-[Explore ComputeSphere Documentation](https://docs.computesphere.com)
+[Explore ComputeSphere Documentation](https://computesphere.com/docs)
 
 **Contact Us:**  
 [support@computesphere.com](mailto:support@computesphere.com)  
