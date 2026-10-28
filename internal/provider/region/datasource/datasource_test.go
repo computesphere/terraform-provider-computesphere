@@ -5,6 +5,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 
 	th "github.com/computesphere/terraform-provider-computesphere/internal/provider/testhelpers"
 )
@@ -17,10 +20,13 @@ func TestAccRegionDataSource_basic(t *testing.T) {
 				ConfigFile: config.StaticFile("./testdata/region_datasource.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.computesphere_region.default", "name", "us-east-1"),
-					// An API that publishes no addresses: both lists are null.
-					resource.TestCheckNoResourceAttr("data.computesphere_region.default", "outbound_ips.#"),
-					resource.TestCheckNoResourceAttr("data.computesphere_region.default", "build_outbound_ips.#"),
 				),
+				// An API that publishes no addresses: both lists are null, not
+				// empty, so a configuration that needs them fails.
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("data.computesphere_region.default", tfjsonpath.New("outbound_ips"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("data.computesphere_region.default", tfjsonpath.New("build_outbound_ips"), knownvalue.Null()),
+				},
 			},
 		},
 	})
