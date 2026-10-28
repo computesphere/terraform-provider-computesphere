@@ -11,7 +11,9 @@ func Schema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Description: "Provides details for a single region.",
 		Attributes: map[string]schema.Attribute{
-			"name": shared.RegionName,
+			"name":               shared.RegionName,
+			"outbound_ips":       shared.RegionOutboundIPs,
+			"build_outbound_ips": shared.RegionBuildOutboundIPs,
 		},
 	}
 }

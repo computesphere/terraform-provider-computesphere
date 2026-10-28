@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Data source `computesphere_region`: new read-only `outbound_ips`, the
+  addresses the region's services connect out from, and
+  `build_outbound_ips`, the addresses builds connect out from, both as CIDR
+  ranges for allowlists. Each is null until the API publishes it.
+
 ## 1.2.0
 
 - New resource `computesphere_database`: a SphereDB database (managed
