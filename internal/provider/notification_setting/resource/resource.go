@@ -8,10 +8,26 @@ import (
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+// webhookAttrTypes is the object type of one entry in webhooks.
+var webhookAttrTypes = map[string]attr.Type{
+	"url":          types.StringType,
+	"content_type": types.StringType,
+	"token":        types.StringType,
+}
+
+type webhookModel struct {
+	URL         types.String `tfsdk:"url"`
+	ContentType types.String `tfsdk:"content_type"`
+	Token       types.String `tfsdk:"token"`
+}
 
 // NotificationSettingResource manages the account's singleton notification
 // settings. The v2 API exposes get + upsert (no create/delete), so create and
@@ -62,11 +78,15 @@ type notificationSettingResourceModel struct {
 	Invites        types.Bool     `tfsdk:"invites"`
 	Payment        types.Bool     `tfsdk:"payment"`
 	WebhookEnabled types.Bool     `tfsdk:"webhook_enabled"`
+	Webhooks       types.List     `tfsdk:"webhooks"`
 	ID             types.String   `tfsdk:"id"`
 	UserID         types.String   `tfsdk:"user_id"`
 }
 
-func (m *notificationSettingResourceModel) apply(n *csv2.NotificationSettings) {
+// apply maps the API's settings into state. The API never returns a webhook
+// token, so the token prior holds for the same URL (the plan or the state)
+// is kept; prior may be null or unknown.
+func (m *notificationSettingResourceModel) apply(ctx context.Context, n *csv2.NotificationSettings, prior types.List, diags *diag.Diagnostics) {
 	m.ID = types.StringValue(n.Id.String())
 	m.UserID = types.StringValue(n.UserId.String())
 	m.Activity = types.BoolValue(n.Activity)
@@ -82,9 +102,34 @@ func (m *notificationSettingResourceModel) apply(n *csv2.NotificationSettings) {
 		emails = append(emails, types.StringValue(string(e)))
 	}
 	m.Emails = emails
+
+	if prior.IsNull() || prior.IsUnknown() {
+		// webhooks isn't managed here: leave it out of state.
+		m.Webhooks = types.ListNull(basetypes.ObjectType{AttrTypes: webhookAttrTypes})
+		return
+	}
+	tokens := map[string]types.String{}
+	{
+		var old []webhookModel
+		diags.Append(prior.ElementsAs(ctx, &old, false)...)
+		for _, w := range old {
+			tokens[w.URL.ValueString()] = w.Token
+		}
+	}
+	hooks := make([]webhookModel, 0, len(n.Webhooks))
+	for _, w := range n.Webhooks {
+		tok, ok := tokens[w.Url]
+		if !ok {
+			tok = types.StringNull()
+		}
+		hooks = append(hooks, webhookModel{URL: types.StringValue(w.Url), ContentType: types.StringValue(string(w.ContentType)), Token: tok})
+	}
+	list, d := types.ListValueFrom(ctx, basetypes.ObjectType{AttrTypes: webhookAttrTypes}, hooks)
+	diags.Append(d...)
+	m.Webhooks = list
 }
 
-func (m *notificationSettingResourceModel) toUpsert() csv2.UpsertNotificationSettingsRequest {
+func (m *notificationSettingResourceModel) toUpsert(hooks []csv2.NotificationWebhook) csv2.UpsertNotificationSettingsRequest {
 	emails := make([]openapi_types.Email, 0, len(m.Emails))
 	for _, e := range m.Emails {
 		emails = append(emails, openapi_types.Email(e.ValueString()))
@@ -99,14 +144,52 @@ func (m *notificationSettingResourceModel) toUpsert() csv2.UpsertNotificationSet
 		Invites:        m.Invites.ValueBool(),
 		Payment:        m.Payment.ValueBool(),
 		WebhookEnabled: m.WebhookEnabled.ValueBool(),
-		Webhooks:       []csv2.NotificationWebhook{},
+		Webhooks:       hooks,
 	}
 }
 
-func (r *NotificationSettingResource) upsert(ctx context.Context, plan notificationSettingResourceModel, diags interface {
-	AddError(string, string)
-}) (*notificationSettingResourceModel, bool) {
-	apiResp, err := r.client.UpsertNotificationSettingsWithResponse(ctx, plan.toUpsert())
+// webhooksToSend is the webhooks list for an upsert, which replaces the saved
+// one. A configured list is sent as configured (a token left out is sent
+// blank, which keeps the stored token for that URL). Without one, the saved
+// webhooks are read and sent back unchanged, so the console's stay.
+func (r *NotificationSettingResource) webhooksToSend(ctx context.Context, plan notificationSettingResourceModel, diags *diag.Diagnostics) []csv2.NotificationWebhook {
+	out := []csv2.NotificationWebhook{}
+	if !plan.Webhooks.IsNull() && !plan.Webhooks.IsUnknown() {
+		var hooks []webhookModel
+		diags.Append(plan.Webhooks.ElementsAs(ctx, &hooks, false)...)
+		for _, w := range hooks {
+			ct := w.ContentType.ValueString()
+			if ct == "" {
+				ct = "json"
+			}
+			out = append(out, csv2.NotificationWebhook{Url: w.URL.ValueString(), ContentType: csv2.NotificationWebhookContentType(ct), Token: w.Token.ValueString()})
+		}
+		return out
+	}
+	cur, err := r.client.GetNotificationSettingsWithResponse(ctx)
+	if err != nil {
+		diags.AddError("Error reading notification setting", err.Error())
+		return nil
+	}
+	switch {
+	case cur.StatusCode() == http.StatusNotFound:
+		return out
+	case cur.StatusCode() != http.StatusOK || cur.JSON200 == nil:
+		diags.AddError("Error reading notification setting", cstypes.ProblemSummary(cur.Body, cur.StatusCode()))
+		return nil
+	}
+	for _, w := range cur.JSON200.Webhooks {
+		out = append(out, csv2.NotificationWebhook{Url: w.Url, ContentType: w.ContentType, Token: ""})
+	}
+	return out
+}
+
+func (r *NotificationSettingResource) upsert(ctx context.Context, plan notificationSettingResourceModel, diags *diag.Diagnostics) (*notificationSettingResourceModel, bool) {
+	hooks := r.webhooksToSend(ctx, plan, diags)
+	if diags.HasError() {
+		return nil, false
+	}
+	apiResp, err := r.client.UpsertNotificationSettingsWithResponse(ctx, plan.toUpsert(hooks))
 	if err != nil {
 		diags.AddError("Error saving notification setting", err.Error())
 		return nil, false
@@ -116,8 +199,8 @@ func (r *NotificationSettingResource) upsert(ctx context.Context, plan notificat
 		return nil, false
 	}
 	var state notificationSettingResourceModel
-	state.apply(apiResp.JSON200)
-	return &state, true
+	state.apply(ctx, apiResp.JSON200, plan.Webhooks, diags)
+	return &state, !diags.HasError()
 }
 
 func (r *NotificationSettingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -152,7 +235,7 @@ func (r *NotificationSettingResource) Read(ctx context.Context, req resource.Rea
 		resp.Diagnostics.AddError("Error reading notification setting", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
-	state.apply(apiResp.JSON200)
+	state.apply(ctx, apiResp.JSON200, state.Webhooks, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
