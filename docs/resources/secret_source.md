@@ -45,11 +45,11 @@ resource "computesphere_secret_source" "doppler" {
 
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
-- `auth_type` (String) How it signs in: `service_token` (Doppler) or `client_secret` (Azure Key Vault).
-- `config` (Map of String) Settings of the type: Doppler `project` and `config`; Azure Key Vault `tenant_id` and `vault`. Changes in place, after a connection test.
-- `credential` (Map of String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Sign-in fields of `auth_type`: Doppler `token`; Azure Key Vault `client_id` and `client_secret`. Write-only: it's never stored in Terraform state, and the API never returns it. It's sent on create, and again when `credential_version` or `auth_type` changes. Needs Terraform 1.11 or later.
+- `auth_type` (String) How it signs in, for example `service_token` for Doppler.
+- `config` (Map of String) Settings of the type, for example Doppler's `project` and `config`. Changes in place, after a connection test.
+- `credential` (Map of String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Sign-in fields of `auth_type`, for example Doppler's `token`. Write-only: it's never stored in Terraform state, and the API never returns it. It's sent on create, and again when `credential_version` or `auth_type` changes. Needs Terraform 1.11 or later.
 - `name` (String) Name, unique in the account. Changes in place.
-- `type` (String) `doppler` or `azure-kv`. Changing it creates a new secret manager.
+- `type` (String) The secret manager's type, for example `doppler`. The types your account can connect are listed by `GET /v2/secret-source-types`. Changing it creates a new secret manager.
 
 ### Optional
 

@@ -1,5 +1,5 @@
 // Package provider implements computesphere_secret_source: an account-level
-// connection to an external secret manager (Doppler, Azure Key Vault) that
+// connection to an external secret manager (for example Doppler) that
 // deployments and environments read secrets from, so their values never
 // pass through Terraform.
 package provider
@@ -90,21 +90,22 @@ func (r *SecretSourceResource) Schema(ctx context.Context, req resource.SchemaRe
 			"name": schema.StringAttribute{Required: true, Description: "Name, unique in the account. Changes in place."},
 			"type": schema.StringAttribute{
 				Required: true, PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
-				Description: "`doppler` or `azure-kv`. Changing it creates a new secret manager.",
+				Description: "The secret manager's type, for example `doppler`. The types your account can connect are " +
+					"listed by `GET /v2/secret-source-types`. Changing it creates a new secret manager.",
 			},
 			"config": schema.MapAttribute{
 				Required: true, ElementType: types.StringType,
-				Description: "Settings of the type: Doppler `project` and `config`; Azure Key Vault `tenant_id` and " +
-					"`vault`. Changes in place, after a connection test.",
+				Description: "Settings of the type, for example Doppler's `project` and `config`. Changes in place, " +
+					"after a connection test.",
 			},
 			"auth_type": schema.StringAttribute{
 				Required:    true,
-				Description: "How it signs in: `service_token` (Doppler) or `client_secret` (Azure Key Vault).",
+				Description: "How it signs in, for example `service_token` for Doppler.",
 			},
 			"credential": schema.MapAttribute{
 				Required: true, WriteOnly: true, Sensitive: true, ElementType: types.StringType,
-				Description: "Sign-in fields of `auth_type`: Doppler `token`; Azure Key Vault `client_id` and " +
-					"`client_secret`. Write-only: it's never stored in Terraform state, and the API never returns it. " +
+				Description: "Sign-in fields of `auth_type`, for example Doppler's `token`. Write-only: it's never " +
+					"stored in Terraform state, and the API never returns it. " +
 					"It's sent on create, and again when `credential_version` or `auth_type` changes. Needs Terraform 1.11 or later.",
 			},
 			"credential_version": schema.Int64Attribute{
