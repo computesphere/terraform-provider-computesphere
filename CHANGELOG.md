@@ -20,6 +20,11 @@
   host), a TLS URI and the CA file. The password is masked unless
   `reveal = true`, which stores it in state and reveals it (recorded in the
   audit log) on every plan and apply.
+- `computesphere_cache`: new `injection` block: which services in the
+  environment get the cache's URL as a variable (`mode` `all`, `selected`
+  with `service_ids`, or `none`) and its `variable_name` (default
+  `REDIS_URL`). Changing it restarts the services it affects; leaving it
+  out keeps it as it is.
 
 ## 1.3.0
 

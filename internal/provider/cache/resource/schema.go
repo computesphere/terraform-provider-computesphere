@@ -64,6 +64,7 @@ func Schema(ctx context.Context) schema.Schema {
 				Computed: true, PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				Description: "True when the cache keeps its data on disk, so a restart doesn't empty it.",
 			},
+			"injection": injectionAttribute(),
 			"internal_host": schema.StringAttribute{
 				Computed: true, PlanModifiers: keep,
 				Description: "The cache's private host inside the environment. It never changes.",

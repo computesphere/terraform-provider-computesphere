@@ -107,6 +107,7 @@ type cacheResourceModel struct {
 	HighAvailability types.Bool   `tfsdk:"high_availability"`
 	Persistence      types.Bool   `tfsdk:"persistence"`
 	InternalHost     types.String `tfsdk:"internal_host"`
+	Injection        types.Object `tfsdk:"injection"`
 	Status           types.String `tfsdk:"status"`
 	Region           types.String `tfsdk:"region"`
 	ProjectID        types.String `tfsdk:"project_id"`
@@ -143,6 +144,7 @@ func (r *CacheResource) ValidateConfig(ctx context.Context, req resource.Validat
 	check("engine", c.Engine, validEngines, "valkey")
 	check("version", c.Version, validVersions, "8.1")
 	check("eviction", c.Eviction, validEvictions, "allkeys-lru, noeviction")
+	validateInjection(c.Injection, &resp.Diagnostics)
 }
 
 // apply maps a v2 Cache into Terraform state.
@@ -204,6 +206,7 @@ func (r *CacheResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	state := plan
 	state.apply(&created)
+	state.Injection = types.ObjectNull(injectionAttrTypes)
 	// Save the id first so a failed wait doesn't orphan the cache.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -211,6 +214,8 @@ func (r *CacheResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 	if c := r.waitAvailable(ctx, created.ID, &resp.Diagnostics); c != nil {
 		state.apply(c)
+		r.writeInjection(ctx, created.ID, plan.Injection, types.ObjectNull(injectionAttrTypes), &resp.Diagnostics)
+		state.Injection = r.readInjection(ctx, created.ID, &resp.Diagnostics)
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	}
 }
@@ -272,6 +277,7 @@ func (r *CacheResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 	state.apply(c)
+	state.Injection = r.readInjection(ctx, state.ID.ValueString(), &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -324,6 +330,11 @@ func (r *CacheResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			newState.apply(c)
 		}
 	}
+	r.writeInjection(ctx, id, plan.Injection, state.Injection, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	newState.Injection = r.readInjection(ctx, id, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
