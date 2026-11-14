@@ -50,6 +50,11 @@
   database, which starts an empty one. To move to a new database, add it as
   a separate resource, move the data, then remove the old one. The new
   `computesphere_cache` and `computesphere_queue` work the same way.
+- `computesphere_notification_setting`: new `webhooks` (URL, body format and
+  token). Left out, the webhooks and email addresses set in the console are
+  kept; before, every apply removed the webhooks. Leaving out `emails` no
+  longer fails. The resource and its data source need a full-access API
+  token, and say so when a scoped token is refused.
 
 ## 1.2.0
 
