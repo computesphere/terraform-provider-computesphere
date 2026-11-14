@@ -57,6 +57,9 @@
   then set the new project on the environment and its services. A `region`
   change is refused at plan time: an environment can't move to another
   region.
+- Deprecated: the `computesphere_guardrail` resource and data source.
+  Guardrails are no longer part of the public API: set them in the console.
+  Both will stop working and be removed in a future release.
 - New resource `computesphere_environment_variables`: an environment's
   shared variables, which every deployment in it inherits (a deployment's
   own value for a key wins). It owns the whole set; an empty map removes

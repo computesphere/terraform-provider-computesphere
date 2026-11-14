@@ -3,12 +3,12 @@
 page_title: "computesphere_guardrail Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a guardrail resource.
+  Deprecated: guardrails are set in the console. Manages a guardrail resource.
 ---
 
 # computesphere_guardrail (Resource)
 
-Manages a guardrail resource.
+Deprecated: guardrails are set in the console. Manages a guardrail resource.
 
 ## Example Usage
 
