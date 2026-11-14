@@ -9,7 +9,8 @@ import (
 
 func Schema(ctx context.Context) schema.Schema {
 	return schema.Schema{
-		Description: "Manages a guardrail resource.",
+		Description:        "Deprecated: guardrails are set in the console. Manages a guardrail resource.",
+		DeprecationMessage: "Guardrails are no longer part of the public API: set them in the console. This resource stops working once the API refuses API tokens for guardrails, and will be removed in a future release.",
 		Attributes: map[string]schema.Attribute{
 			"id":                     shared.GuardrailID,
 			"name":                   shared.GuardrailName,
