@@ -1,15 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.4.0
 
-- `computesphere_alert`: `threshold` and `evaluation_period` are optional,
-  for the scheduled-job alert types (`job_run_failed`, `job_failing_streak`,
-  `job_run_missed`) that don't use them. New read-only
-  `effective_evaluation_period` and `status`.
-- `computesphere_deployment`: new `instance_type`, the spherelet size the
-  deployment runs on (e.g. `sl-1c-2g`, or `FLX`, `MAX`, `PWR`); it defaults
-  to the service's size and changes in place. `plan_id` is deprecated and
-  can't be set together with `instance_type`.
+### New resources and data sources
+
 - New resource `computesphere_secret_source`: a secret manager (Doppler or
   Azure Key Vault) for the account, which deployments and environments read
   secrets from. Its `credential` is write-only, never stored in state;
@@ -20,11 +14,28 @@
   host), a TLS URI and the CA file. The password is masked unless
   `reveal = true`, which stores it in state and reveals it (recorded in the
   audit log) on every plan and apply.
+
+### New attributes
+
+- `computesphere_deployment`: new `instance_type`, the spherelet size the
+  deployment runs on (e.g. `sl-1c-2g`, or `FLX`, `MAX`, `PWR`); it defaults
+  to the service's size and changes in place. `plan_id` is deprecated and
+  can't be set together with `instance_type`.
 - `computesphere_cache`: new `injection` block: which services in the
   environment get the cache's URL as a variable (`mode` `all`, `selected`
   with `service_ids`, or `none`) and its `variable_name` (default
   `REDIS_URL`). Changing it restarts the services it affects; leaving it
   out keeps it as it is.
+- `computesphere_alert`: `threshold` and `evaluation_period` are optional,
+  for the scheduled-job alert types (`job_run_failed`, `job_failing_streak`,
+  `job_run_missed`) that don't use them. New read-only
+  `effective_evaluation_period` and `status`.
+
+### Changed
+
+- `computesphere_service` and `computesphere_deployment`: set
+  `instance_type` on the service or on its deployments, not both: a service
+  size change resizes every deployment of the service.
 
 ## 1.3.0
 
