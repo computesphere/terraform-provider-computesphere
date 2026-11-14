@@ -32,7 +32,7 @@ const (
 // fakeEnvAPI is one environment: create, read, rename, move and delete.
 type fakeEnvAPI struct {
 	mu       sync.Mutex
-	env      map[string]any
+	record   map[string]any
 	services int // deployments the environment runs
 	deleted  bool
 	sent     []string // "METHOD /path body", writes only
@@ -48,32 +48,47 @@ func (f *fakeEnvAPI) handler() http.Handler {
 	mux.HandleFunc("POST /v2/environments", func(w http.ResponseWriter, r *http.Request) {
 		var b map[string]any
 		_ = json.NewDecoder(r.Body).Decode(&b)
-		f.env = map[string]any{
+		f.record = map[string]any{
 			"object": "environment", "id": fakeEnvID, "name": b["name"], "region": b["region"],
 			"project_id": b["project_id"], "created_at": "2026-11-14T00:00:00Z", "updated_at": "2026-11-14T00:00:00Z",
+			"deploy_policy": "auto", "default_url_disabled": false, "network_policy": map[string]any{"enabled": true},
+			"network_access": map[string]any{"type": "public_access", "whitelisted_ips": []string{}},
+			"sub_domain":     "e-production-1a2b", "kind": "standard",
 		}
-		write(w, http.StatusCreated, f.env)
+		write(w, http.StatusCreated, f.record)
 	})
 	mux.HandleFunc("GET /v2/environments/{eid}", func(w http.ResponseWriter, r *http.Request) {
-		if f.deleted || f.env == nil {
+		if f.deleted || f.record == nil {
 			write(w, http.StatusNotFound, map[string]any{"status": 404, "title": "Not Found"})
 			return
 		}
-		write(w, http.StatusOK, f.env)
+		write(w, http.StatusOK, f.record)
 	})
 	mux.HandleFunc("PATCH /v2/environments/{eid}", func(w http.ResponseWriter, r *http.Request) {
 		var b map[string]any
 		_ = json.NewDecoder(r.Body).Decode(&b)
-		if n, ok := b["name"]; ok {
-			f.env["name"] = n
+		for _, k := range []string{"name", "deploy_policy", "default_url_disabled", "network_policy"} {
+			if v, ok := b[k]; ok {
+				f.record[k] = v
+			}
 		}
-		write(w, http.StatusOK, f.env)
+		write(w, http.StatusOK, f.record)
+	})
+	mux.HandleFunc("PUT /v2/environments/{eid}/networking", func(w http.ResponseWriter, r *http.Request) {
+		var b map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&b)
+		ips, _ := b["whitelisted_ips"].([]any)
+		if ips == nil {
+			ips = []any{}
+		}
+		f.record["network_access"] = map[string]any{"type": b["type"], "whitelisted_ips": ips}
+		write(w, http.StatusOK, f.record)
 	})
 	mux.HandleFunc("POST /v2/environments/{eid}/move", func(w http.ResponseWriter, r *http.Request) {
 		var b map[string]any
 		_ = json.NewDecoder(r.Body).Decode(&b)
-		f.env["project_id"] = b["target_project_id"]
-		write(w, http.StatusOK, f.env)
+		f.record["project_id"] = b["target_project_id"]
+		write(w, http.StatusOK, f.record)
 	})
 	mux.HandleFunc("POST /v2/projects", func(w http.ResponseWriter, r *http.Request) {
 		write(w, http.StatusCreated, map[string]any{"object": "project", "id": projectB, "name": "new",
