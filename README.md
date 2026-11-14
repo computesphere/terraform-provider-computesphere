@@ -30,7 +30,7 @@ This is the official Terraform provider for managing resources on [ComputeSphere
      required_providers {
        computesphere = {
          source  = "computesphere/computesphere"
-         version = "~> 1.1"
+         version = "~> 1.3"
        }
      }
    }
