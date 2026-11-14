@@ -11,7 +11,7 @@ This is the official Terraform provider for managing resources on [ComputeSphere
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.23
+- [Go](https://golang.org/doc/install) >= 1.26
 
 ---
 
@@ -101,7 +101,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 </p>
 
 ---
-[Explore ComputeSphere Documentation](https://docs.computesphere.com)
+[Explore ComputeSphere Documentation](https://computesphere.com/docs)
 
 **Contact Us:**  
 [support@computesphere.com](mailto:support@computesphere.com)  

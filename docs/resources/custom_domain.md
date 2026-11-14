@@ -3,12 +3,12 @@
 page_title: "computesphere_custom_domain Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a custom domain bound to a deployment (ADR 0132). Modeled as an imperative sub-resource — one instance per hostname, so it is for_each-friendly. Both the deployment and the hostname are immutable; changing either forces replacement.
+  Manages a custom domain on a deployment. Use one resource per hostname (for_each works well). Changing the deployment or the hostname replaces the domain.
 ---
 
 # computesphere_custom_domain (Resource)
 
-Manages a custom domain bound to a deployment (ADR 0132). Modeled as an imperative sub-resource — one instance per hostname, so it is for_each-friendly. Both the deployment and the hostname are immutable; changing either forces replacement.
+Manages a custom domain on a deployment. Use one resource per hostname (for_each works well). Changing the deployment or the hostname replaces the domain.
 
 ## Example Usage
 

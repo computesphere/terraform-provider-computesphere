@@ -205,7 +205,7 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, depID, csv2.SetEnvVarsRequest{
 			EnvVars:    envVars,
 			SecretVars: secretVars,
-		}); everr != nil {
+		}, wholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
@@ -441,7 +441,7 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body); everr != nil {
+		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body, wholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
@@ -504,4 +504,13 @@ func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *DeploymentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// wholeSet marks an env-var write as the whole set (replace=true): the maps
+// Terraform sends are the configuration, so keys left out are meant to go.
+func wholeSet(_ context.Context, req *http.Request) error {
+	q := req.URL.Query()
+	q.Set("replace", "true")
+	req.URL.RawQuery = q.Encode()
+	return nil
 }

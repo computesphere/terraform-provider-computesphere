@@ -80,7 +80,7 @@ Read-Only:
 - `burstable` (Boolean) True on 1–2 vCPU types, which burst to their full vCPU.
 - `engine` (String) Database engine.
 - `family` (String) `free`, `flex` (shared CPU), `standard` or `plus` (twice the memory per vCPU).
-- `high_availability_allowed` (Boolean) Whether `standby` and `three_zone` are offered.
+- `high_availability_allowed` (Boolean) Whether `standby` is offered.
 - `id` (String) Instance type id used on `computesphere_database`, e.g. `pg-2c-4g`.
 - `included_storage_gb` (Number) Storage included in the price.
 - `max_connections` (Number) Direct connections; pooled connections allow 5×.
