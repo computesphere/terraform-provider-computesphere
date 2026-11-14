@@ -2,12 +2,14 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -141,6 +143,27 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	if err != nil {
 		resp.Diagnostics.AddError("Invalid environment id", err.Error())
 		return
+	}
+
+	if !plan.ProjectID.Equal(state.ProjectID) {
+		// A project change moves the environment and everything in it. The
+		// plan-time check can't run when the project was unknown then, so
+		// check again before anything is sent.
+		n, cerr := r.deploymentCount(ctx, eid.String())
+		if cerr != nil {
+			resp.Diagnostics.AddError("Can't check the environment's services", cerr.Error())
+			return
+		}
+		if n > 0 {
+			resp.Diagnostics.AddAttributeError(path.Root("project_id"), "project_id can't change while the environment runs services",
+				fmt.Sprintf("This environment runs %d service(s); nothing was moved. Move it in the console or with "+
+					"the CLI, then set project_id here and on the services that moved with it.", n))
+			return
+		}
+		if err := moveEnvironment(ctx, r.client, eid.String(), plan.ProjectID.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Error moving environment to another project", err.Error())
+			return
+		}
 	}
 
 	name := plan.Name.ValueString()
