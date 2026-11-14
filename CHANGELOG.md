@@ -60,6 +60,11 @@
 - Deprecated: the `computesphere_guardrail` resource and data source.
   Guardrails are no longer part of the public API: set them in the console.
   Both will stop working and be removed in a future release.
+- `computesphere_notification_setting`: new `webhooks` (URL, body format and
+  token). Left out, the webhooks and email addresses set in the console are
+  kept; before, every apply removed the webhooks. Leaving out `emails` no
+  longer fails. The resource and its data source need a full-access API
+  token, and say so when a scoped token is refused.
 - New resource `computesphere_environment_variables`: an environment's
   shared variables, which every deployment in it inherits (a deployment's
   own value for a key wins). It owns the whole set; an empty map removes
