@@ -31,9 +31,9 @@ provider "computesphere" {
 }
 
 resource "computesphere_service" "example" {
-  name           = "example-service"
-  project_id     = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
-  type           = "web-service"
+  name          = "example-service"
+  project_id    = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
+  type          = "web-service"
   instance_type = "sl-1c-2g" # list sizes with the computesphere_spherelet_instance_types data source
 }
 

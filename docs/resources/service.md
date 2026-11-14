@@ -46,9 +46,9 @@ provider "computesphere" {
 }
 
 resource "computesphere_service" "example" {
-  name           = "example-service"
-  project_id     = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
-  type           = "web-service"
+  name          = "example-service"
+  project_id    = "a1b2c3d4-e5f6-7890-abcd-ef1234567890ab"
+  type          = "web-service"
   instance_type = "sl-1c-2g" # list sizes with the computesphere_spherelet_instance_types data source
 }
 
@@ -72,7 +72,7 @@ output "service_name" {
 
 ### Optional
 
-- `instance_type` (String) The spherelet size the service runs on, e.g. `sl-1c-2g`. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it updates the service in place.
+- `instance_type` (String) The spherelet size the service runs on, e.g. `sl-1c-2g`. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it updates the service in place and redeploys its deployments on the new size; the account needs room for their spherelets at that size.
 - `plan_id` (String, Deprecated) Deprecated: use `instance_type`. Plan id of the service's spherelet size; null for sizes that have no plan id. Can't be set together with `instance_type`.
 
 ### Read-Only
