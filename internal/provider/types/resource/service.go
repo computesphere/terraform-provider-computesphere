@@ -35,7 +35,7 @@ var ServiceInstanceType = schema.StringAttribute{
 	Optional: true,
 	Computed: true,
 	Description: "The spherelet size the service runs on, e.g. `sl-1c-2g`. List sizes with the " +
-		"`computesphere_spherelet_instance_types` data source. Changing it updates the service in place and redeploys its deployments on the new size; " +
+		"`computesphere_spherelet_instance_types` data source. Changing it updates the service in place and redeploys its deployments on the new size; set the size here or on the service's deployments, not both; " +
 		"the account needs room for their spherelets at that size.",
 }
 var ServicePlanID = schema.StringAttribute{
