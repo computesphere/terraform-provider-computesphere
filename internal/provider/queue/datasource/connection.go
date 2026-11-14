@@ -20,7 +20,7 @@ var _ datasource.DataSource = &ConnectionDataSource{}
 func NewConnectionDataSource() datasource.DataSource { return &ConnectionDataSource{} }
 
 type queueConnectionModel struct {
-	ID       types.String `tfsdk:"id"`
+	QueueID  types.String `tfsdk:"queue_id"`
 	Reveal   types.Bool   `tfsdk:"reveal"`
 	Host     types.String `tfsdk:"host"`
 	Port     types.Int64  `tfsdk:"port"`
@@ -61,7 +61,7 @@ func (d *ConnectionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	m := cstypes.ConnectionModel{ID: q.ID, Reveal: q.Reveal}
+	m := cstypes.ConnectionModel{ID: q.QueueID, Reveal: q.Reveal}
 	c := cstypes.ReadConnection(ctx, d.client, "queues", "queue", &m, resp)
 	if c == nil {
 		return

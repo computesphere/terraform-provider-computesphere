@@ -26,25 +26,26 @@ type Connection struct {
 	CAFile   *string `json:"ca_file"`
 }
 
-// ConnectionModel is the state of a cache or queue connection data source.
+// ConnectionModel holds a cache or queue connection's values; each data
+// source maps it to its own model (cache_id or queue_id).
 type ConnectionModel struct {
-	ID       types.String `tfsdk:"id"`
-	Reveal   types.Bool   `tfsdk:"reveal"`
-	Host     types.String `tfsdk:"host"`
-	Port     types.Int64  `tfsdk:"port"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-	URI      types.String `tfsdk:"uri"`
-	TLS      types.Bool   `tfsdk:"tls"`
-	Revealed types.Bool   `tfsdk:"revealed"`
-	CAFile   types.String `tfsdk:"ca_file"`
+	ID       types.String `tfsdk:"-"`
+	Reveal   types.Bool   `tfsdk:"-"`
+	Host     types.String `tfsdk:"-"`
+	Port     types.Int64  `tfsdk:"-"`
+	Username types.String `tfsdk:"-"`
+	Password types.String `tfsdk:"-"`
+	URI      types.String `tfsdk:"-"`
+	TLS      types.Bool   `tfsdk:"-"`
+	Revealed types.Bool   `tfsdk:"-"`
+	CAFile   types.String `tfsdk:"-"`
 }
 
 // ConnectionAttributes are the attributes both connection data sources share.
 // noun is "cache" or "queue"; uriScheme its URI scheme.
 func ConnectionAttributes(noun, uriScheme string) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
-		"id": schema.StringAttribute{Required: true, Description: "The " + noun + "'s id."},
+		noun + "_id": schema.StringAttribute{Required: true, Description: "The " + noun + "'s id."},
 		"reveal": schema.BoolAttribute{
 			Optional:    true,
 			Description: "Include the password. Needs write access to the project. Default false: the password is masked.",

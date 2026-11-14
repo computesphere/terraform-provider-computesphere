@@ -14,7 +14,7 @@ Reads how to connect to a queue: host, port, user, virtual host and an `amqps://
 
 ```terraform
 data "computesphere_queue_connection" "example" {
-  id = "c1d2e3f4-5678-90ab-cdef-1234567890ab"
+  queue_id = "c1d2e3f4-5678-90ab-cdef-1234567890ab"
 }
 
 # Host and port, for an app in the same environment.
@@ -28,7 +28,7 @@ output "queue_endpoint" {
 
 ### Required
 
-- `id` (String) The queue's id.
+- `queue_id` (String) The queue's id.
 
 ### Optional
 

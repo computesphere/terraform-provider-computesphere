@@ -50,7 +50,7 @@ func TestAccQueueConnectionDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: factories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "computesphere_queue_connection" "example" { id = "` + connID + `" }`,
+				Config: `data "computesphere_queue_connection" "example" { queue_id = "` + connID + `" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(addr, "port", "5671"),
 					resource.TestCheckResourceAttr(addr, "password", "••••••••"),
@@ -62,7 +62,7 @@ func TestAccQueueConnectionDataSource(t *testing.T) {
 			},
 			{
 				Config: `data "computesphere_queue_connection" "example" {
-  id     = "` + connID + `"
+  queue_id = "` + connID + `"
   reveal = true
 }`,
 				Check: resource.ComposeAggregateTestCheckFunc(

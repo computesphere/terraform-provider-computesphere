@@ -14,7 +14,7 @@ Reads how to connect to a cache: host, port, user and a `rediss://` URI over TLS
 
 ```terraform
 data "computesphere_cache_connection" "example" {
-  id = "c1d2e3f4-5678-90ab-cdef-1234567890ab"
+  cache_id = "c1d2e3f4-5678-90ab-cdef-1234567890ab"
 }
 
 # Host and port, for an app in the same environment.
@@ -28,7 +28,7 @@ output "cache_endpoint" {
 
 ### Required
 
-- `id` (String) The cache's id.
+- `cache_id` (String) The cache's id.
 
 ### Optional
 

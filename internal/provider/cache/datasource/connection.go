@@ -7,6 +7,7 @@ import (
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // ConnectionDataSource reads how to connect to a cache.
@@ -38,14 +39,30 @@ func (d *ConnectionDataSource) Configure(ctx context.Context, req datasource.Con
 	}
 }
 
+type cacheConnectionModel struct {
+	CacheID  types.String `tfsdk:"cache_id"`
+	Reveal   types.Bool   `tfsdk:"reveal"`
+	Host     types.String `tfsdk:"host"`
+	Port     types.Int64  `tfsdk:"port"`
+	Username types.String `tfsdk:"username"`
+	Password types.String `tfsdk:"password"`
+	URI      types.String `tfsdk:"uri"`
+	TLS      types.Bool   `tfsdk:"tls"`
+	Revealed types.Bool   `tfsdk:"revealed"`
+	CAFile   types.String `tfsdk:"ca_file"`
+}
+
 func (d *ConnectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var m cstypes.ConnectionModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &m)...)
+	var c cacheConnectionModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &c)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	m := cstypes.ConnectionModel{ID: c.CacheID, Reveal: c.Reveal}
 	if cstypes.ReadConnection(ctx, d.client, "caches", "cache", &m, resp) == nil {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &m)...)
+	c.Host, c.Port, c.Username, c.Password, c.URI = m.Host, m.Port, m.Username, m.Password, m.URI
+	c.TLS, c.Revealed, c.CAFile = m.TLS, m.Revealed, m.CAFile
+	resp.Diagnostics.Append(resp.State.Set(ctx, &c)...)
 }

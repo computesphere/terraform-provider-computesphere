@@ -50,7 +50,7 @@ func TestAccCacheConnectionDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: factories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "computesphere_cache_connection" "example" { id = "` + connID + `" }`,
+				Config: `data "computesphere_cache_connection" "example" { cache_id = "` + connID + `" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(addr, "port", "6379"),
 					resource.TestCheckResourceAttr(addr, "password", "••••••••"),
@@ -61,7 +61,7 @@ func TestAccCacheConnectionDataSource(t *testing.T) {
 			},
 			{
 				Config: `data "computesphere_cache_connection" "example" {
-  id     = "` + connID + `"
+  cache_id = "` + connID + `"
   reveal = true
 }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
