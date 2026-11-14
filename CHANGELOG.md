@@ -65,6 +65,10 @@
   kept; before, every apply removed the webhooks. Leaving out `emails` no
   longer fails. The resource and its data source need a full-access API
   token, and say so when a scoped token is refused.
+- New data source `computesphere_database_connection`: the pooled and
+  direct routes of a database (host, port, database, user, URI), the public
+  routes when public access is on, and the CA details. The password is
+  masked unless `reveal = true`, which stores it in state.
 
 ## 1.2.0
 
