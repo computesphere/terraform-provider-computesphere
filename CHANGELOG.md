@@ -6,6 +6,10 @@
   for the scheduled-job alert types (`job_run_failed`, `job_failing_streak`,
   `job_run_missed`) that don't use them. New read-only
   `effective_evaluation_period` and `status`.
+- `computesphere_deployment`: new `instance_type`, the spherelet size the
+  deployment runs on (e.g. `sl-1c-2g`, or `FLX`, `MAX`, `PWR`); it defaults
+  to the service's size and changes in place. `plan_id` is deprecated and
+  can't be set together with `instance_type`.
 - New resource `computesphere_secret_source`: a secret manager (Doppler or
   Azure Key Vault) for the account, which deployments and environments read
   secrets from. Its `credential` is write-only, never stored in state;
