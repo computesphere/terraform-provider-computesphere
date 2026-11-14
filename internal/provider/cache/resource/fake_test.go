@@ -88,6 +88,11 @@ func (f *fakeCacheAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			var body map[string]any
 			_ = json.NewDecoder(r.Body).Decode(&body)
 			f.puts = append(f.puts, body)
+			if _, ok := body["mode"]; !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				_ = json.NewEncoder(w).Encode(map[string]any{"status": 400, "title": "mode is required"})
+				return
+			}
 			for k, v := range body {
 				in[k] = v
 			}

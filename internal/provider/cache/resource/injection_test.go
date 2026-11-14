@@ -2,6 +2,7 @@ package provider_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -76,6 +77,25 @@ func TestCacheResource_injection(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "injection.service_ids.#", "0"),
 				),
 				ConfigPlanChecks: empty,
+			},
+			{
+				// Only the variable name: the current mode is sent with it.
+				Config: injectionConfig(`  injection = {
+    variable_name = "VALKEY_URL"
+  }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "injection.mode", "none"),
+					resource.TestCheckResourceAttr(name, "injection.variable_name", "VALKEY_URL"),
+					lastPut("map[mode:none variable_name:VALKEY_URL]"),
+				),
+			},
+			{
+				Config:      injectionConfig(`  injection = { mode = "some" }`),
+				ExpectError: regexp.MustCompile(`mode must be all, selected or none`),
+			},
+			{
+				Config:      injectionConfig(`  injection = { variable_name = "redis-url" }`),
+				ExpectError: regexp.MustCompile(`upper-case letters, digits and underscores`),
 			},
 			{
 				// Without the block, the injection stays as it is.

@@ -144,6 +144,7 @@ func (r *CacheResource) ValidateConfig(ctx context.Context, req resource.Validat
 	check("engine", c.Engine, validEngines, "valkey")
 	check("version", c.Version, validVersions, "8.1")
 	check("eviction", c.Eviction, validEvictions, "allkeys-lru, noeviction")
+	validateInjection(c.Injection, &resp.Diagnostics)
 }
 
 // apply maps a v2 Cache into Terraform state.
@@ -205,6 +206,7 @@ func (r *CacheResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	state := plan
 	state.apply(&created)
+	state.Injection = types.ObjectNull(injectionAttrTypes)
 	// Save the id first so a failed wait doesn't orphan the cache.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

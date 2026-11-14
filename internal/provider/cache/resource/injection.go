@@ -4,10 +4,12 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -99,6 +101,15 @@ func (r *CacheResource) writeInjection(ctx context.Context, id string, plan, pri
 	body := map[string]any{}
 	if !m.Mode.IsNull() && !m.Mode.IsUnknown() {
 		body["mode"] = m.Mode.ValueString()
+	} else {
+		// The API needs mode on every write: keep the cache's current one.
+		cur := r.readInjection(ctx, id, diags)
+		if diags.HasError() {
+			return
+		}
+		if v, ok := cur.Attributes()["mode"].(types.String); ok {
+			body["mode"] = v.ValueString()
+		}
 	}
 	if !m.VariableName.IsNull() && !m.VariableName.IsUnknown() {
 		body["variable_name"] = m.VariableName.ValueString()
@@ -118,5 +129,24 @@ func (r *CacheResource) writeInjection(ctx context.Context, id string, plan, pri
 	}
 	if status != http.StatusOK {
 		diags.AddError("Error changing cache injection", cstypes.ProblemSummary(raw, status))
+	}
+}
+
+var variableName = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+
+// validateInjection checks the injection block's mode and variable name.
+func validateInjection(obj types.Object, diags *diag.Diagnostics) {
+	if obj.IsNull() || obj.IsUnknown() {
+		return
+	}
+	attrs := obj.Attributes()
+	if v, ok := attrs["mode"].(types.String); ok && !v.IsNull() && !v.IsUnknown() {
+		if m := v.ValueString(); m != "all" && m != "selected" && m != "none" {
+			diags.AddAttributeError(path.Root("injection").AtName("mode"), "Invalid value", "mode must be all, selected or none.")
+		}
+	}
+	if v, ok := attrs["variable_name"].(types.String); ok && !v.IsNull() && !v.IsUnknown() && !variableName.MatchString(v.ValueString()) {
+		diags.AddAttributeError(path.Root("injection").AtName("variable_name"), "Invalid value",
+			"variable_name must be upper-case letters, digits and underscores, starting with a letter.")
 	}
 }
