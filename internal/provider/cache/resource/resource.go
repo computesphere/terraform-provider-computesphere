@@ -46,6 +46,8 @@ type apiCache struct {
 	InstanceType     *string `json:"instance_type"`
 	HighAvailability bool    `json:"high_availability"`
 	Eviction         *string `json:"eviction"`
+	Persistence      bool    `json:"persistence"`
+	InternalHost     *string `json:"internal_host"`
 	Status           string  `json:"status"`
 	ReadOnly         bool    `json:"read_only"`
 	ProjectID        string  `json:"project_id"`
@@ -103,6 +105,8 @@ type cacheResourceModel struct {
 	InstanceType     types.String `tfsdk:"instance_type"`
 	Eviction         types.String `tfsdk:"eviction"`
 	HighAvailability types.Bool   `tfsdk:"high_availability"`
+	Persistence      types.Bool   `tfsdk:"persistence"`
+	InternalHost     types.String `tfsdk:"internal_host"`
 	Status           types.String `tfsdk:"status"`
 	Region           types.String `tfsdk:"region"`
 	ProjectID        types.String `tfsdk:"project_id"`
@@ -151,6 +155,8 @@ func (m *cacheResourceModel) apply(c *apiCache) {
 	m.InstanceType = types.StringPointerValue(c.InstanceType)
 	m.Eviction = types.StringPointerValue(c.Eviction)
 	m.HighAvailability = types.BoolValue(c.HighAvailability)
+	m.Persistence = types.BoolValue(c.Persistence)
+	m.InternalHost = types.StringPointerValue(c.InternalHost)
 	m.Status = types.StringValue(c.Status)
 	m.Region = types.StringValue(c.Region)
 	m.ProjectID = types.StringValue(c.ProjectID)
@@ -276,7 +282,7 @@ func (r *CacheResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "cache", "name", "environment_id", "engine", "version", "eviction") {
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "cache", "name", "environment_id", "engine", "version") {
 		return
 	}
 	id := state.ID.ValueString()
@@ -337,7 +343,7 @@ func (r *CacheResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 // existing cache (no update body takes them)
 // instead of planning a replacement that would delete its data.
 func (r *CacheResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	dataproduct.RefuseChange(ctx, req, resp, "cache", "name", "environment_id", "engine", "version", "eviction")
+	dataproduct.RefuseChange(ctx, req, resp, "cache", "name", "environment_id", "engine", "version")
 }
 
 func (r *CacheResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

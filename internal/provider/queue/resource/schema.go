@@ -46,7 +46,15 @@ func Schema(ctx context.Context) schema.Schema {
 					"zones with quorum queues. Changing it resizes the broker in place; a size with less disk than " +
 					"the current one is refused.",
 			},
-			"instances":  schema.Int64Attribute{Computed: true, Description: "Instances in the broker: 1, or 3 on a high-availability instance type (an id ending in `-ha`)."},
+			"instances": schema.Int64Attribute{Computed: true, Description: "Instances in the broker: 1, or 3 on a high-availability instance type (an id ending in `-ha`)."},
+			"storage_gb": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Disk per instance, in GB. It grows with a larger size and never shrinks.",
+			},
+			"internal_host": schema.StringAttribute{
+				Computed: true, PlanModifiers: keep,
+				Description: "The queue's private host inside the environment. It never changes.",
+			},
 			"status":     schema.StringAttribute{Computed: true, Description: "Current status, e.g. `available`."},
 			"region":     schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Region of the environment."},
 			"project_id": schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Project the broker belongs to."},

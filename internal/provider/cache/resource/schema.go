@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -50,11 +51,20 @@ func Schema(ctx context.Context) schema.Schema {
 			"eviction": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: keep,
 				Description: "What happens when memory is full: `allkeys-lru` (the default) evicts the least recently " +
-					"used keys; `noeviction` refuses writes until memory is freed. It is set when the cache is created.",
+					"used keys; `noeviction` refuses writes until memory is freed. Changing it updates the cache in place; " +
+					"a cache created before 15 October 2026 keeps the policy it was created with, and a change is refused.",
 			},
 			"high_availability": schema.BoolAttribute{
 				Computed:    true,
 				Description: "True when the cache has high availability: a standby copy in another zone (a high-availability instance type, its id ending in `-ha`).",
+			},
+			"persistence": schema.BoolAttribute{
+				Computed: true, PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+				Description: "True when the cache keeps its data on disk, so a restart doesn't empty it.",
+			},
+			"internal_host": schema.StringAttribute{
+				Computed: true, PlanModifiers: keep,
+				Description: "The cache's private host inside the environment. It never changes.",
 			},
 			"status":     schema.StringAttribute{Computed: true, Description: "Current status, e.g. `available`."},
 			"region":     schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Region of the environment."},

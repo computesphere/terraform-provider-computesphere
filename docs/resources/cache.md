@@ -82,7 +82,7 @@ output "cache_status" {
 ### Optional
 
 - `engine` (String) Cache engine. Only `valkey` today. It can't change after create; a change is refused at plan time.
-- `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. It is set when the cache is created.
+- `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. Changing it updates the cache in place; a cache created before 15 October 2026 keeps the policy it was created with, and a change is refused.
 - `version` (String) Valkey version, e.g. `8.1`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
@@ -90,6 +90,8 @@ output "cache_status" {
 - `created_at` (String) Creation timestamp.
 - `high_availability` (Boolean) True when the cache has high availability: a standby copy in another zone (a high-availability instance type, its id ending in `-ha`).
 - `id` (String) Cache identifier.
+- `internal_host` (String) The cache's private host inside the environment. It never changes.
+- `persistence` (Boolean) True when the cache keeps its data on disk, so a restart doesn't empty it.
 - `project_id` (String) Project the cache belongs to.
 - `region` (String) Region of the environment.
 - `status` (String) Current status, e.g. `available`.

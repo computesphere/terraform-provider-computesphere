@@ -62,7 +62,8 @@ func (f *fakeCacheAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c := map[string]any{
 			"object": "cache", "id": fakeCacheID, "name": body.Name, "engine": body.Engine, "version": f.version,
 			"instance_type": body.InstanceType, "high_availability": strings.HasSuffix(body.InstanceType, "-ha"),
-			"eviction": eviction, "status": "provisioning", "read_only": false,
+			"eviction": eviction, "persistence": true, "internal_host": body.Name + "-7k2m9q",
+			"status": "provisioning", "read_only": false,
 			"account_id": "11111111-1111-1111-1111-111111111111", "project_id": "22222222-2222-2222-2222-222222222222",
 			"environment_id": body.EnvironmentID, "region": "eastus2", "error": "",
 			"created_at": "2026-10-12T10:00:00Z", "updated_at": "2026-10-12T10:00:00Z",

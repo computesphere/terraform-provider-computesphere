@@ -88,9 +88,11 @@ output "queue_instances" {
 - `created_at` (String) Creation timestamp.
 - `id` (String) Broker identifier.
 - `instances` (Number) Instances in the broker: 1, or 3 on a high-availability instance type (an id ending in `-ha`).
+- `internal_host` (String) The queue's private host inside the environment. It never changes.
 - `project_id` (String) Project the broker belongs to.
 - `region` (String) Region of the environment.
 - `status` (String) Current status, e.g. `available`.
+- `storage_gb` (Number) Disk per instance, in GB. It grows with a larger size and never shrinks.
 
 ## Import
 
