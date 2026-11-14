@@ -15,6 +15,11 @@
   secrets from. Its `credential` is write-only, never stored in state;
   change `credential_version` to send a rotated one. `all_projects` or
   `project_ids` say which projects may use it. Needs Terraform 1.11 or later.
+- New data sources `computesphere_cache_connection` and
+  `computesphere_queue_connection`: host, port, user (and a queue's virtual
+  host), a TLS URI and the CA file. The password is masked unless
+  `reveal = true`, which stores it in state and reveals it (recorded in the
+  audit log) on every plan and apply.
 
 ## 1.3.0
 

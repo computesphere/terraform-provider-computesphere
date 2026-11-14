@@ -90,6 +90,8 @@ Full per-attribute documentation for every resource and data source lives under
 | Data Source  | computesphere_database_connection    | [database/datasource](internal/provider/database/datasource/) |
 | Data Source  | computesphere_cache_instance_types   | [cache/datasource](internal/provider/cache/datasource/)      |
 | Data Source  | computesphere_queue_instance_types   | [queue/datasource](internal/provider/queue/datasource/)      |
+| Data Source  | computesphere_cache_connection       | [cache/datasource](internal/provider/cache/datasource/)      |
+| Data Source  | computesphere_queue_connection       | [queue/datasource](internal/provider/queue/datasource/)      |
 | Data Source  | computesphere_spherelet_instance_types | [spherelet/datasource](internal/provider/spherelet/datasource/) |
 | Data Source  | computesphere_guardrail (deprecated) | [guardrail/datasource](internal/provider/guardrail/datasource/) |
 | Data Source  | computesphere_notification_setting   | [notification_setting/datasource](internal/provider/notification_setting/datasource/) |
