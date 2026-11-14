@@ -42,7 +42,7 @@ func (d *InstanceTypesDataSource) Schema(ctx context.Context, req datasource.Sch
 			},
 			"engine": schema.StringAttribute{
 				Optional:    true,
-				Description: "Database engine. Only `postgresql` today.",
+				Description: "Database engine: `postgresql` (the default) or `documentdb`. Their instance types share names, not ids.",
 			},
 			"instance_types": schema.ListNestedAttribute{
 				Computed:    true,

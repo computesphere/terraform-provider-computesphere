@@ -64,7 +64,7 @@ output "available_instance_types" {
 
 ### Optional
 
-- `engine` (String) Database engine. Only `postgresql` today.
+- `engine` (String) Database engine: `postgresql` (the default) or `documentdb`. Their instance types share names, not ids.
 - `environment_id` (String) Price and check availability for this environment's region.
 
 ### Read-Only
