@@ -24,19 +24,24 @@ const defaultStreak = 3
 func (r *AlertResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var c alertResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &c)...)
-	if resp.Diagnostics.HasError() || c.AlertType.IsUnknown() || c.AlertType.IsNull() || c.Threshold.IsUnknown() {
+	if resp.Diagnostics.HasError() || c.AlertType.IsUnknown() || c.AlertType.IsNull() {
 		return
 	}
 	t := c.AlertType.ValueString()
+	if metricTypes[t] && c.EvaluationPeriod.IsNull() {
+		resp.Diagnostics.AddAttributeError(path.Root("evaluation_period"), "Missing evaluation_period",
+			"A "+t+" alert needs evaluation_period, the seconds the metric must stay over the threshold. "+
+				"Rules evaluate in whole minutes, and values under 120 act as 120.")
+	}
+	if c.Threshold.IsUnknown() {
+		return
+	}
 	switch {
 	case metricTypes[t] && c.Threshold.IsNull():
 		resp.Diagnostics.AddAttributeError(path.Root("threshold"), "Missing threshold",
 			"A "+t+" alert needs threshold, a percent from 1 to 100.")
 	case metricTypes[t] && (c.Threshold.ValueInt64() < 1 || c.Threshold.ValueInt64() > 100):
 		resp.Diagnostics.AddAttributeError(path.Root("threshold"), "Invalid threshold", "threshold must be from 1 to 100.")
-	case metricTypes[t] && c.EvaluationPeriod.IsNull():
-		resp.Diagnostics.AddAttributeError(path.Root("evaluation_period"), "Missing evaluation_period",
-			"A "+t+" alert needs evaluation_period, the seconds the metric must stay over the threshold (at least 120).")
 	case t == "job_failing_streak" && !c.Threshold.IsNull() && (c.Threshold.ValueInt64() < 2 || c.Threshold.ValueInt64() > 10):
 		resp.Diagnostics.AddAttributeError(path.Root("threshold"), "Invalid threshold",
 			"For job_failing_streak, threshold is the failed runs in a row, from 2 to 10 (default 3).")

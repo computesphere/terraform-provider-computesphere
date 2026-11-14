@@ -55,8 +55,9 @@ var Threshold = schema.Int64Attribute{
 var EvaluationPeriod = schema.Int64Attribute{
 	Optional: true, Computed: true,
 	PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
-	Description: "Seconds the metric must stay over the threshold. Rules evaluate in whole minutes, at least 120 " +
-		"seconds (see `effective_evaluation_period`). The job alert types don't use it.",
+	Description: "Seconds the metric must stay over the threshold; needed for `cpu`, `memory` and `disk`. Rules " +
+		"evaluate in whole minutes, and values under 120 act as 120 (see `effective_evaluation_period`). The " +
+		"job alert types don't use it.",
 }
 
 var Active = schema.BoolAttribute{

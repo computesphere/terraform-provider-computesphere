@@ -77,7 +77,7 @@ output "alert_type" {
 ### Optional
 
 - `active` (Boolean) Whether the alert is active.
-- `evaluation_period` (Number) Seconds the metric must stay over the threshold. Rules evaluate in whole minutes, at least 120 seconds (see `effective_evaluation_period`). The job alert types don't use it.
+- `evaluation_period` (Number) Seconds the metric must stay over the threshold; needed for `cpu`, `memory` and `disk`. Rules evaluate in whole minutes, and values under 120 act as 120 (see `effective_evaluation_period`). The job alert types don't use it.
 - `threshold` (Number) Percent for `cpu`, `memory` and `disk` (1 to 100); failed runs in a row for `job_failing_streak` (2 to 10, default 3). `job_run_failed` and `job_run_missed` don't use it. When `alert_type` changes to `job_failing_streak` and this is left out, it's set to 3.
 
 ### Read-Only
