@@ -83,8 +83,10 @@ func (d *ConnectionDataSource) Schema(ctx context.Context, req datasource.Schema
 	resp.Schema = schema.Schema{
 		Description: "Reads how to connect to a SphereDB database: the pooled route (for your app) and the direct " +
 			"route (for tools and migrations), and the public routes when public access is on. Private hosts are " +
-			"reachable only from services in the database's environment. With `reveal = true` the password is " +
-			"included, stored in Terraform state, and each read is recorded in the account's activity log.",
+			"reachable only from services in the database's environment; from a laptop, use `csph db tunnel`. " +
+			"With `reveal = true` the password is included and stored in Terraform state, and since every plan " +
+			"and apply reads the data source again, each one reveals the password and is recorded in the " +
+			"account's activity log.",
 		Attributes: map[string]schema.Attribute{
 			"database_id": schema.StringAttribute{Required: true, Description: "Database id."},
 			"reveal": schema.BoolAttribute{
@@ -178,7 +180,10 @@ func (d *ConnectionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		resp.Diagnostics.AddError("Error reading database connection", "could not read the response: "+err.Error())
 		return
 	}
-	m.Engine = types.StringValue(c.Engine)
+	m.Engine = types.StringNull()
+	if c.Engine != "" {
+		m.Engine = types.StringValue(c.Engine)
+	}
 	m.Sslmode = types.StringValue(c.Sslmode)
 	m.Revealed = types.BoolValue(c.Revealed)
 	m.CAFile = types.StringPointerValue(c.CAFile)

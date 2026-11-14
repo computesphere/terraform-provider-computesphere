@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,13 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/computesphere/terraform-provider-computesphere/internal/provider"
 )
 
 const connDB = "99999999-9999-4999-8999-999999999999"
 
-// The connection data source reads the routes; reveal is sent only when set,
+// The connection data source reads the routes, masked unless reveal is true,
 // and public routes are null until public access is on.
 func TestAccDatabaseConnectionDataSource(t *testing.T) {
 	var revealSeen []string
@@ -67,6 +69,14 @@ func TestAccDatabaseConnectionDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(addr, "pooled.password", "s3cret"),
 					resource.TestCheckResourceAttr(addr, "revealed", "true"),
+					func(*terraform.State) error {
+						for _, v := range revealSeen {
+							if v == "true" {
+								return nil
+							}
+						}
+						return fmt.Errorf("reveal=true never sent: %v", revealSeen)
+					},
 				),
 			},
 		},

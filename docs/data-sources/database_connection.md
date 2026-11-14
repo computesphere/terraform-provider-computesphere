@@ -3,12 +3,12 @@
 page_title: "computesphere_database_connection Data Source - computesphere"
 subcategory: ""
 description: |-
-  Reads how to connect to a SphereDB database: the pooled route (for your app) and the direct route (for tools and migrations), and the public routes when public access is on. Private hosts are reachable only from services in the database's environment. With reveal = true the password is included, stored in Terraform state, and each read is recorded in the account's activity log.
+  Reads how to connect to a SphereDB database: the pooled route (for your app) and the direct route (for tools and migrations), and the public routes when public access is on. Private hosts are reachable only from services in the database's environment; from a laptop, use csph db tunnel. With reveal = true the password is included and stored in Terraform state, and since every plan and apply reads the data source again, each one reveals the password and is recorded in the account's activity log.
 ---
 
 # computesphere_database_connection (Data Source)
 
-Reads how to connect to a SphereDB database: the pooled route (for your app) and the direct route (for tools and migrations), and the public routes when public access is on. Private hosts are reachable only from services in the database's environment. With `reveal = true` the password is included, stored in Terraform state, and each read is recorded in the account's activity log.
+Reads how to connect to a SphereDB database: the pooled route (for your app) and the direct route (for tools and migrations), and the public routes when public access is on. Private hosts are reachable only from services in the database's environment; from a laptop, use `csph db tunnel`. With `reveal = true` the password is included and stored in Terraform state, and since every plan and apply reads the data source again, each one reveals the password and is recorded in the account's activity log.
 
 ## Example Usage
 

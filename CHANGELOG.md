@@ -68,7 +68,8 @@
 - New data source `computesphere_database_connection`: the pooled and
   direct routes of a database (host, port, database, user, URI), the public
   routes when public access is on, and the CA details. The password is
-  masked unless `reveal = true`, which stores it in state.
+  masked unless `reveal = true`, which stores it in state and reveals it
+  (recorded in the activity log) on every plan and apply.
 
 ## 1.2.0
 
