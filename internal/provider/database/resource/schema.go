@@ -13,7 +13,6 @@ import (
 
 func Schema(ctx context.Context) schema.Schema {
 	keep := []planmodifier.String{stringplanmodifier.UseStateForUnknown()}
-	replace := []planmodifier.String{stringplanmodifier.RequiresReplace()}
 	return schema.Schema{
 		Description: "Manages a SphereDB database: a managed database the platform runs for you. " +
 			"Pick an instance type (see the `computesphere_database_instance_types` data source), " +
@@ -24,24 +23,23 @@ func Schema(ctx context.Context) schema.Schema {
 				Description: "Database identifier.",
 			},
 			"name": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
-				Description: "Lowercase letters, digits and hyphens; unique in the environment. Changing it creates a new database.",
+				Required:    true,
+				Description: "Lowercase letters, digits and hyphens; unique in the environment. It can't change after create; a change is refused at plan time.",
 			},
 			"environment_id": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
-				Description: "Environment the database belongs to. Changing it creates a new database.",
+				Required:    true,
+				Description: "Environment the database belongs to. It can't change after create; a change is refused at plan time.",
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("postgresql"),
-				PlanModifiers: replace,
 				Description: "Database engine: `postgresql` (the default), or `documentdb` for SphereDB built on the " +
 					"open-source DocumentDB engine (where offered; no extensions or public access yet). " +
-					"Changing it creates a new database.",
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"version": schema.StringAttribute{
 				Optional: true, Computed: true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
-				Description:   "Major version. Defaults to the latest supported. Changing it creates a new database.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Description:   "Major version. Defaults to the latest supported. It can't change after create; a change is refused at plan time.",
 			},
 			"instance_type": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: sizing("instance_type"),

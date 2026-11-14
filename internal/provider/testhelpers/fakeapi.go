@@ -333,3 +333,26 @@ func decode(r *http.Request) map[string]any {
 func jsonBody(raw []byte) io.ReadCloser {
 	return io.NopCloser(bytes.NewReader(raw))
 }
+
+// FakeAccountID is the account id the fake-API provider is configured with.
+const FakeAccountID = testAccountID
+
+// SetupFakeAPIProvider serves handler as the v2 API on a local test server
+// and returns provider factories pointed at it, for unit tests that bring
+// their own handler.
+func SetupFakeAPIProvider(t *testing.T, handler http.Handler) map[string]func() (tfprotov6.ProviderServer, error) {
+	t.Helper()
+	srv := httptest.NewServer(handler)
+	t.Cleanup(srv.Close)
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"computesphere": providerserver.NewProtocol6WithError(
+			provider.New(
+				"test",
+				provider.WithHost(srv.URL+"/v2"),
+				provider.WithAPIToken("some-api-token"),
+				provider.WithAccountID(FakeAccountID),
+				provider.WithHTTPClient(srv.Client()),
+			)(),
+		),
+	}
+}

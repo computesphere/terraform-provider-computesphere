@@ -7,6 +7,7 @@ import (
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/dataproduct"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -328,6 +329,9 @@ func (r *DatabaseResource) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "database", "name", "environment_id", "engine", "version") {
 		return
 	}
 	id, err := uuid.Parse(state.ID.ValueString())
