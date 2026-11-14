@@ -129,8 +129,9 @@ func TestAccAlertResource_typeChange(t *testing.T) {
 		ProtoV6ProviderFactories: factories,
 		Steps: []resource.TestStep{
 			{
-				Config: alertConfig(`  alert_type = "cpu"
-  threshold  = 80`),
+				Config: alertConfig(`  alert_type        = "cpu"
+  threshold         = 80
+  evaluation_period = 300`),
 				Check: resource.TestCheckResourceAttr(addr, "effective_evaluation_period", "120"),
 			},
 			{
@@ -152,6 +153,11 @@ func TestAccAlertResource_typeChange(t *testing.T) {
 			{
 				Config:      alertConfig(`  alert_type = "memory"`),
 				ExpectError: regexp.MustCompile(`needs threshold`),
+			},
+			{
+				Config: alertConfig(`  alert_type = "disk"
+  threshold  = 90`),
+				ExpectError: regexp.MustCompile(`needs evaluation_period`),
 			},
 			{
 				Config: alertConfig(`  alert_type = "job_failing_streak"

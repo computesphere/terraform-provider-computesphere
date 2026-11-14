@@ -15,8 +15,9 @@ var (
 
 var metricTypes = map[string]bool{"cpu": true, "memory": true, "disk": true}
 
-// ValidateConfig checks threshold against the alert type: a metric rule
-// needs a percent from 1 to 100, and a failing-streak rule takes 2 to 10.
+// ValidateConfig checks threshold and evaluation_period against the alert
+// type: a metric rule needs both (a percent from 1 to 100, and seconds), and
+// a failing-streak rule takes a threshold from 2 to 10.
 func (r *AlertResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var c alertResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &c)...)
@@ -30,6 +31,9 @@ func (r *AlertResource) ValidateConfig(ctx context.Context, req resource.Validat
 			"A "+t+" alert needs threshold, a percent from 1 to 100.")
 	case metricTypes[t] && (c.Threshold.ValueInt64() < 1 || c.Threshold.ValueInt64() > 100):
 		resp.Diagnostics.AddAttributeError(path.Root("threshold"), "Invalid threshold", "threshold must be from 1 to 100.")
+	case metricTypes[t] && c.EvaluationPeriod.IsNull():
+		resp.Diagnostics.AddAttributeError(path.Root("evaluation_period"), "Missing evaluation_period",
+			"A "+t+" alert needs evaluation_period, the seconds the metric must stay over the threshold (at least 120).")
 	case t == "job_failing_streak" && !c.Threshold.IsNull() && (c.Threshold.ValueInt64() < 2 || c.Threshold.ValueInt64() > 10):
 		resp.Diagnostics.AddAttributeError(path.Root("threshold"), "Invalid threshold",
 			"For job_failing_streak, threshold is the failed runs in a row, from 2 to 10 (default 3).")
