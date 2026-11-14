@@ -19,10 +19,14 @@ type fakeCacheAPI struct {
 	caches  map[string]map[string]any
 	pending map[string]bool
 	calls   []string
+	// injection per cache: a new cache gives REDIS_URL to every service.
+	injection map[string]map[string]any
+	puts      []map[string]any
 }
 
 func newFakeCacheAPI(t *testing.T) *fakeCacheAPI {
-	return &fakeCacheAPI{version: "8.1", t: t, caches: map[string]map[string]any{}, pending: map[string]bool{}}
+	return &fakeCacheAPI{version: "8.1", t: t, caches: map[string]map[string]any{}, pending: map[string]bool{},
+		injection: map[string]map[string]any{}}
 }
 
 const fakeCacheID = "0b5d6a8e-2c1f-4e7a-9d3b-6f0e1c2a3b4c"
@@ -73,6 +77,25 @@ func (f *fakeCacheAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		f.pending[fakeCacheID] = true
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(c)
+	case strings.HasPrefix(p, "/caches/") && strings.HasSuffix(p, "/injection"):
+		id := strings.TrimSuffix(strings.TrimPrefix(p, "/caches/"), "/injection")
+		in, ok := f.injection[id]
+		if !ok {
+			in = map[string]any{"object": "cache_injection", "cache_id": id, "mode": "all", "variable_name": "REDIS_URL", "service_ids": []string{}}
+			f.injection[id] = in
+		}
+		if r.Method == http.MethodPut {
+			var body map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			f.puts = append(f.puts, body)
+			for k, v := range body {
+				in[k] = v
+			}
+			if in["mode"] != "selected" {
+				in["service_ids"] = []string{}
+			}
+		}
+		_ = json.NewEncoder(w).Encode(in)
 	case strings.HasPrefix(p, "/caches/"):
 		id := strings.TrimPrefix(p, "/caches/")
 		c, ok := f.caches[id]

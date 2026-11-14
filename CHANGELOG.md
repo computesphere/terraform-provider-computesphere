@@ -15,6 +15,11 @@
   secrets from. Its `credential` is write-only, never stored in state;
   change `credential_version` to send a rotated one. `all_projects` or
   `project_ids` say which projects may use it. Needs Terraform 1.11 or later.
+- `computesphere_cache`: new `injection` block: which services in the
+  environment get the cache's URL as a variable (`mode` `all`, `selected`
+  with `service_ids`, or `none`) and its `variable_name` (default
+  `REDIS_URL`). Changing it restarts the services it affects; leaving it
+  out keeps it as it is.
 
 ## 1.3.0
 

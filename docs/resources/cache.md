@@ -83,6 +83,7 @@ output "cache_status" {
 
 - `engine` (String) Cache engine. Only `valkey` today. It can't change after create; a change is refused at plan time.
 - `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. Changing it updates the cache in place; a cache created before 15 October 2026, 08:30 UTC, keeps the policy it was created with, and the API refuses a change.
+- `injection` (Attributes) Which services in the cache's environment get its URL (a secret `rediss://` URL with the password) as a variable. A new cache gives it to every service as `REDIS_URL` unless the environment already has that name. Changing it restarts the services it affects. Leave it out to keep it as it is. (see [below for nested schema](#nestedatt--injection))
 - `version` (String) Valkey version, e.g. `8.1`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
@@ -95,6 +96,15 @@ output "cache_status" {
 - `project_id` (String) Project the cache belongs to.
 - `region` (String) Region of the environment.
 - `status` (String) Current status, e.g. `available`.
+
+<a id="nestedatt--injection"></a>
+### Nested Schema for `injection`
+
+Optional:
+
+- `mode` (String) `all` (every app service in the environment), `selected` (the services in `service_ids`) or `none`.
+- `service_ids` (Set of String) Services that get the variable when `mode` is `selected`; empty otherwise.
+- `variable_name` (String) Variable holding the cache's URL. Defaults to `REDIS_URL`.
 
 ## Import
 
