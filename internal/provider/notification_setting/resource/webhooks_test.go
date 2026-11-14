@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"sync"
 	"testing"
 
@@ -194,5 +195,31 @@ func TestAccNotificationSettingResource_webhooks(t *testing.T) {
 				),
 			},
 		},
+	})
+}
+
+// A scoped API token gets 403 on notification settings; the error says to use
+// a full-access token.
+func TestAccNotificationSettingResource_scopedToken(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/problem+json")
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"status":403,"code":"forbidden","title":"Forbidden"}`))
+	}))
+	t.Cleanup(srv.Close)
+	factories := map[string]func() (tfprotov6.ProviderServer, error){
+		"computesphere": providerserver.NewProtocol6WithError(provider.New("test",
+			provider.WithHost(srv.URL+"/v2"),
+			provider.WithAPIToken("some-api-token"),
+			provider.WithAccountID("11111111-1111-1111-1111-111111111111"),
+			provider.WithHTTPClient(srv.Client()),
+		)()),
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: factories,
+		Steps: []resource.TestStep{{
+			Config:      `resource "computesphere_notification_setting" "example" { email_enabled = true }`,
+			ExpectError: regexp.MustCompile(`full-access`),
+		}},
 	})
 }

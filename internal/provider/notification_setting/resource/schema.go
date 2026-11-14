@@ -9,7 +9,9 @@ import (
 
 func Schema(ctx context.Context) schema.Schema {
 	return schema.Schema{
-		Description: "Manages a notification setting resource.",
+		Description: "Manages the notification settings of the person who owns the API token: which topics are " +
+			"delivered, and by in-app, email or webhook. Needs a full-access API token: notification settings span every " +
+			"account the person is in, so a token scoped to an account or a project is refused.",
 		Attributes: map[string]schema.Attribute{
 			"activity":        shared.NotificationSettingActivity,
 			"billing":         shared.NotificationSettingBilling,

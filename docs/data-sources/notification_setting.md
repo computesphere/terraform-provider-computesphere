@@ -3,12 +3,12 @@
 page_title: "computesphere_notification_setting Data Source - computesphere"
 subcategory: ""
 description: |-
-  Provides details for a notification setting.
+  Reads the notification settings of the person who owns the API token. Needs a full-access API token: notification settings span every account the person is in, so a token scoped to an account or a project is refused.
 ---
 
 # computesphere_notification_setting (Data Source)
 
-Provides details for a notification setting.
+Reads the notification settings of the person who owns the API token. Needs a full-access API token: notification settings span every account the person is in, so a token scoped to an account or a project is refused.
 
 ## Example Usage
 

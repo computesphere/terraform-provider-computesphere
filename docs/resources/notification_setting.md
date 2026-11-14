@@ -3,12 +3,12 @@
 page_title: "computesphere_notification_setting Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a notification setting resource.
+  Manages the notification settings of the person who owns the API token: which topics are delivered, and by in-app, email or webhook. Needs a full-access API token: notification settings span every account the person is in, so a token scoped to an account or a project is refused.
 ---
 
 # computesphere_notification_setting (Resource)
 
-Manages a notification setting resource.
+Manages the notification settings of the person who owns the API token: which topics are delivered, and by in-app, email or webhook. Needs a full-access API token: notification settings span every account the person is in, so a token scoped to an account or a project is refused.
 
 ## Example Usage
 
