@@ -321,6 +321,7 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		databaseresource.NewDatabaseResource,
 		queueresource.NewQueueResource,
 		environmentresource.NewEnvironmentResource,
+		environmentresource.NewEnvironmentVariablesResource,
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
 		serviceresource.NewServiceResource,
