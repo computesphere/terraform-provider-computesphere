@@ -6,6 +6,11 @@
   addresses the region's services connect out from, and
   `build_outbound_ips`, the addresses builds connect out from, both as CIDR
   ranges for allowlists. Each is null until the API publishes it.
+- `computesphere_database` accepts `engine = "documentdb"`: SphereDB built on
+  the open-source DocumentDB engine (where offered). It has its own
+  instance types (`docdb-...`; list them with
+  `computesphere_database_instance_types` and `engine = "documentdb"`), and
+  services get `MONGODB_URI` instead of `DATABASE_URL`.
 
 ## 1.2.0
 
