@@ -57,6 +57,9 @@
   then set the new project on the environment and its services. A `region`
   change is refused at plan time: an environment can't move to another
   region.
+- Deprecated: the `computesphere_guardrail` resource and data source.
+  Guardrails are no longer part of the public API: set them in the console.
+  Both will stop working and be removed in a future release.
 - `computesphere_notification_setting`: new `webhooks` (URL, body format and
   token). Left out, the webhooks and email addresses set in the console are
   kept; before, every apply removed the webhooks. Leaving out `emails` no

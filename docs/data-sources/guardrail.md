@@ -3,12 +3,12 @@
 page_title: "computesphere_guardrail Data Source - computesphere"
 subcategory: ""
 description: |-
-  Provides details for a single guardrail.
+  Deprecated: guardrails are set in the console. Provides details for a single guardrail.
 ---
 
 # computesphere_guardrail (Data Source)
 
-Provides details for a single guardrail.
+Deprecated: guardrails are set in the console. Provides details for a single guardrail.
 
 ## Example Usage
 

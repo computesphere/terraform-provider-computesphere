@@ -69,7 +69,11 @@ Full per-attribute documentation for every resource and data source lives under
 | Resource     | computesphere_team                   | [team/resource](internal/provider/team/resource/)            |
 | Resource     | computesphere_api_token              | [api_token/resource](internal/provider/api_token/resource/)  |
 | Resource     | computesphere_alert                  | [alert/resource](internal/provider/alert/resource/)          |
-| Resource     | computesphere_guardrail              | [guardrail/resource](internal/provider/guardrail/resource/)  |
+| Resource     | computesphere_custom_domain          | [custom_domain/resource](internal/provider/custom_domain/resource/) |
+| Resource     | computesphere_database               | [database/resource](internal/provider/database/resource/)    |
+| Resource     | computesphere_cache                  | [cache/resource](internal/provider/cache/resource/)          |
+| Resource     | computesphere_queue                  | [queue/resource](internal/provider/queue/resource/)          |
+| Resource     | computesphere_guardrail (deprecated) | [guardrail/resource](internal/provider/guardrail/resource/)  |
 | Resource     | computesphere_notification_setting   | [notification_setting/resource](internal/provider/notification_setting/resource/) |
 | Data Source  | computesphere_project / _projects    | [project/datasource](internal/provider/project/datasource/)  |
 | Data Source  | computesphere_environment / _environments | [environment/datasource](internal/provider/environment/datasource/) |
@@ -79,7 +83,11 @@ Full per-attribute documentation for every resource and data source lives under
 | Data Source  | computesphere_region / _regions      | [region/datasource](internal/provider/region/datasource/)    |
 | Data Source  | computesphere_team / _teams          | [team/datasource](internal/provider/team/datasource/)        |
 | Data Source  | computesphere_alert / _alerts        | [alert/datasource](internal/provider/alert/datasource/)      |
-| Data Source  | computesphere_guardrail              | [guardrail/datasource](internal/provider/guardrail/datasource/) |
+| Data Source  | computesphere_database_instance_types | [database/datasource](internal/provider/database/datasource/) |
+| Data Source  | computesphere_cache_instance_types   | [cache/datasource](internal/provider/cache/datasource/)      |
+| Data Source  | computesphere_queue_instance_types   | [queue/datasource](internal/provider/queue/datasource/)      |
+| Data Source  | computesphere_spherelet_instance_types | [spherelet/datasource](internal/provider/spherelet/datasource/) |
+| Data Source  | computesphere_guardrail (deprecated) | [guardrail/datasource](internal/provider/guardrail/datasource/) |
 | Data Source  | computesphere_notification_setting   | [notification_setting/datasource](internal/provider/notification_setting/datasource/) |
 | Data Source  | computesphere_plan / _plans          | [plan/datasource](internal/provider/plan/datasource/)        |
 | Data Source  | computesphere_subscription / _subscriptions | [subscription/datasource](internal/provider/subscription/datasource/) |
