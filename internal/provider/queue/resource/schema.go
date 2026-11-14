@@ -43,8 +43,10 @@ func Schema(ctx context.Context) schema.Schema {
 				Required: true,
 				Description: "Instance type id, e.g. `sq-1c-2g-s20g` (Queue 1). List them with the " +
 					"`computesphere_queue_instance_types` data source. A high-availability instance type (an id ending in `-ha`) runs three instances across " +
-					"zones with quorum queues. Changing it resizes the broker in place; a size with less disk than " +
-					"the current one is refused.",
+					"zones with quorum queues. Changing it resizes the broker in place, with the same number of " +
+					"instances; its disk grows with a larger size and never shrinks. With one instance, a queue " +
+					"moves among Queue 1, Queue 2, Queue Plus 2 and Queue 4, and Queue 8 and Queue 16 can't change " +
+					"size. High availability can't be turned on or off. The API refuses a change it can't make.",
 			},
 			"instances": schema.Int64Attribute{Computed: true, Description: "Instances in the broker: 1, or 3 on a high-availability instance type (an id ending in `-ha`)."},
 			"storage_gb": schema.Int64Attribute{

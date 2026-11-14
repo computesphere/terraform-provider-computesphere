@@ -46,13 +46,15 @@ func Schema(ctx context.Context) schema.Schema {
 				Description: "Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` " +
 					"data source. A high-availability instance type (an id ending in `-ha`) adds a standby copy in another zone with automatic failover. " +
 					"Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted " +
-					"(or writes are refused with `noeviction`).",
+					"(or writes are refused with `noeviction`). A cache that keeps its data on disk can't turn high " +
+					"availability on or off; the API refuses that change.",
 			},
 			"eviction": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: keep,
 				Description: "What happens when memory is full: `allkeys-lru` (the default) evicts the least recently " +
 					"used keys; `noeviction` refuses writes until memory is freed. Changing it updates the cache in place; " +
-					"a cache created before 15 October 2026 keeps the policy it was created with, and a change is refused.",
+					"a cache created before 15 October 2026, 08:30 UTC, keeps the policy it was created with, and the API " +
+					"refuses a change.",
 			},
 			"high_availability": schema.BoolAttribute{
 				Computed:    true,

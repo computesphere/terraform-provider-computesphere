@@ -33,7 +33,7 @@ var (
 	validVersions = map[string]bool{"4.3": true}
 
 	readyStatuses  = map[string]bool{"available": true}
-	failedStatuses = map[string]bool{"failed": true}
+	failedStatuses = map[string]bool{"failed": true, "stopped": true, "stopping": true, "deleting": true}
 )
 
 // apiQueue is the v2 Queue object (GET/POST/PATCH /queues).
@@ -300,8 +300,15 @@ func (r *QueueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if c := r.waitAvailable(ctx, id, &resp.Diagnostics); c != nil {
 			newState.apply(c)
 		}
-	} else if c, _, err := r.get(ctx, id); err == nil && c != nil {
-		newState.apply(c)
+	} else {
+		c, _, err := r.get(ctx, id)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading broker", err.Error())
+			return
+		}
+		if c != nil {
+			newState.apply(c)
+		}
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }

@@ -417,10 +417,6 @@ func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-// ModifyPlan refuses a name, environment, engine or version change on an
-// existing database (no update body takes them)
-// instead of planning a replacement that would delete its data.
-
 func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -76,13 +76,13 @@ output "cache_status" {
 ### Required
 
 - `environment_id` (String) Environment the cache belongs to. Only services in this environment can reach it. It can't change after create; a change is refused at plan time.
-- `instance_type` (String) Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` data source. A high-availability instance type (an id ending in `-ha`) adds a standby copy in another zone with automatic failover. Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted (or writes are refused with `noeviction`).
+- `instance_type` (String) Instance type id, e.g. `sc-0.25c-1g`. List them with the `computesphere_cache_instance_types` data source. A high-availability instance type (an id ending in `-ha`) adds a standby copy in another zone with automatic failover. Changing it resizes the cache in place. On a smaller size, keys beyond its memory are evicted (or writes are refused with `noeviction`). A cache that keeps its data on disk can't turn high availability on or off; the API refuses that change.
 - `name` (String) Lowercase letters, digits and hyphens, up to 40 characters; unique in the environment. It can't change after create; a change is refused at plan time.
 
 ### Optional
 
 - `engine` (String) Cache engine. Only `valkey` today. It can't change after create; a change is refused at plan time.
-- `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. Changing it updates the cache in place; a cache created before 15 October 2026 keeps the policy it was created with, and a change is refused.
+- `eviction` (String) What happens when memory is full: `allkeys-lru` (the default) evicts the least recently used keys; `noeviction` refuses writes until memory is freed. Changing it updates the cache in place; a cache created before 15 October 2026, 08:30 UTC, keeps the policy it was created with, and the API refuses a change.
 - `version` (String) Valkey version, e.g. `8.1`. Defaults to the latest supported. It can't change after create; a change is refused at plan time.
 
 ### Read-Only

@@ -25,20 +25,23 @@
   Set `instance_type` (e.g. `sc-0.25c-1g`; a high-availability type, its id
   ending in `-ha`, adds a standby in another zone), which changes in place,
   and `eviction` (`allkeys-lru` or `noeviction`), which also changes in
-  place on caches created from 15 October 2026. Read-only `persistence` and
+  place on caches created from 15 October 2026, 08:30 UTC. A cache that
+  keeps its data on disk can't turn high availability on or off. Read-only `persistence` and
   `internal_host`. The password is never stored in state.
 - New resource `computesphere_queue`: a SphereQueue broker (managed
   RabbitMQ). Set `instance_type` (e.g. `sq-1c-2g-s20g`; a high-availability
-  type, its id ending in `-ha`, runs three instances); it changes in place.
+  type, its id ending in `-ha`, runs three instances); it changes in place
+  with the same number of instances, and its disk never shrinks.
   Read-only `instances`, `storage_gb` and `internal_host`. The password is
   never stored in state.
 - New data sources `computesphere_cache_instance_types` and
   `computesphere_queue_instance_types`: the size catalogs with prices and
   availability for an environment.
-- `computesphere_database`, `computesphere_cache` and `computesphere_queue`
-  refuse a `name`, `environment_id`, `engine` or `version` change at plan
-  time, rather than planning a replacement that
-  would start an empty one.
+- Changed: `computesphere_database` refuses a `name`, `environment_id`,
+  `engine` or `version` change at plan time. It used to replace the
+  database, which starts an empty one. To move to a new database, add it as
+  a separate resource, move the data, then remove the old one. The new
+  `computesphere_cache` and `computesphere_queue` work the same way.
 
 ## 1.2.0
 

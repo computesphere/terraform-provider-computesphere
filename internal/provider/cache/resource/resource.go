@@ -34,7 +34,7 @@ var (
 	validEvictions = map[string]bool{"allkeys-lru": true, "noeviction": true}
 
 	readyStatuses  = map[string]bool{"available": true}
-	failedStatuses = map[string]bool{"failed": true, "stopped": true}
+	failedStatuses = map[string]bool{"failed": true, "stopped": true, "stopping": true, "deleting": true}
 )
 
 // apiCache is the v2 Cache object (GET/POST/PATCH /caches).
@@ -314,8 +314,15 @@ func (r *CacheResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if c := r.waitAvailable(ctx, id, &resp.Diagnostics); c != nil {
 			newState.apply(c)
 		}
-	} else if c, _, err := r.get(ctx, id); err == nil && c != nil {
-		newState.apply(c)
+	} else {
+		c, _, err := r.get(ctx, id)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading cache", err.Error())
+			return
+		}
+		if c != nil {
+			newState.apply(c)
+		}
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
