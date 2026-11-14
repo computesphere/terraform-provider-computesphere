@@ -75,6 +75,7 @@ Full per-attribute documentation for every resource and data source lives under
 | Resource     | computesphere_database               | [database/resource](internal/provider/database/resource/)    |
 | Resource     | computesphere_cache                  | [cache/resource](internal/provider/cache/resource/)          |
 | Resource     | computesphere_queue                  | [queue/resource](internal/provider/queue/resource/)          |
+| Resource     | computesphere_secret_source          | [secret_source/resource](internal/provider/secret_source/resource/) |
 | Resource     | computesphere_guardrail (deprecated) | [guardrail/resource](internal/provider/guardrail/resource/)  |
 | Resource     | computesphere_notification_setting   | [notification_setting/resource](internal/provider/notification_setting/resource/) |
 | Data Source  | computesphere_project / _projects    | [project/datasource](internal/provider/project/datasource/)  |

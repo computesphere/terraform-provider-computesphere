@@ -10,6 +10,11 @@
   deployment runs on (e.g. `sl-1c-2g`, or `FLX`, `MAX`, `PWR`); it defaults
   to the service's size and changes in place. `plan_id` is deprecated and
   can't be set together with `instance_type`.
+- New resource `computesphere_secret_source`: a secret manager (Doppler or
+  Azure Key Vault) for the account, which deployments and environments read
+  secrets from. Its `credential` is write-only, never stored in state;
+  change `credential_version` to send a rotated one. `all_projects` or
+  `project_ids` say which projects may use it. Needs Terraform 1.11 or later.
 
 ## 1.3.0
 

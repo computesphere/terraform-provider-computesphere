@@ -32,6 +32,7 @@ import (
 	notificationresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/resource"
 	projectresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/project/resource"
 	queueresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/queue/resource"
+	secretsourceresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/secret_source/resource"
 	serviceresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/service/resource"
 	teamresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/team/resource"
 
@@ -326,6 +327,7 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
 		serviceresource.NewServiceResource,
+		secretsourceresource.NewSecretSourceResource,
 		apitokenresource.NewApiTokenResource,
 		teamresource.NewTeamResource,
 	}
