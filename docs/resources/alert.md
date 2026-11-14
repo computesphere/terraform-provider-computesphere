@@ -69,20 +69,22 @@ output "alert_type" {
 
 ### Required
 
-- `alert_type` (String) Type of the alert.
+- `alert_type` (String) What the rule watches: `cpu`, `memory` or `disk` (a metric of the environment's services over `threshold` percent for the evaluation period), or `job_run_failed`, `job_failing_streak` (`threshold` failed runs in a row) or `job_run_missed` for the environment's scheduled jobs.
 - `environment_id` (String) ID of the environment this alert belongs to.
-- `evaluation_period` (Number) Evaluation period for the alert.
 - `project_id` (String) ID of the project this alert belongs to.
 - `severity` (String) Severity level of the alert.
-- `threshold` (Number) Threshold value for the alert.
 
 ### Optional
 
 - `active` (Boolean) Whether the alert is active.
+- `evaluation_period` (Number) Seconds the metric must stay over the threshold. Rules evaluate in whole minutes, at least 120 seconds (see `effective_evaluation_period`). The job alert types don't use it.
+- `threshold` (Number) Percent for `cpu`, `memory` and `disk` (1 to 100); failed runs in a row for `job_failing_streak` (2 to 10, default 3). `job_run_failed` and `job_run_missed` don't use it.
 
 ### Read-Only
 
+- `effective_evaluation_period` (Number) The window the rule really evaluates over, in seconds; 0 for a job alert.
 - `id` (String) Unique identifier for the alert.
+- `status` (String) The rule's status.
 
 ## Import
 

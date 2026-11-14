@@ -20,6 +20,11 @@ func Schema(ctx context.Context) schema.Schema {
 			"threshold":         shared.Threshold,
 			"evaluation_period": shared.EvaluationPeriod,
 			"active":            shared.Active,
+			"effective_evaluation_period": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The window the rule really evaluates over, in seconds; 0 for a job alert.",
+			},
+			"status": schema.StringAttribute{Computed: true, Description: "The rule's status."},
 		},
 	}
 }

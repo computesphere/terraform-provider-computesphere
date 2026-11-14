@@ -79,6 +79,10 @@
   a value changed outside Terraform isn't detected; unchanged values aren't
   sent again. It owns the set of names; an empty map removes them all.
   Import by environment id.
+- `computesphere_alert`: `threshold` and `evaluation_period` are optional,
+  for the scheduled-job alert types (`job_run_failed`, `job_failing_streak`,
+  `job_run_missed`) that don't use them. New read-only
+  `effective_evaluation_period` and `status`.
 
 ## 1.2.0
 
