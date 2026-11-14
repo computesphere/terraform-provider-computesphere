@@ -91,7 +91,7 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"port": schema.Int64Attribute{Optional: true, Description: "Container port.", PlanModifiers: rrRemovedInt},
 			"sphere_count": schema.Int64Attribute{
-				Optional: true, Description: "Number of spherelets (replicas) to run.", PlanModifiers: rrRemovedInt,
+				Optional: true, Description: "Number of spherelets to run.", PlanModifiers: rrRemovedInt,
 			},
 			"env_vars": schema.MapAttribute{
 				Optional: true, ElementType: types.StringType, Description: "Plain environment variables.",

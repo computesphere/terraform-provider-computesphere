@@ -124,7 +124,7 @@ output "deployment_status" {
 - `plan_id` (String) Compute tier override; defaults to the service's plan.
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
-- `sphere_count` (Number) Number of spherelets (replicas) to run.
+- `sphere_count` (Number) Number of spherelets to run.
 - `wait_for_ready` (Boolean) Wait for the deployment to reach a ready state after deploying.
 
 ### Read-Only

@@ -192,7 +192,7 @@ func inPlace(f *fakeDeployAPI) resource.TestCheckFunc {
 	return resource.ComposeAggregateTestCheckFunc(
 		expectSent(f, "DELETE ", 0),
 		expectSent(f, "POST /v2/deployments {", 0),
-		expectSent(f, "POST /v2/deployments/", 1), // the deploy
+		expectSent(f, "POST /v2/deployments/", 1), // the deploy, the only rollout
 	)
 }
 
@@ -221,7 +221,23 @@ func TestAccDeploymentResource_updatesInPlace(t *testing.T) {
 			{
 				PreConfig: f.reset,
 				Config:    cfg(aImage, aEnv, aSecret, aArgs),
-				Check:     resource.TestCheckResourceAttrSet(depAddr, "id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(depAddr, "id"),
+					// Create's writes only save; its one deploy rolls them out.
+					expectBody(f, "PUT /v2/deployments/", func(b map[string]any) error {
+						if b["skip_redeploy"] != true {
+							return fmt.Errorf("env-var write skip_redeploy = %v, want true", b["skip_redeploy"])
+						}
+						return nil
+					}),
+					expectBody(f, "PATCH /v2/deployments/", func(b map[string]any) error {
+						if b["skip_redeploy"] != true {
+							return fmt.Errorf("update skip_redeploy = %v, want true", b["skip_redeploy"])
+						}
+						return nil
+					}),
+					expectSent(f, "POST /v2/deployments/", 1),
+				),
 			},
 			{
 				PreConfig:        f.reset,
@@ -233,6 +249,9 @@ func TestAccDeploymentResource_updatesInPlace(t *testing.T) {
 						img, _ := b["image"].(map[string]any)
 						if img["name"] != "nginx:1.28" || img["password"] != "pass" {
 							return fmt.Errorf("image = %v, want the new name with the registry auth", img)
+						}
+						if b["skip_redeploy"] != true {
+							return fmt.Errorf("skip_redeploy = %v, want true (the one deploy rolls it out)", b["skip_redeploy"])
 						}
 						return nil
 					}),
@@ -257,6 +276,9 @@ func TestAccDeploymentResource_updatesInPlace(t *testing.T) {
 						}
 						if _, ok := b["secret_vars"]; ok {
 							return fmt.Errorf("secret_vars sent: %v", b["secret_vars"])
+						}
+						if b["skip_redeploy"] != true {
+							return fmt.Errorf("skip_redeploy = %v, want true (the one deploy rolls it out)", b["skip_redeploy"])
 						}
 						return nil
 					}),
