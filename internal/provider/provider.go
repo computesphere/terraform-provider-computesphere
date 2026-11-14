@@ -48,6 +48,7 @@ import (
 	queuedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/queue/datasource"
 	regiondatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/region/datasource"
 	servicedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/service/datasource"
+	sphereletdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet/datasource"
 	subscriptiondatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/subscription/datasource"
 	teamdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/team/datasource"
 )
@@ -349,6 +350,7 @@ func (p *ComputeSphereProvider) DataSources(_ context.Context) []func() datasour
 		regiondatasource.NewRegionsDataSource,
 		servicedatasource.NewServiceDataSource,
 		servicedatasource.NewServicesDataSource,
+		sphereletdatasource.NewTypesDataSource,
 		subscriptiondatasource.NewSubscriptionDataSource,
 		subscriptiondatasource.NewSubscriptionsDataSource,
 		teamdatasource.NewTeamDataSource,

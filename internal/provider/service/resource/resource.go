@@ -1,13 +1,16 @@
 package provider
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +23,8 @@ type ServiceResource struct {
 
 var _ resource.Resource = &ServiceResource{}
 var _ resource.ResourceWithIdentity = &ServiceResource{}
+var _ resource.ResourceWithValidateConfig = &ServiceResource{}
+var _ resource.ResourceWithImportState = &ServiceResource{}
 
 func NewServiceResource() resource.Resource {
 	return &ServiceResource{}
@@ -43,11 +48,12 @@ func (r *ServiceResource) IdentitySchema(ctx context.Context, req resource.Ident
 
 // serviceResourceModel — env_id/image_name/port/sphere_count are intentionally
 // absent: under the compute model those are deployment-level concerns, not part
-// of the v2 service resource. A service carries its plan (spherelet shape).
+// of the v2 service resource. A service carries its spherelet size.
 type serviceResourceModel struct {
 	Name         types.String `tfsdk:"name"`
 	ProjectID    types.String `tfsdk:"project_id"`
 	Type         types.String `tfsdk:"type"`
+	InstanceType types.String `tfsdk:"instance_type"`
 	PlanID       types.String `tfsdk:"plan_id"`
 	Active       types.Bool   `tfsdk:"active"`
 	CreatedAt    types.String `tfsdk:"created_at"`
@@ -63,11 +69,38 @@ func (r *ServiceResource) Configure(ctx context.Context, req resource.ConfigureR
 	}
 }
 
-func (m *serviceResourceModel) apply(s *csv2.Service) {
+// ValidateConfig rejects instance_type and the deprecated plan_id together
+// at plan time.
+func (r *ServiceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var c serviceResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &c)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !c.InstanceType.IsNull() && !c.PlanID.IsNull() {
+		resp.Diagnostics.AddAttributeError(path.Root(spherelet.FieldPlanID), "Conflicting attributes", spherelet.ConflictDetail)
+	}
+}
+
+// known returns the value of a planned attribute, or "" when it is null or
+// unknown (not set in the configuration).
+func known(v types.String) string {
+	if v.IsNull() || v.IsUnknown() {
+		return ""
+	}
+	return v.ValueString()
+}
+
+// apply maps a v2 service into state. body is the raw response, read for the
+// spherelet size; prior is the planned or prior-state value, so an alias in
+// the configuration is kept as written.
+func (m *serviceResourceModel) apply(s *csv2.Service, body []byte, prior types.String, aliases func() []spherelet.Item) {
+	f := spherelet.ReadFields(body)
 	m.ID = types.StringValue(s.Id)
 	m.Name = types.StringValue(s.Name)
 	m.ProjectID = types.StringValue(s.ProjectId.String())
 	m.Type = types.StringValue(s.Type)
+	m.InstanceType = spherelet.Value(prior, f.InstanceType, f.InstanceTypePresent, aliases)
 	m.PlanID = types.StringPointerValue(s.PlanId)
 	m.Active = types.BoolValue(s.Active)
 	m.CreatedAt = types.StringValue(s.CreatedAt.Format(time.RFC3339))
@@ -87,12 +120,17 @@ func (r *ServiceResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	apiResp, err := r.client.CreateServiceWithResponse(ctx, csv2.CreateServiceRequest{
+	body, err := spherelet.SetFields(csv2.CreateServiceRequest{
 		Name:      plan.Name.ValueString(),
 		ProjectId: projectID,
 		Type:      plan.Type.ValueString(),
-		PlanId:    cstypes.StringPtr(plan.PlanID.ValueString()),
-	})
+		PlanId:    cstypes.StringPtr(known(plan.PlanID)),
+	}, map[string]string{spherelet.FieldType: known(plan.InstanceType)})
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating service", err.Error())
+		return
+	}
+	apiResp, err := r.client.CreateServiceWithBodyWithResponse(ctx, "application/json", bytes.NewReader(body))
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating service", err.Error())
 		return
@@ -103,8 +141,11 @@ func (r *ServiceResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	var state serviceResourceModel
-	state.apply(apiResp.JSON201)
+	state.apply(apiResp.JSON201, apiResp.Body, plan.InstanceType, spherelet.AliasLookup(ctx, r.client))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), state.ID)...)
+	}
 }
 
 func (r *ServiceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -134,8 +175,11 @@ func (r *ServiceResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	state.apply(apiResp.JSON200)
+	state.apply(apiResp.JSON200, apiResp.Body, state.InstanceType, spherelet.AliasLookup(ctx, r.client))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), state.ID)...)
+	}
 }
 
 func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -153,23 +197,51 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// The v2 service update surface is the plan (spherelet shape); name/type/
-	// project changes force replacement via RequiresReplace.
-	apiResp, err := r.client.UpdateServiceWithResponse(ctx, sid, csv2.UpdateServiceRequest{
-		PlanId: plan.PlanID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating service", err.Error())
-		return
+	// The v2 service update surface is the spherelet size (or the deprecated
+	// plan_id); name/type/project changes force replacement via
+	// RequiresReplace. Only attributes set in the configuration are sent: an
+	// unset one is unknown in the plan.
+	fields := map[string]string{
+		spherelet.FieldType:   known(plan.InstanceType),
+		spherelet.FieldPlanID: known(plan.PlanID),
 	}
-	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
-		resp.Diagnostics.AddError("Error updating service", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+	var (
+		svc     *csv2.Service
+		rawBody []byte
+		status  int
+	)
+	if fields[spherelet.FieldType] == "" && fields[spherelet.FieldPlanID] == "" {
+		// Nothing updatable changed; refresh from the API.
+		getResp, gerr := r.client.GetServiceWithResponse(ctx, sid)
+		if gerr != nil {
+			resp.Diagnostics.AddError("Error updating service", gerr.Error())
+			return
+		}
+		svc, rawBody, status = getResp.JSON200, getResp.Body, getResp.StatusCode()
+	} else {
+		body, berr := spherelet.SetFields(struct{}{}, fields)
+		if berr != nil {
+			resp.Diagnostics.AddError("Error updating service", berr.Error())
+			return
+		}
+		apiResp, uerr := r.client.UpdateServiceWithBodyWithResponse(ctx, sid, "application/json", bytes.NewReader(body))
+		if uerr != nil {
+			resp.Diagnostics.AddError("Error updating service", uerr.Error())
+			return
+		}
+		svc, rawBody, status = apiResp.JSON200, apiResp.Body, apiResp.StatusCode()
+	}
+	if status != http.StatusOK || svc == nil {
+		resp.Diagnostics.AddError("Error updating service", cstypes.ProblemSummary(rawBody, status))
 		return
 	}
 
 	var newState serviceResourceModel
-	newState.apply(apiResp.JSON200)
+	newState.apply(svc, rawBody, plan.InstanceType, spherelet.AliasLookup(ctx, r.client))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+	if resp.Identity != nil {
+		resp.Diagnostics.Append(resp.Identity.SetAttribute(ctx, path.Root("id"), newState.ID)...)
+	}
 }
 
 func (r *ServiceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -196,4 +268,9 @@ func (r *ServiceResource) Delete(ctx context.Context, req resource.DeleteRequest
 	default:
 		resp.Diagnostics.AddError("Error deleting service", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
 	}
+}
+
+// ImportState imports a service by id, given as a string or as the identity.
+func (r *ServiceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughWithIdentity(ctx, path.Root("id"), path.Root("id"), req, resp)
 }

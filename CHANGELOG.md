@@ -21,6 +21,14 @@
   alone sends nothing. Changing the spherelet size (`plan_id`), or removing
   `image`, an `image_*` setting, `port` or the spherelet count
   (`sphere_count`), still replaces the deployment.
+- `computesphere_service`: new `instance_type`, the spherelet size the
+  service runs on (e.g. `sl-1c-2g`, or the aliases `FLX`, `MAX` and `PWR`).
+  Changing it resizes the service in place and redeploys its deployments on
+  the new size (the account needs room for them). `plan_id` is deprecated and
+  can't be set together with `instance_type`. Services can now be imported.
+- New data source `computesphere_spherelet_instance_types`: the spherelet
+  sizes with vCPU, guaranteed vCPU, memory, monthly and annual price,
+  aliases and availability, optionally for one region.
 - New resource `computesphere_cache`: a SphereCache cache (managed Valkey).
   Set `instance_type` (e.g. `sc-0.25c-1g`; a high-availability type, its id
   ending in `-ha`, adds a standby in another zone), which changes in place,
