@@ -259,10 +259,9 @@ func deploymentNeedsUpdate(ctx context.Context, plan deploymentResourceModel, di
 // deploy triggers a deploy and, when wait_for_ready is set, blocks until the
 // deployment settles into a terminal state.
 func (r *DeploymentResource) deploy(ctx context.Context, id uuid.UUID, plan deploymentResourceModel, diags *diag.Diagnostics) bool {
+	// The deploy body takes no spherelet count: create sends it in the create
+	// body and Update saves a new one through scale first.
 	deployBody := csv2.DeployDeploymentJSONRequestBody{}
-	if !plan.SphereCount.IsNull() {
-		deployBody["sphere_count"] = int(plan.SphereCount.ValueInt64())
-	}
 	dResp, err := r.client.DeployDeploymentWithResponse(ctx, id, deployBody)
 	if err != nil {
 		diags.AddError("Error deploying", err.Error())
@@ -446,6 +445,20 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
 			resp.Diagnostics.AddError("Error setting deployment env vars", cstypes.ProblemSummary(evResp.Body, evResp.StatusCode()))
+			return
+		}
+	}
+
+	if !plan.SphereCount.IsNull() && !plan.SphereCount.Equal(state.SphereCount) {
+		// The spherelet count changes only through scale; the deploy below
+		// rolls it out together with any other change, so scale only saves it.
+		skip := true
+		body := csv2.ScaleRequest{Spherelets: int(plan.SphereCount.ValueInt64()), SkipRedeploy: &skip}
+		if sResp, serr := r.client.ScaleDeploymentWithResponse(ctx, id, body); serr != nil {
+			resp.Diagnostics.AddError("Error scaling deployment", serr.Error())
+			return
+		} else if sResp.StatusCode() != http.StatusOK && sResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error scaling deployment", cstypes.ProblemSummary(sResp.Body, sResp.StatusCode()))
 			return
 		}
 	}
