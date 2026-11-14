@@ -137,7 +137,7 @@ func (r *CacheResource) writeInjection(ctx context.Context, id string, plan, pri
 	}
 }
 
-var variableName = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+var variableName = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,127}$`)
 
 // validateInjection checks the injection block's mode and variable name.
 func validateInjection(obj types.Object, diags *diag.Diagnostics) {
@@ -148,10 +148,13 @@ func validateInjection(obj types.Object, diags *diag.Diagnostics) {
 	if v, ok := attrs["mode"].(types.String); ok && !v.IsNull() && !v.IsUnknown() {
 		if m := v.ValueString(); m != "all" && m != "selected" && m != "none" {
 			diags.AddAttributeError(path.Root("injection").AtName("mode"), "Invalid value", "mode must be all, selected or none.")
+		} else if ids, ok := attrs["service_ids"].(types.Set); m == "selected" && ok && ids.IsNull() {
+			diags.AddAttributeError(path.Root("injection").AtName("service_ids"), "Missing service_ids",
+				"mode = \"selected\" needs service_ids: the services that get the variable.")
 		}
 	}
 	if v, ok := attrs["variable_name"].(types.String); ok && !v.IsNull() && !v.IsUnknown() && !variableName.MatchString(v.ValueString()) {
 		diags.AddAttributeError(path.Root("injection").AtName("variable_name"), "Invalid value",
-			"variable_name must be upper-case letters, digits and underscores, starting with a letter.")
+			"variable_name must be upper-case letters, digits and underscores, starting with a letter, at most 128 characters.")
 	}
 }

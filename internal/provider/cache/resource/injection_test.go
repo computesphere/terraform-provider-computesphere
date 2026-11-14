@@ -101,6 +101,10 @@ func TestCacheResource_injection(t *testing.T) {
 				),
 			},
 			{
+				Config:      injectionConfig(`  injection = { mode = "selected" }`),
+				ExpectError: regexp.MustCompile(`needs service_ids`),
+			},
+			{
 				Config:      injectionConfig(`  injection = { mode = "some" }`),
 				ExpectError: regexp.MustCompile(`mode must be all, selected or none`),
 			},
