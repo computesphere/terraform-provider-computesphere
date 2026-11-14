@@ -3,12 +3,12 @@
 page_title: "computesphere_deployment Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
+  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 ---
 
 # computesphere_deployment (Resource)
 
-Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
+Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 
 ## Example Usage
 
@@ -124,7 +124,7 @@ output "deployment_status" {
 - `plan_id` (String) Compute tier override; defaults to the service's plan.
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
-- `sphere_count` (Number) Number of spherelets (replicas) to run.
+- `sphere_count` (Number) Number of spherelets to run.
 - `wait_for_ready` (Boolean) Wait for the deployment to reach a ready state after deploying.
 
 ### Read-Only
