@@ -52,7 +52,17 @@ func Schema(ctx context.Context) schema.Schema {
 				Required: true, Description: "Resource type (must match the service type, e.g. web-service).", PlanModifiers: rr,
 			},
 			"plan_id": schema.StringAttribute{
-				Optional: true, Description: "Compute tier override; defaults to the service's plan.", PlanModifiers: rr,
+				Optional: true, PlanModifiers: rr, DeprecationMessage: "Use instance_type instead.",
+				Description: "Deprecated: use `instance_type`. Plan id of the spherelet size; changing it replaces the " +
+					"deployment. Can't be set together with `instance_type`.",
+			},
+			"instance_type": schema.StringAttribute{
+				Optional: true, Computed: true,
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Description: "The spherelet size the deployment runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). " +
+					"Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data " +
+					"source. Changing it resizes the deployment in place; the account needs room for its spherelets at " +
+					"that size.",
 			},
 			"image": schema.StringAttribute{
 				Optional: true, Description: "Container image reference (e.g. nginx:latest) for image-based deployments.",
