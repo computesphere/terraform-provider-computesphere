@@ -74,8 +74,8 @@ output "environment_project_id" {
 ### Required
 
 - `name` (String) Name of the environment.
-- `project_id` (String) Project ID associated with the environment.
-- `region` (String) Region of the environment.
+- `project_id` (String) Project ID associated with the environment. Changing it moves the environment, with its services, to that project in the same account.
+- `region` (String) Region of the environment. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
 

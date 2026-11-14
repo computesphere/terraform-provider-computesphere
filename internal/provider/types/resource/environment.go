@@ -18,14 +18,14 @@ var EnvironmentName = schema.StringAttribute{
 
 var EnvironmentRegion = schema.StringAttribute{
 	Required:            true,
-	Description:         "Region of the environment.",
-	MarkdownDescription: "Region of the environment.",
+	Description:         "Region of the environment. It can't change after create; a change is refused at plan time.",
+	MarkdownDescription: "Region of the environment. It can't change after create; a change is refused at plan time.",
 }
 
 var EnvironmentProjectID = schema.StringAttribute{
 	Required:            true,
-	Description:         "Project ID associated with the environment.",
-	MarkdownDescription: "Project ID associated with the environment.",
+	Description:         "Project ID associated with the environment. Changing it moves the environment, with its services, to that project in the same account.",
+	MarkdownDescription: "Project ID associated with the environment. Changing it moves the environment, with its services, to that project in the same account.",
 }
 
 var EnvironmentCreatedAt = schema.StringAttribute{

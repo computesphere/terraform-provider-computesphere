@@ -143,6 +143,14 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	if !plan.ProjectID.Equal(state.ProjectID) {
+		// A project change moves the environment and everything in it.
+		if err := moveEnvironment(ctx, r.client, eid.String(), plan.ProjectID.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Error moving environment to another project", err.Error())
+			return
+		}
+	}
+
 	name := plan.Name.ValueString()
 	apiResp, err := r.client.UpdateEnvironmentWithResponse(ctx, eid, csv2.UpdateEnvironmentRequest{
 		Name: &name,
