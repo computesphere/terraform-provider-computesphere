@@ -144,6 +144,14 @@ func TestAccEnvironmentSecretsResource(t *testing.T) {
 				Check:  f.check(map[string]string{"API_KEY": "k2", "DB_PASS": "p1"}, map[string]string{"API_KEY": "k2", "DB_PASS": ""}),
 			},
 			{
+				// An empty value keeps the stored secret as it is.
+				Config: secretsConfig(`{ API_KEY = "", DB_PASS = "p1" }`),
+				Check:  f.check(map[string]string{"API_KEY": "k2", "DB_PASS": "p1"}, map[string]string{"API_KEY": "", "DB_PASS": ""}),
+			},
+			{
+				Config: secretsConfig(`{ API_KEY = "k2", DB_PASS = "p1" }`),
+			},
+			{
 				// A secret added elsewhere shows as a change that removes it.
 				PreConfig: func() { f.mu.Lock(); f.secrets["EXTRA"] = "x"; f.mu.Unlock() },
 				Config:    secretsConfig(`{ API_KEY = "k2", DB_PASS = "p1" }`),

@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"net/http"
+	"sort"
+	"strings"
 
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
@@ -47,7 +49,10 @@ func (r *EnvironmentSecretsResource) Schema(ctx context.Context, req resource.Sc
 		Description: "Manages an environment's shared secrets: the secrets every deployment in the environment " +
 			"inherits (a deployment's own value for a key wins). Values are write-only: the API never returns them, " +
 			"so a value changed outside Terraform isn't detected. This resource owns the set of names: a secret set " +
-			"elsewhere and not listed here is removed. Changing a secret restarts the deployments that inherit it.",
+			"elsewhere and not listed here is removed, including one that references a secret manager. List a name " +
+			"with an empty value (`NAME = \"\"`) to keep that secret, and its reference, as it is. Changing a secret " +
+			"restarts the deployments that inherit it; a service whose deploy policy is `approval` gets the change " +
+			"with its next deploy unless a project admin makes it.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true, Description: "The environment id.",
@@ -59,7 +64,8 @@ func (r *EnvironmentSecretsResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"secrets": schema.MapAttribute{
 				Required: true, Sensitive: true, ElementType: types.StringType,
-				Description: "Secret name to value. An empty map removes every shared secret of the environment.",
+				Description: "Secret name to value. An empty value keeps the stored secret as it is (a new name needs " +
+					"a value). An empty map removes every shared secret of the environment.",
 			},
 		},
 	}
@@ -115,7 +121,7 @@ func (r *EnvironmentSecretsResource) write(ctx context.Context, plan environment
 	}
 	var editors []csv2.RequestEditorFn
 	if len(secrets) == 0 {
-		editors = append(editors, withBodyField("allow_empty", true))
+		editors = append(editors, allowEmpty)
 	}
 	apiResp, err := r.client.ReplaceEnvironmentSecretsWithResponse(ctx, eid, csv2.SetEnvironmentSecretsRequest{Secrets: send}, editors...)
 	if err != nil {
@@ -181,6 +187,12 @@ func (r *EnvironmentSecretsResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	state.ID = types.StringValue(eid.String())
+	if extra := namesNotIn(ctx, apiResp.JSON200.Secrets, state.Secrets, &resp.Diagnostics); len(extra) > 0 {
+		// The map is sensitive, so a plan doesn't show which names it removes.
+		resp.Diagnostics.AddWarning("Secrets set outside Terraform",
+			"These secrets of the environment aren't in the configuration, so the next apply removes them: "+
+				strings.Join(extra, ", ")+". To keep one as it is, list it with an empty value.")
+	}
 	state.Secrets = keepValues(ctx, apiResp.JSON200.Secrets, state.Secrets, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -198,7 +210,7 @@ func (r *EnvironmentSecretsResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 	apiResp, err := r.client.ReplaceEnvironmentSecretsWithResponse(ctx, eid,
-		csv2.SetEnvironmentSecretsRequest{Secrets: map[string]string{}}, withBodyField("allow_empty", true))
+		csv2.SetEnvironmentSecretsRequest{Secrets: map[string]string{}}, allowEmpty)
 	if err != nil {
 		resp.Diagnostics.AddError("Error removing environment secrets", err.Error())
 		return
@@ -214,4 +226,21 @@ func (r *EnvironmentSecretsResource) Delete(ctx context.Context, req resource.De
 // so the first plan after an import sets every secret again.
 func (r *EnvironmentSecretsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("environment_id"), req, resp)
+}
+
+// namesNotIn lists the names the API has that prior doesn't, sorted.
+func namesNotIn(ctx context.Context, names map[string]string, prior types.Map, diags *diag.Diagnostics) []string {
+	if prior.IsNull() || prior.IsUnknown() {
+		return nil
+	}
+	old := map[string]string{}
+	diags.Append(prior.ElementsAs(ctx, &old, false)...)
+	var out []string
+	for k := range names {
+		if _, ok := old[k]; !ok {
+			out = append(out, k)
+		}
+	}
+	sort.Strings(out)
+	return out
 }

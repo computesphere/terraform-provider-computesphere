@@ -3,12 +3,12 @@
 page_title: "computesphere_environment_secrets Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages an environment's shared secrets: the secrets every deployment in the environment inherits (a deployment's own value for a key wins). Values are write-only: the API never returns them, so a value changed outside Terraform isn't detected. This resource owns the set of names: a secret set elsewhere and not listed here is removed. Changing a secret restarts the deployments that inherit it.
+  Manages an environment's shared secrets: the secrets every deployment in the environment inherits (a deployment's own value for a key wins). Values are write-only: the API never returns them, so a value changed outside Terraform isn't detected. This resource owns the set of names: a secret set elsewhere and not listed here is removed, including one that references a secret manager. List a name with an empty value (NAME = "") to keep that secret, and its reference, as it is. Changing a secret restarts the deployments that inherit it; a service whose deploy policy is approval gets the change with its next deploy unless a project admin makes it.
 ---
 
 # computesphere_environment_secrets (Resource)
 
-Manages an environment's shared secrets: the secrets every deployment in the environment inherits (a deployment's own value for a key wins). Values are write-only: the API never returns them, so a value changed outside Terraform isn't detected. This resource owns the set of names: a secret set elsewhere and not listed here is removed. Changing a secret restarts the deployments that inherit it.
+Manages an environment's shared secrets: the secrets every deployment in the environment inherits (a deployment's own value for a key wins). Values are write-only: the API never returns them, so a value changed outside Terraform isn't detected. This resource owns the set of names: a secret set elsewhere and not listed here is removed, including one that references a secret manager. List a name with an empty value (`NAME = ""`) to keep that secret, and its reference, as it is. Changing a secret restarts the deployments that inherit it; a service whose deploy policy is `approval` gets the change with its next deploy unless a project admin makes it.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ resource "computesphere_environment_secrets" "example" {
 ### Required
 
 - `environment_id` (String) Environment the secrets belong to. Changing it removes the secrets from the old environment and sets them on the new one.
-- `secrets` (Map of String, Sensitive) Secret name to value. An empty map removes every shared secret of the environment.
+- `secrets` (Map of String, Sensitive) Secret name to value. An empty value keeps the stored secret as it is (a new name needs a value). An empty map removes every shared secret of the environment.
 
 ### Read-Only
 
