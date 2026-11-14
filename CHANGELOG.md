@@ -64,6 +64,11 @@
   shared variables, which every deployment in it inherits (a deployment's
   own value for a key wins). It owns the whole set; an empty map removes
   them all. Import by environment id.
+- New resource `computesphere_environment_secrets`: an environment's shared
+  secrets, which every deployment in it inherits. Values are write-only, so
+  a value changed outside Terraform isn't detected; unchanged values aren't
+  sent again. It owns the set of names; an empty map removes them all.
+  Import by environment id.
 
 ## 1.2.0
 
