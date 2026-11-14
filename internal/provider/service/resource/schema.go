@@ -15,6 +15,7 @@ func Schema(ctx context.Context) schema.Schema {
 			"name":           shared.ServiceName,
 			"project_id":     shared.ServiceProjectID,
 			"type":           shared.ServiceType,
+			"instance_type":  shared.ServiceInstanceType,
 			"plan_id":        shared.ServicePlanID,
 			"active":         shared.ServiceActive,
 			"created_at":     shared.ServiceCreatedAt,
