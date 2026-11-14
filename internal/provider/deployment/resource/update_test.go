@@ -88,6 +88,9 @@ func (f *fakeDeployAPI) handler() http.Handler {
 	mux.HandleFunc("PUT /v2/deployments/{id}/env-vars", func(w http.ResponseWriter, r *http.Request) {
 		write(w, http.StatusOK, view(r.PathValue("id")))
 	})
+	mux.HandleFunc("POST /v2/deployments/{id}/scale", func(w http.ResponseWriter, r *http.Request) {
+		write(w, http.StatusAccepted, map[string]any{"object": "deployment", "id": r.PathValue("id"), "status": "Scaling"})
+	})
 	mux.HandleFunc("POST /v2/deployments/{id}/deploy", func(w http.ResponseWriter, r *http.Request) {
 		write(w, http.StatusAccepted, map[string]any{"object": "deployment", "id": r.PathValue("id"), "status": "Redeploying"})
 	})
@@ -303,6 +306,32 @@ func TestAccDeploymentResource_updatesInPlace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(depAddr, "wait_for_ready", "true"),
 					expectSent(f, "", 0),
+				),
+			},
+			{
+				// A spherelet count change is saved through scale and rolled
+				// out by the one deploy; the deploy body carries no count.
+				PreConfig: f.reset,
+				Config: depConfig(serviceID, envID, aPort, `sphere_count = 3`, aWait, aRegistry, aImage2,
+					`env_vars = { C = "3" }`),
+				ConfigPlanChecks: planAction(plancheck.ResourceActionUpdate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(depAddr, "sphere_count", "3"),
+					expectSent(f, "DELETE ", 0),
+					expectSent(f, "PATCH ", 0),
+					expectSent(f, "PUT ", 0),
+					expectBody(f, "POST /v2/deployments/bbbbbbbb-0000-4000-8000-000000000001/scale", func(b map[string]any) error {
+						if b["spherelets"] != float64(3) || b["skip_redeploy"] != true {
+							return fmt.Errorf("scale body = %v, want spherelets 3 and skip_redeploy true", b)
+						}
+						return nil
+					}),
+					expectBody(f, "POST /v2/deployments/bbbbbbbb-0000-4000-8000-000000000001/deploy", func(b map[string]any) error {
+						if _, ok := b["sphere_count"]; ok {
+							return fmt.Errorf("deploy body = %v, want no sphere_count", b)
+						}
+						return nil
+					}),
 				),
 			},
 		},
