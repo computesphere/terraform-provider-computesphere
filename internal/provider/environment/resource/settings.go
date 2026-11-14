@@ -32,7 +32,7 @@ func settingsAttributes() map[string]schema.Attribute {
 		"default_url_disabled": schema.BoolAttribute{
 			Optional: true, Computed: true, PlanModifiers: keepBool,
 			Description: "Turn the environment's default `computesphere.app` URL off. Needs a custom domain that is " +
-				"verified and serving; the URL turns back on by itself when the last one stops serving.",
+				"verified and serving. Removing the last serving custom domain turns the default URL back on by itself.",
 		},
 		"network_policy_enabled": schema.BoolAttribute{
 			Computed: true, PlanModifiers: keepBool,
