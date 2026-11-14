@@ -10,7 +10,7 @@ import (
 func Schema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Description:        "Deprecated: guardrails are set in the console. Provides details for a single guardrail.",
-		DeprecationMessage: "Guardrails are no longer part of the public API: set them in the console. This data source stops working once the API refuses API tokens for guardrails, and will be removed in a future release.",
+		DeprecationMessage: "Guardrails are no longer part of the public API: set them in the console. This data source will stop working and be removed in a future release.",
 		Attributes: map[string]schema.Attribute{
 			"id":                     schema.StringAttribute{Required: true, Description: shared.GuardrailID.Description},
 			"name":                   schema.StringAttribute{Computed: true, Description: shared.GuardrailName.Description},

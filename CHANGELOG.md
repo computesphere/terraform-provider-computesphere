@@ -52,8 +52,7 @@
   `computesphere_cache` and `computesphere_queue` work the same way.
 - Deprecated: the `computesphere_guardrail` resource and data source.
   Guardrails are no longer part of the public API: set them in the console.
-  Both stop working once the API refuses API tokens for guardrails, and will
-  be removed in a future release.
+  Both will stop working and be removed in a future release.
 
 ## 1.2.0
 
