@@ -38,7 +38,8 @@ func Schema(ctx context.Context) schema.Schema {
 						"token": schema.StringAttribute{
 							Optional: true,
 							Description: "Sent as the webhook's `Authorization` header. The API never returns it: leave " +
-								"it out to keep the token already stored for this URL.",
+								"it out to keep the token already stored for this URL. A stored token can't be removed from " +
+								"Terraform: change the URL, or remove the token in the console.",
 						},
 					},
 				},
