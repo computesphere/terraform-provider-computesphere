@@ -122,7 +122,8 @@ func (r *SecretSourceResource) Schema(ctx context.Context, req resource.SchemaRe
 				PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				Description: "Projects that may use it, each with all its environments. None by default; empty while " +
 					"`all_projects` is true. A project allowed only some of its environments in the console isn't " +
-					"listed here, and the next apply allows all of them again.",
+					"listed here: if it's in the configuration, the next apply allows all its environments again; if " +
+					"it isn't, the next change to access removes it (refused while secrets there read from it).",
 			},
 			"sync_interval_s": schema.Int64Attribute{
 				Optional: true, Computed: true,
