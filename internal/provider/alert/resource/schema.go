@@ -24,7 +24,7 @@ func Schema(ctx context.Context) schema.Schema {
 				Computed:    true,
 				Description: "The window the rule really evaluates over, in seconds; 0 for a job alert.",
 			},
-			"status": schema.StringAttribute{Computed: true, Description: "The rule's status."},
+			"status": schema.StringAttribute{Computed: true, Description: "The rule's status, e.g. `active` or `inactive`."},
 		},
 	}
 }
