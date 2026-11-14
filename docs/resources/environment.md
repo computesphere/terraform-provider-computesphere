@@ -74,8 +74,8 @@ output "environment_project_id" {
 ### Required
 
 - `name` (String) Name of the environment.
-- `project_id` (String) Project ID associated with the environment.
-- `region` (String) Region of the environment.
+- `project_id` (String) Project ID associated with the environment. Changing it moves the environment to that project in the same account. While the environment runs services the change is refused at plan time: move it in the console or with the CLI, then set the new project here and on its services.
+- `region` (String) Region of the environment. It can't change after create; a change is refused at plan time.
 
 ### Read-Only
 
