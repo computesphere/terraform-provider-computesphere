@@ -55,3 +55,33 @@ func TestAccDeploymentResource_instanceType(t *testing.T) {
 		},
 	})
 }
+
+// Moving from the deprecated plan_id to instance_type updates the deployment
+// in place; a different plan_id still replaces it.
+func TestAccDeploymentResource_planIDToInstanceType(t *testing.T) {
+	factories, f := setupFakeDeployAPI(t)
+	base := []string{aImage, aPort, aNoWait}
+	cfg := func(attrs ...string) string {
+		return depConfig(serviceID, envID, append(append([]string{}, base...), attrs...)...)
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: factories,
+		Steps: []resource.TestStep{
+			{Config: cfg(aPlanID)},
+			{
+				Config:           cfg(aPlanID2),
+				ConfigPlanChecks: planAction(plancheck.ResourceActionDestroyBeforeCreate),
+			},
+			{
+				PreConfig:        f.reset,
+				Config:           cfg(`instance_type = "sl-1c-2g"`),
+				ConfigPlanChecks: planAction(plancheck.ResourceActionUpdate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(depAddr, "instance_type", "sl-1c-2g"),
+					expectSent(f, "DELETE ", 0),
+					expectSent(f, "POST /v2/deployments {", 0),
+				),
+			},
+		},
+	})
+}

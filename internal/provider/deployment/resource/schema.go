@@ -52,9 +52,11 @@ func Schema(ctx context.Context) schema.Schema {
 				Required: true, Description: "Resource type (must match the service type, e.g. web-service).", PlanModifiers: rr,
 			},
 			"plan_id": schema.StringAttribute{
-				Optional: true, PlanModifiers: rr, DeprecationMessage: "Use instance_type instead.",
-				Description: "Deprecated: use `instance_type`. Plan id of the spherelet size; changing it replaces the " +
-					"deployment. Can't be set together with `instance_type`.",
+				Optional: true, DeprecationMessage: "Use instance_type instead.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured()},
+				Description: "Deprecated: use `instance_type`. Plan id of the spherelet size; changing it to another plan " +
+					"id replaces the deployment, while removing it (to move to `instance_type`) doesn't. Can't be set " +
+					"together with `instance_type`.",
 			},
 			"instance_type": schema.StringAttribute{
 				Optional: true, Computed: true,
@@ -62,7 +64,8 @@ func Schema(ctx context.Context) schema.Schema {
 				Description: "The spherelet size the deployment runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). " +
 					"Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data " +
 					"source. Changing it resizes the deployment in place; the account needs room for its spherelets at " +
-					"that size.",
+					"that size. Set the size on the service or on its deployments, not both: a service size change " +
+					"resizes every deployment of the service.",
 			},
 			"image": schema.StringAttribute{
 				Optional: true, Description: "Container image reference (e.g. nginx:latest) for image-based deployments.",

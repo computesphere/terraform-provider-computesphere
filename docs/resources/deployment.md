@@ -121,8 +121,8 @@ output "deployment_status" {
 - `image_type` (String) Image visibility: "public" (default) or "private". Set to "private" to pull from an authenticated registry using image_provider/image_username/image_password/image_url.
 - `image_url` (String) Registry endpoint for a private image. Required for providers that authenticate with username + password (azure, docker, other, custom).
 - `image_username` (String) Registry username for a private image.
-- `instance_type` (String) The spherelet size the deployment runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the deployment in place; the account needs room for its spherelets at that size.
-- `plan_id` (String, Deprecated) Deprecated: use `instance_type`. Plan id of the spherelet size; changing it replaces the deployment. Can't be set together with `instance_type`.
+- `instance_type` (String) The spherelet size the deployment runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the deployment in place; the account needs room for its spherelets at that size. Set the size on the service or on its deployments, not both: a service size change resizes every deployment of the service.
+- `plan_id` (String, Deprecated) Deprecated: use `instance_type`. Plan id of the spherelet size; changing it to another plan id replaces the deployment, while removing it (to move to `instance_type`) doesn't. Can't be set together with `instance_type`.
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
 - `sphere_count` (Number) Number of spherelets to run.
