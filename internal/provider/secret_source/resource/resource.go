@@ -65,11 +65,13 @@ type apiSource struct {
 	Access                *struct {
 		AllProjects bool `json:"all_projects"`
 		Projects    []struct {
-			ProjectID string `json:"project_id"`
+			ProjectID       string `json:"project_id"`
+			AllEnvironments bool   `json:"all_environments"`
 		} `json:"projects"`
 	} `json:"access"`
 	SyncIntervalS *int64 `json:"sync_interval_s"`
 	RefCount      *int64 `json:"ref_count"`
+	Notice        string `json:"notice"`
 }
 
 func (r *SecretSourceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -119,7 +121,8 @@ func (r *SecretSourceResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional: true, Computed: true, ElementType: types.StringType,
 				PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 				Description: "Projects that may use it, each with all its environments. None by default; empty while " +
-					"`all_projects` is true.",
+					"`all_projects` is true. A project allowed only some of its environments in the console isn't " +
+					"listed here, and the next apply allows all of them again.",
 			},
 			"sync_interval_s": schema.Int64Attribute{
 				Optional: true, Computed: true,
@@ -156,7 +159,9 @@ func accessBody(ctx context.Context, plan model, diags *diag.Diagnostics) map[st
 		var ids []string
 		diags.Append(plan.ProjectIDs.ElementsAs(ctx, &ids, false)...)
 		for _, id := range ids {
-			projects = append(projects, map[string]any{"project_id": id})
+			// all_environments defaults to false, which would allow none of
+			// the project's environments.
+			projects = append(projects, map[string]any{"project_id": id, "all_environments": true})
 		}
 	}
 	return map[string]any{"all_projects": all, "projects": projects}
@@ -183,10 +188,14 @@ func (m *model) apply(ctx context.Context, s *apiSource, diags *diag.Diagnostics
 	if s.Access != nil {
 		all = s.Access.AllProjects
 		// With all_projects the API lists every project; project_ids is
-		// then empty, as configured.
+		// then empty, as configured. A project allowed only some of its
+		// environments (set in the console) isn't one project_ids grants,
+		// so it reads as missing and the next apply widens it.
 		if !all {
 			for _, p := range s.Access.Projects {
-				ids = append(ids, p.ProjectID)
+				if p.AllEnvironments {
+					ids = append(ids, p.ProjectID)
+				}
 			}
 		}
 	}
@@ -208,6 +217,11 @@ func (r *SecretSourceResource) do(ctx context.Context, method, p string, in any,
 	if status != ok {
 		diags.AddError("Error "+what+" secret manager", cstypes.ProblemSummary(raw, status))
 		return nil
+	}
+	if out.Notice != "" {
+		// The connection test's note, e.g. the credential can sign in but
+		// can't list the secrets.
+		diags.AddWarning("Secret manager connection test", out.Notice)
 	}
 	return &out
 }
@@ -352,4 +366,22 @@ func (r *SecretSourceResource) ValidateConfig(ctx context.Context, req resource.
 		resp.Diagnostics.AddAttributeError(path.Root("project_ids"), "Conflicting attributes",
 			"Set all_projects = true or list project_ids, not both.")
 	}
+}
+
+var _ resource.ResourceWithModifyPlan = &SecretSourceResource{}
+
+// ModifyPlan: with all_projects = true, project_ids reads empty, so a plan
+// that turns it on doesn't carry the old list over.
+func (r *SecretSourceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	var all types.Bool
+	var cfgIDs types.Set
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("all_projects"), &all)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("project_ids"), &cfgIDs)...)
+	if resp.Diagnostics.HasError() || all.IsUnknown() || !all.ValueBool() || !cfgIDs.IsNull() {
+		return
+	}
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("project_ids"), types.SetValueMust(types.StringType, nil))...)
 }

@@ -74,7 +74,7 @@ func (f *fakeSourceAPI) handler() http.Handler {
 		var b map[string]any
 		_ = json.NewDecoder(r.Body).Decode(&b)
 		if b["all_projects"] == true {
-			b["projects"] = []map[string]any{{"project_id": "p-1"}, {"project_id": "p-2"}}
+			b["projects"] = []map[string]any{{"project_id": "p-1", "all_environments": true}, {"project_id": "p-2", "all_environments": true}}
 		}
 		f.source["access"] = b
 		write(w, http.StatusOK, view())
@@ -182,6 +182,19 @@ func TestAccSecretSourceResource(t *testing.T) {
 					func(*terraform.State) error {
 						if w := f.last("PATCH "); !strings.Contains(w, `"credential":{"token":"dp.st.example"}`) {
 							return fmt.Errorf("rotation PATCH = %s", w)
+						}
+						return nil
+					},
+				),
+			},
+			{
+				// A listed project is allowed all its environments.
+				Config: sourceConfig("doppler-web-2", 2, `  project_ids = ["p-1"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(addr, "project_ids.#", "1"),
+					func(*terraform.State) error {
+						if w := f.last("PUT "); !strings.Contains(w, `{"all_environments":true,"project_id":"p-1"}`) {
+							return fmt.Errorf("access PUT = %s", w)
 						}
 						return nil
 					},
