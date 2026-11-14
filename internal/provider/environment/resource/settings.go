@@ -32,7 +32,7 @@ func settingsAttributes() map[string]schema.Attribute {
 		"default_url_disabled": schema.BoolAttribute{
 			Optional: true, Computed: true, PlanModifiers: keepBool,
 			Description: "Turn the environment's default `computesphere.app` URL off. Needs a custom domain that is " +
-				"verified and serving.",
+				"verified and serving; the URL turns back on by itself when the last one stops serving.",
 		},
 		"network_policy_enabled": schema.BoolAttribute{
 			Computed: true, PlanModifiers: keepBool,
@@ -42,7 +42,8 @@ func settingsAttributes() map[string]schema.Attribute {
 		"ip_allowlist": schema.ListAttribute{
 			Optional: true, Computed: true, ElementType: types.StringType,
 			PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()},
-			Description:   "CIDR ranges allowed to reach the environment. An empty list makes it public (the default).",
+			Description: "CIDR ranges allowed to reach the environment. Set `[]` to make it public (the default); " +
+				"leaving it out keeps the current list.",
 		},
 		"sub_domain": schema.StringAttribute{
 			Computed: true, PlanModifiers: keepStr, Description: "The environment's generated subdomain.",

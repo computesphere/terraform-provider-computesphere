@@ -79,9 +79,9 @@ output "environment_project_id" {
 
 ### Optional
 
-- `default_url_disabled` (Boolean) Turn the environment's default `computesphere.app` URL off. Needs a custom domain that is verified and serving.
+- `default_url_disabled` (Boolean) Turn the environment's default `computesphere.app` URL off. Needs a custom domain that is verified and serving; the URL turns back on by itself when the last one stops serving.
 - `deploy_policy` (String) `auto` (the default): builds deploy when they finish. `approval`: builds wait for a project admin to approve them, and image deploys need the project admin role. Changing it needs the project admin role.
-- `ip_allowlist` (List of String) CIDR ranges allowed to reach the environment. An empty list makes it public (the default).
+- `ip_allowlist` (List of String) CIDR ranges allowed to reach the environment. Set `[]` to make it public (the default); leaving it out keeps the current list.
 
 ### Read-Only
 
