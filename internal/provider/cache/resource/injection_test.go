@@ -67,6 +67,17 @@ func TestCacheResource_injection(t *testing.T) {
 				ConfigPlanChecks: empty,
 			},
 			{
+				// Only the variable name changes: the selected services are kept.
+				Config: injectionConfig(`  injection = {
+    variable_name = "CACHE_URL_2"
+  }`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "injection.mode", "selected"),
+					resource.TestCheckResourceAttr(name, "injection.service_ids.#", "1"),
+					lastPut("map[mode:selected service_ids:[44444444-4444-4444-4444-444444444444] variable_name:CACHE_URL_2]"),
+				),
+			},
+			{
 				Config: injectionConfig(`  injection = {
     mode          = "none"
     variable_name = "CACHE_URL"
@@ -86,7 +97,7 @@ func TestCacheResource_injection(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "injection.mode", "none"),
 					resource.TestCheckResourceAttr(name, "injection.variable_name", "VALKEY_URL"),
-					lastPut("map[mode:none variable_name:VALKEY_URL]"),
+					lastPut("map[mode:none service_ids:[] variable_name:VALKEY_URL]"),
 				),
 			},
 			{

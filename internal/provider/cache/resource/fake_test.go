@@ -93,6 +93,8 @@ func (f *fakeCacheAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				_ = json.NewEncoder(w).Encode(map[string]any{"status": 400, "title": "mode is required"})
 				return
 			}
+			// Like the API: service_ids come only from the request.
+			in["service_ids"] = []string{}
 			for k, v := range body {
 				in[k] = v
 			}

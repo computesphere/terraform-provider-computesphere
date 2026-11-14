@@ -98,28 +98,33 @@ func (r *CacheResource) writeInjection(ctx context.Context, id string, plan, pri
 	if diags.HasError() {
 		return
 	}
-	body := map[string]any{}
-	if !m.Mode.IsNull() && !m.Mode.IsUnknown() {
-		body["mode"] = m.Mode.ValueString()
-	} else {
-		// The API needs mode on every write: keep the cache's current one.
+	// The API needs mode on every write and takes service_ids only from
+	// the request, so a field the configuration leaves out is filled from
+	// the cache's current injection.
+	set := func(v attr.Value) bool { return !v.IsNull() && !v.IsUnknown() }
+	if !set(m.Mode) || !set(m.ServiceIDs) || !set(m.VariableName) {
 		cur := r.readInjection(ctx, id, diags)
 		if diags.HasError() {
 			return
 		}
-		if v, ok := cur.Attributes()["mode"].(types.String); ok {
-			body["mode"] = v.ValueString()
+		a := cur.Attributes()
+		if v, ok := a["mode"].(types.String); ok && !set(m.Mode) {
+			m.Mode = v
+		}
+		if v, ok := a["service_ids"].(types.Set); ok && !set(m.ServiceIDs) {
+			m.ServiceIDs = v
+		}
+		if v, ok := a["variable_name"].(types.String); ok && !set(m.VariableName) {
+			m.VariableName = v
 		}
 	}
-	if !m.VariableName.IsNull() && !m.VariableName.IsUnknown() {
-		body["variable_name"] = m.VariableName.ValueString()
+	var ids []string
+	diags.Append(m.ServiceIDs.ElementsAs(ctx, &ids, false)...)
+	if ids == nil {
+		ids = []string{}
 	}
-	if !m.ServiceIDs.IsNull() && !m.ServiceIDs.IsUnknown() {
-		var ids []string
-		diags.Append(m.ServiceIDs.ElementsAs(ctx, &ids, false)...)
-		body["service_ids"] = ids
-	}
-	if len(body) == 0 {
+	body := map[string]any{"mode": m.Mode.ValueString(), "variable_name": m.VariableName.ValueString(), "service_ids": ids}
+	if diags.HasError() {
 		return
 	}
 	status, raw, err := cstypes.DoJSON(ctx, r.client, http.MethodPut, "/caches/"+url.PathEscape(id)+"/injection", nil, body, nil)
