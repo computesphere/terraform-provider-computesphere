@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `computesphere_alert`: `threshold` and `evaluation_period` are optional,
+  for the scheduled-job alert types (`job_run_failed`, `job_failing_streak`,
+  `job_run_missed`) that don't use them. New read-only
+  `effective_evaluation_period` and `status`.
+
 ## 1.3.0
 
 ### New resources and data sources
