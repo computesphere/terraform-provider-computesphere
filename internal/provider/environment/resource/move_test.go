@@ -75,6 +75,17 @@ func (f *fakeEnvAPI) handler() http.Handler {
 		f.env["project_id"] = b["target_project_id"]
 		write(w, http.StatusOK, f.env)
 	})
+	mux.HandleFunc("POST /v2/projects", func(w http.ResponseWriter, r *http.Request) {
+		write(w, http.StatusCreated, map[string]any{"object": "project", "id": projectB, "name": "new",
+			"account_id": "11111111-1111-1111-1111-111111111111", "created_at": "2026-11-14T00:00:00Z"})
+	})
+	mux.HandleFunc("GET /v2/projects/{pid}", func(w http.ResponseWriter, r *http.Request) {
+		write(w, http.StatusOK, map[string]any{"object": "project", "id": projectB, "name": "new",
+			"account_id": "11111111-1111-1111-1111-111111111111", "created_at": "2026-11-14T00:00:00Z"})
+	})
+	mux.HandleFunc("DELETE /v2/projects/{pid}", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
 	mux.HandleFunc("GET /v2/deployments", func(w http.ResponseWriter, r *http.Request) {
 		items := []map[string]any{}
 		for i := 0; i < f.services; i++ {
@@ -179,6 +190,44 @@ func TestAccEnvironmentResource_moveAndRegion(t *testing.T) {
 			{
 				Config: envConfig(projectB, envRegion),
 				Check:  f.expect(),
+			},
+		},
+	})
+}
+
+// A project created in the same run is unknown at plan, so the services check
+// runs again at apply: with services, the apply stops before any move.
+func TestAccEnvironmentResource_moveToNewProjectWithServices(t *testing.T) {
+	factories, f := setupFakeEnvAPI(t)
+	withNewProject := `resource "computesphere_project" "new" { name = "new" }
+resource "computesphere_environment" "example" {
+  name       = "production"
+  region     = "us-east-1"
+  project_id = computesphere_project.new.id
+}`
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: factories,
+		Steps: []resource.TestStep{
+			{Config: envConfig(projectA, envRegion)},
+			{
+				PreConfig:   func() { f.reset(); f.mu.Lock(); f.services = 1; f.mu.Unlock() },
+				Config:      withNewProject,
+				ExpectError: regexp.MustCompile(`can.t change while the environment runs services`),
+			},
+			{
+				// Nothing reached the move endpoint.
+				PreConfig: func() { f.mu.Lock(); f.services = 0; f.mu.Unlock() },
+				Config:    envConfig(projectA, envRegion),
+				Check: func(*terraform.State) error {
+					f.mu.Lock()
+					defer f.mu.Unlock()
+					for _, s := range f.sent {
+						if strings.Contains(s, "/move") {
+							return fmt.Errorf("a move was sent: %v", f.sent)
+						}
+					}
+					return nil
+				},
 			},
 		},
 	})

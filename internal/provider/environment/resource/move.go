@@ -37,6 +37,15 @@ func (r *EnvironmentResource) ModifyPlan(ctx context.Context, req resource.Modif
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if planProject.IsUnknown() && r.client != nil {
+		// The new project is only known at apply (e.g. a project created in
+		// the same run): Update checks again then. Say so now.
+		if n, err := r.deploymentCount(ctx, id.ValueString()); err == nil && n > 0 {
+			resp.Diagnostics.AddAttributeWarning(path.Root("project_id"), "project_id may change at apply",
+				fmt.Sprintf("project_id is only known at apply. This environment runs %d service(s), so if the "+
+					"project changes, the apply stops before anything is moved.", n))
+		}
+	}
 	if !planProject.IsUnknown() && !planProject.IsNull() && !planProject.Equal(stateProject) && r.client != nil {
 		n, err := r.deploymentCount(ctx, id.ValueString())
 		switch {
@@ -47,8 +56,8 @@ func (r *EnvironmentResource) ModifyPlan(ctx context.Context, req resource.Modif
 			resp.Diagnostics.AddAttributeError(path.Root("project_id"), "project_id can't change while the environment runs services",
 				fmt.Sprintf("This environment runs %d service(s). Moving it to another project takes its services "+
 					"with it, and the computesphere_service resources that manage them would then be replaced. Move "+
-					"the environment in the console or with the CLI, then set project_id here and on its services to "+
-					"the new project: the next plan shows no changes.", n))
+					"the environment in the console or with the CLI, then set project_id here and on the services that "+
+					"moved with it (a service that also runs in other environments is copied, and its resource stays as it is).", n))
 			return
 		default:
 			resp.Diagnostics.AddAttributeWarning(path.Root("project_id"), "The environment moves to another project",
