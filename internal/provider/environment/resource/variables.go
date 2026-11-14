@@ -51,7 +51,7 @@ func (r *EnvironmentVariablesResource) Schema(ctx context.Context, req resource.
 			"This resource owns the whole set: a variable set elsewhere and not listed here is removed. Changing " +
 			"a variable restarts the deployments that inherit it; a service whose deploy policy is `approval` " +
 			"gets the change with its next deploy unless a project admin makes it. Keep credentials out of " +
-			"plain variables.",
+			"plain variables: set them with computesphere_environment_secrets.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true, Description: "The environment id.",
