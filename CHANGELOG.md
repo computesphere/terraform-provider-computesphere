@@ -50,10 +50,13 @@
   database, which starts an empty one. To move to a new database, add it as
   a separate resource, move the data, then remove the old one. The new
   `computesphere_cache` and `computesphere_queue` work the same way.
-- `computesphere_environment`: changing `project_id` moves the environment,
-  with its services, to that project in the same account, in place (it
-  failed with "inconsistent result after apply"). A `region` change is
-  refused at plan time: an environment can't move to another region.
+- `computesphere_environment`: changing `project_id` moves an environment
+  that runs no services to that project in the same account, in place (it
+  failed with "inconsistent result after apply"). While it runs services the
+  change is refused at plan time: move it in the console or with the CLI,
+  then set the new project on the environment and its services. A `region`
+  change is refused at plan time: an environment can't move to another
+  region.
 
 ## 1.2.0
 

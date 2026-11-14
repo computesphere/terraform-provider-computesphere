@@ -24,8 +24,8 @@ var EnvironmentRegion = schema.StringAttribute{
 
 var EnvironmentProjectID = schema.StringAttribute{
 	Required:            true,
-	Description:         "Project ID associated with the environment. Changing it moves the environment, with its services, to that project in the same account.",
-	MarkdownDescription: "Project ID associated with the environment. Changing it moves the environment, with its services, to that project in the same account.",
+	Description:         "Project ID associated with the environment. Changing it moves the environment to that project in the same account. While the environment runs services the change is refused at plan time: move it in the console or with the CLI, then set the new project here and on its services.",
+	MarkdownDescription: "Project ID associated with the environment. Changing it moves the environment to that project in the same account. While the environment runs services the change is refused at plan time: move it in the console or with the CLI, then set the new project here and on its services.",
 }
 
 var EnvironmentCreatedAt = schema.StringAttribute{

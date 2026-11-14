@@ -31,10 +31,11 @@ const (
 
 // fakeEnvAPI is one environment: create, read, rename, move and delete.
 type fakeEnvAPI struct {
-	mu      sync.Mutex
-	env     map[string]any
-	deleted bool
-	sent    []string // "METHOD /path body", writes only
+	mu       sync.Mutex
+	env      map[string]any
+	services int // deployments the environment runs
+	deleted  bool
+	sent     []string // "METHOD /path body", writes only
 }
 
 func (f *fakeEnvAPI) handler() http.Handler {
@@ -73,6 +74,14 @@ func (f *fakeEnvAPI) handler() http.Handler {
 		_ = json.NewDecoder(r.Body).Decode(&b)
 		f.env["project_id"] = b["target_project_id"]
 		write(w, http.StatusOK, f.env)
+	})
+	mux.HandleFunc("GET /v2/deployments", func(w http.ResponseWriter, r *http.Request) {
+		items := []map[string]any{}
+		for i := 0; i < f.services; i++ {
+			items = append(items, map[string]any{"object": "deployment", "id": fmt.Sprintf("dep-%d", i)})
+		}
+		write(w, http.StatusOK, map[string]any{"object": "list", "items": items,
+			"pagination": map[string]any{"page": 1, "page_size": 1, "total": f.services, "total_pages": 1}})
 	})
 	mux.HandleFunc("DELETE /v2/environments/{eid}", func(w http.ResponseWriter, r *http.Request) {
 		f.deleted = true
@@ -134,8 +143,10 @@ func envConfig(project, region string) string {
 }`, region, project)
 }
 
-// A project change moves the environment in place; a region change is
-// refused at plan time and sends nothing.
+// A project change on an environment that runs services is refused at plan
+// time (the move would take them along); without services it moves the
+// environment in place. A region change is refused at plan time. Refusals
+// send nothing.
 func TestAccEnvironmentResource_moveAndRegion(t *testing.T) {
 	factories, f := setupFakeEnvAPI(t)
 	resource.Test(t, resource.TestCase{
@@ -143,7 +154,12 @@ func TestAccEnvironmentResource_moveAndRegion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: envConfig(projectA, envRegion)},
 			{
-				PreConfig:        f.reset,
+				PreConfig:   func() { f.reset(); f.mu.Lock(); f.services = 2; f.mu.Unlock() },
+				Config:      envConfig(projectB, envRegion),
+				ExpectError: regexp.MustCompile(`project_id can't change while the environment runs services`),
+			},
+			{
+				PreConfig:        func() { f.reset(); f.mu.Lock(); f.services = 0; f.mu.Unlock() },
 				Config:           envConfig(projectB, envRegion),
 				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(envAddr, plancheck.ResourceActionUpdate)}},
 				Check: resource.ComposeAggregateTestCheckFunc(

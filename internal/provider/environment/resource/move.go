@@ -12,6 +12,7 @@ import (
 
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,10 +22,38 @@ var _ resource.ResourceWithModifyPlan = &EnvironmentResource{}
 
 // ModifyPlan refuses a region change on an existing environment. The API
 // can't move an environment to another region, and replacing it would delete
-// everything in it, so the plan stops instead.
+// everything in it, so the plan stops instead. It also refuses a project
+// change while the environment runs services: a move takes its services to
+// the new project (moving, copying or deleting them), which a configuration
+// that manages them would then plan to replace.
 func (r *EnvironmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
+	}
+	var planProject, stateProject, id types.String
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("project_id"), &planProject)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("project_id"), &stateProject)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &id)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !planProject.IsUnknown() && !planProject.IsNull() && !planProject.Equal(stateProject) && r.client != nil {
+		n, err := r.deploymentCount(ctx, id.ValueString())
+		switch {
+		case err != nil:
+			resp.Diagnostics.AddAttributeError(path.Root("project_id"), "Can't check the environment's services", err.Error())
+			return
+		case n > 0:
+			resp.Diagnostics.AddAttributeError(path.Root("project_id"), "project_id can't change while the environment runs services",
+				fmt.Sprintf("This environment runs %d service(s). Moving it to another project takes its services "+
+					"with it, and the computesphere_service resources that manage them would then be replaced. Move "+
+					"the environment in the console or with the CLI, then set project_id here and on its services to "+
+					"the new project: the next plan shows no changes.", n))
+			return
+		default:
+			resp.Diagnostics.AddAttributeWarning(path.Root("project_id"), "The environment moves to another project",
+				"Who can read its variables and secrets follows the new project's members.")
+		}
 	}
 	var planRegion, stateRegion types.String
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("region"), &planRegion)...)
@@ -79,4 +108,24 @@ func moveEnvironment(ctx context.Context, client *csv2.ClientWithResponses, eid,
 		return fmt.Errorf("%s", cstypes.ProblemSummary(raw, resp.StatusCode))
 	}
 	return nil
+}
+
+// deploymentCount is how many deployments (services) the environment runs.
+func (r *EnvironmentResource) deploymentCount(ctx context.Context, eid string) (int, error) {
+	id, err := uuid.Parse(eid)
+	if err != nil {
+		return 0, err
+	}
+	size := 1
+	list, err := r.client.ListDeploymentsWithResponse(ctx, &csv2.ListDeploymentsParams{EnvironmentId: &id, PageSize: &size})
+	if err != nil {
+		return 0, err
+	}
+	if list.StatusCode() != http.StatusOK || list.JSON200 == nil {
+		return 0, fmt.Errorf("%s", cstypes.ProblemSummary(list.Body, list.StatusCode()))
+	}
+	if list.JSON200.Pagination.Total > 0 {
+		return list.JSON200.Pagination.Total, nil
+	}
+	return len(list.JSON200.Items), nil
 }
