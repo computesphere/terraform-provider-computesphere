@@ -46,7 +46,7 @@ func TestCacheResource_lifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "instance_type", "sc-0.25c-1g"),
 					resource.TestCheckResourceAttr(name, "high_availability", "false"),
 					resource.TestCheckResourceAttr(name, "status", "available"),
-					resource.TestCheckResourceAttr(name, "region", "eastus2"),
+					resource.TestCheckResourceAttr(name, "region", "us-east-1"),
 				),
 			},
 			{

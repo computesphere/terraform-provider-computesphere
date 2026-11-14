@@ -65,7 +65,7 @@ func (f *fakeCacheAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"eviction": eviction, "persistence": true, "internal_host": body.Name + "-7k2m9q",
 			"status": "provisioning", "read_only": false,
 			"account_id": "11111111-1111-1111-1111-111111111111", "project_id": "22222222-2222-2222-2222-222222222222",
-			"environment_id": body.EnvironmentID, "region": "eastus2", "error": "",
+			"environment_id": body.EnvironmentID, "region": "us-east-1", "error": "",
 			"created_at": "2026-10-12T10:00:00Z", "updated_at": "2026-10-12T10:00:00Z",
 			"links": map[string]any{"self": "/v2/caches/" + fakeCacheID},
 		}

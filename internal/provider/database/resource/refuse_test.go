@@ -40,7 +40,7 @@ func (f *fakeDatabasesAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"plan": "standard", "instance_type": body["instance_type"], "high_availability": "none",
 			"status": "available", "redundancy": "single-zone", "storage_gb": 10, "members": []any{},
 			"account_id": "11111111-1111-1111-1111-111111111111", "project_id": "22222222-2222-2222-2222-222222222222",
-			"environment_id": body["environment_id"], "region": "eastus2", "error": "",
+			"environment_id": body["environment_id"], "region": "us-east-1", "error": "",
 			"created_at": "2026-10-12T10:00:00Z", "updated_at": "2026-10-12T10:00:00Z",
 			"links": map[string]any{"self": "/v2/databases/" + id},
 		}
