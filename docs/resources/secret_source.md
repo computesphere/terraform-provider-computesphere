@@ -3,12 +3,12 @@
 page_title: "computesphere_secret_source Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a secret manager connection for the account (Doppler or Azure Key Vault), which deployments and environments read secrets from, so their values never pass through Terraform. Owners and admins only. The connection is tested before it's saved: nothing is saved unless the secret manager accepts the credential. A secret manager that secrets still read from can't be removed.
+  Manages a secret manager connection for the account (for example Doppler), which deployments and environments read secrets from, so their values never pass through Terraform. Owners and admins only. The connection is tested before it's saved: nothing is saved unless the secret manager accepts the credential. A secret manager that secrets still read from can't be removed.
 ---
 
 # computesphere_secret_source (Resource)
 
-Manages a secret manager connection for the account (Doppler or Azure Key Vault), which deployments and environments read secrets from, so their values never pass through Terraform. Owners and admins only. The connection is tested before it's saved: nothing is saved unless the secret manager accepts the credential. A secret manager that secrets still read from can't be removed.
+Manages a secret manager connection for the account (for example Doppler), which deployments and environments read secrets from, so their values never pass through Terraform. Owners and admins only. The connection is tested before it's saved: nothing is saved unless the secret manager accepts the credential. A secret manager that secrets still read from can't be removed.
 
 ## Example Usage
 

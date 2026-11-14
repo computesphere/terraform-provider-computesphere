@@ -81,7 +81,7 @@ func (r *SecretSourceResource) Metadata(ctx context.Context, req resource.Metada
 func (r *SecretSourceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	keepStr := []planmodifier.String{stringplanmodifier.UseStateForUnknown()}
 	resp.Schema = schema.Schema{
-		Description: "Manages a secret manager connection for the account (Doppler or Azure Key Vault), which " +
+		Description: "Manages a secret manager connection for the account (for example Doppler), which " +
 			"deployments and environments read secrets from, so their values never pass through Terraform. Owners " +
 			"and admins only. The connection is tested before it's saved: nothing is saved unless the secret manager " +
 			"accepts the credential. A secret manager that secrets still read from can't be removed.",

@@ -4,9 +4,9 @@
 
 ### New resources and data sources
 
-- New resource `computesphere_secret_source`: a secret manager (Doppler or
-  Azure Key Vault) for the account, which deployments and environments read
-  secrets from. Its `credential` is write-only, never stored in state;
+- New resource `computesphere_secret_source`: a secret manager connection
+  for the account (for example Doppler), which deployments and environments
+  read secrets from. Its `credential` is write-only, never stored in state;
   change `credential_version` to send a rotated one. `all_projects` or
   `project_ids` say which projects may use it. Needs Terraform 1.11 or later.
 - New data sources `computesphere_cache_connection` and
