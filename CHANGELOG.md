@@ -57,6 +57,10 @@
   then set the new project on the environment and its services. A `region`
   change is refused at plan time: an environment can't move to another
   region.
+- New resource `computesphere_environment_variables`: an environment's
+  shared variables, which every deployment in it inherits (a deployment's
+  own value for a key wins). It owns the whole set; an empty map removes
+  them all. Import by environment id.
 
 ## 1.2.0
 

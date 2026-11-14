@@ -64,6 +64,7 @@ Full per-attribute documentation for every resource and data source lives under
 |--------------|--------------------------------------|--------------------------------------------------------------|
 | Resource     | computesphere_project                | [project/resource](internal/provider/project/resource/)      |
 | Resource     | computesphere_environment            | [environment/resource](internal/provider/environment/resource/) |
+| Resource     | computesphere_environment_variables  | [environment/resource](internal/provider/environment/resource/) |
 | Resource     | computesphere_service                | [service/resource](internal/provider/service/resource/)      |
 | Resource     | computesphere_deployment             | [deployment/resource](internal/provider/deployment/resource/) |
 | Resource     | computesphere_team                   | [team/resource](internal/provider/team/resource/)            |
