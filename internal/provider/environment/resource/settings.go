@@ -2,13 +2,18 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"net/http"
+	"strings"
 
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -27,12 +32,14 @@ func settingsAttributes() map[string]schema.Attribute {
 		"deploy_policy": schema.StringAttribute{
 			Optional: true, Computed: true, PlanModifiers: keepStr,
 			Description: "`auto` (the default): builds deploy when they finish. `approval`: builds wait for a project " +
-				"admin to approve them, and image deploys need the project admin role. Changing it needs the project admin role.",
+				"admin to approve them, and image deploys need the project admin role. Changing it needs the project admin role; " +
+				"leaving it out keeps the current policy.",
 		},
 		"default_url_disabled": schema.BoolAttribute{
 			Optional: true, Computed: true, PlanModifiers: keepBool,
 			Description: "Turn the environment's default `computesphere.app` URL off. Needs a custom domain that is " +
-				"verified and serving. Removing the last serving custom domain turns the default URL back on by itself.",
+				"verified and serving, so it can't be set on a new environment. Removing the last serving custom domain turns " +
+				"the default URL back on by itself.",
 		},
 		"network_policy_enabled": schema.BoolAttribute{
 			Computed: true, PlanModifiers: keepBool,
@@ -42,7 +49,7 @@ func settingsAttributes() map[string]schema.Attribute {
 		"ip_allowlist": schema.ListAttribute{
 			Optional: true, Computed: true, ElementType: types.StringType,
 			PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()},
-			Description: "CIDR ranges allowed to reach the environment. Set `[]` to make it public (the default); " +
+			Description: "IP addresses or CIDR ranges allowed to reach the environment, each once. Set `[]` to make it public (the default); " +
 				"leaving it out keeps the current list.",
 		},
 		"sub_domain": schema.StringAttribute{
@@ -138,4 +145,71 @@ func (r *EnvironmentResource) writeSettings(ctx context.Context, eid uuid.UUID, 
 		return nil
 	}
 	return get.JSON200
+}
+
+var _ resource.ResourceWithValidateConfig = &EnvironmentResource{}
+
+// ValidateConfig checks the settings before any API call:
+//   - deploy_policy is auto or approval;
+//   - ip_allowlist holds IP addresses or CIDR ranges, each once and without
+//     spaces (the API trims and dedupes them, which would read back as a
+//     different list);
+//   - default_url_disabled = true can't be set on a new environment: it needs
+//     a serving custom domain, which a new environment doesn't have yet (that
+//     check is in ModifyPlan, where the prior state is known).
+func (r *EnvironmentResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var c environmentResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &c)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !c.DeployPolicy.IsNull() && !c.DeployPolicy.IsUnknown() {
+		if v := c.DeployPolicy.ValueString(); v != "auto" && v != "approval" {
+			resp.Diagnostics.AddAttributeError(path.Root("deploy_policy"), "Invalid value", "deploy_policy must be auto or approval.")
+		}
+	}
+	if c.IPAllowlist.IsNull() || c.IPAllowlist.IsUnknown() {
+		return
+	}
+	var ips []types.String
+	resp.Diagnostics.Append(c.IPAllowlist.ElementsAs(ctx, &ips, false)...)
+	seen := map[string]bool{}
+	for i, v := range ips {
+		if v.IsUnknown() || v.IsNull() {
+			continue
+		}
+		s := v.ValueString()
+		at := path.Root("ip_allowlist").AtListIndex(i)
+		switch {
+		case strings.TrimSpace(s) != s:
+			resp.Diagnostics.AddAttributeError(at, "Invalid value", fmt.Sprintf("%q has leading or trailing spaces.", s))
+		case !validIPOrCIDR(s):
+			resp.Diagnostics.AddAttributeError(at, "Invalid value", fmt.Sprintf("%q isn't an IP address or a CIDR range.", s))
+		case seen[s]:
+			resp.Diagnostics.AddAttributeError(at, "Invalid value", fmt.Sprintf("%q is listed more than once.", s))
+		}
+		seen[s] = true
+	}
+}
+
+func validIPOrCIDR(s string) bool {
+	if _, _, err := net.ParseCIDR(s); err == nil {
+		return true
+	}
+	return net.ParseIP(s) != nil
+}
+
+// refuseDefaultURLOnCreate stops a plan that creates an environment with
+// default_url_disabled = true, which the API always refuses on a new one.
+func refuseDefaultURLOnCreate(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if !req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+	var v types.Bool
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("default_url_disabled"), &v)...)
+	if !v.IsNull() && !v.IsUnknown() && v.ValueBool() {
+		resp.Diagnostics.AddAttributeError(path.Root("default_url_disabled"), "default_url_disabled can't be set on a new environment",
+			"The default URL can be turned off only once the environment has a custom domain that is verified and "+
+				"serving. Create the environment without it, add the domain, then set default_url_disabled = true.")
+	}
 }

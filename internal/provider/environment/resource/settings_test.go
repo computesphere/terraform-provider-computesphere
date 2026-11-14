@@ -2,10 +2,12 @@ package provider_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func settingsConfig(extra string) string {
@@ -64,6 +66,33 @@ func TestAccEnvironmentResource_settings(t *testing.T) {
 				// Removing the settings from the configuration leaves them as they are.
 				Config:           settingsConfig(""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()}},
+			},
+		},
+	})
+}
+
+// Invalid settings are refused at plan time, before any API call.
+func TestAccEnvironmentResource_settingsRefused(t *testing.T) {
+	factories, f := setupFakeEnvAPI(t)
+	refused := func(extra, pattern string) resource.TestStep {
+		return resource.TestStep{PreConfig: f.reset, Config: settingsConfig(extra), ExpectError: regexp.MustCompile(pattern)}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: factories,
+		Steps: []resource.TestStep{
+			refused(`  default_url_disabled = true`, `can't be set on a new environment`),
+			refused(`  deploy_policy = "manual"`, `deploy_policy must be auto or approval`),
+			refused(`  ip_allowlist = ["203.0.113.0/24", "203.0.113.0/24"]`, `listed more than once`),
+			refused(`  ip_allowlist = [" 203.0.113.0/24"]`, `leading or trailing spaces`),
+			refused(`  ip_allowlist = ["not-an-ip"]`, `isn't an IP address or a CIDR range`),
+			{
+				Config: settingsConfig(`  ip_allowlist = ["198.51.100.7"]`),
+				Check: func(*terraform.State) error {
+					if len(f.sent) == 0 {
+						return fmt.Errorf("nothing sent")
+					}
+					return nil
+				},
 			},
 		},
 	})
