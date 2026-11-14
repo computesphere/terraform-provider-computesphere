@@ -60,3 +60,8 @@ output "region" {
 ### Required
 
 - `name` (String) Name of the region.
+
+### Read-Only
+
+- `build_outbound_ips` (List of String) The addresses builds connect out from, as CIDR ranges, for example when a build fetches from a package registry behind an allowlist. Every build on ComputeSphere shares them, so every region lists the same ranges. Null until they are published.
+- `outbound_ips` (List of String) The addresses services in this region connect out from, as CIDR ranges, for allowlists on databases, email providers and partner APIs. Every service in the region shares them. Null until they are published.

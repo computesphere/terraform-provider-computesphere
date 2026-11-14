@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Data source `computesphere_region`: new read-only `outbound_ips`, the
+  addresses the region's services connect out from, and
+  `build_outbound_ips`, the addresses builds connect out from, both as CIDR
+  ranges for allowlists. Each is null until the API publishes it.
+- `computesphere_database` accepts `engine = "documentdb"`: SphereDB built on
+  the open-source DocumentDB engine (where offered). It has its own
+  instance types (`docdb-...`; list them with
+  `computesphere_database_instance_types` and `engine = "documentdb"`), and
+  services get `MONGODB_URI` instead of `DATABASE_URL`.
+- `computesphere_project`: a project without a `description` applies and
+  re-plans cleanly (it failed with "inconsistent result after apply"), and
+  removing a description clears it.
 - New resource `computesphere_cache`: a SphereCache cache (managed Valkey).
   Set `instance_type` (e.g. `sc-0.25c-1g`; a high-availability type, its id
   ending in `-ha`, adds a standby in another zone), which changes in place,

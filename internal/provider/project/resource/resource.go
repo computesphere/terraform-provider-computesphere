@@ -54,7 +54,12 @@ func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureR
 func (m *projectResourceModel) apply(p *csv2.Project) {
 	m.ID = types.StringValue(p.Id)
 	m.Name = types.StringValue(p.Name)
-	m.Description = types.StringPointerValue(p.Description)
+	// The API leaves out an empty description; the schema's default is "",
+	// so a missing one reads as "" and a project without one has no diff.
+	m.Description = types.StringValue("")
+	if p.Description != nil {
+		m.Description = types.StringValue(*p.Description)
+	}
 	m.CreatedAt = types.StringValue(p.CreatedAt.Format(time.RFC3339))
 }
 
@@ -137,9 +142,11 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	name := plan.Name.ValueString()
+	// Always send the description, "" included, so removing it clears it.
+	desc := plan.Description.ValueString()
 	apiResp, err := r.client.UpdateProjectWithResponse(ctx, pid, csv2.UpdateProjectRequest{
 		Name:        &name,
-		Description: cstypes.StringPtr(plan.Description.ValueString()),
+		Description: &desc,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating project", err.Error())

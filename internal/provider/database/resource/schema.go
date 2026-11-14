@@ -32,7 +32,9 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("postgresql"),
-				Description: "Database engine. Only `postgresql` today. It can't change after create; a change is refused at plan time.",
+				Description: "Database engine: `postgresql` (the default), or `documentdb` for SphereDB built on the " +
+					"open-source DocumentDB engine (where offered; no extensions or public access yet). " +
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"version": schema.StringAttribute{
 				Optional: true, Computed: true,
@@ -41,7 +43,7 @@ func Schema(ctx context.Context) schema.Schema {
 			},
 			"instance_type": schema.StringAttribute{
 				Optional: true, Computed: true, PlanModifiers: sizing("instance_type"),
-				Description: "Instance type id, e.g. `pg-2c-4g` (Standard 2). List them with the " +
+				Description: "Instance type id, e.g. `pg-2c-4g` (Standard 2; `docdb-2c-4g` on the `documentdb` engine). List them with the " +
 					"`computesphere_database_instance_types` data source. Changing it resizes the database " +
 					"in place with a short restart.",
 			},
@@ -59,12 +61,12 @@ func Schema(ctx context.Context) schema.Schema {
 			"storage_gb": schema.Int64Attribute{
 				Optional: true, Computed: true,
 				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
-				Description:   "Storage in GB. Defaults to 10. It can only grow.",
+				Description:   "Storage in GB. Defaults to the instance type's included storage. It can only grow.",
 			},
 			"inject": schema.BoolAttribute{
 				Optional: true, Computed: true, Default: booldefault.StaticBool(true),
 				Description: "At create, give every service in the environment the pooled connection string as " +
-					"`DATABASE_URL`. Only applies when the database is created.",
+					"`DATABASE_URL` (`MONGODB_URI` on the `documentdb` engine). Only applies when the database is created.",
 			},
 			"status":        schema.StringAttribute{Computed: true, Description: "Current status, e.g. `available`."},
 			"region":        schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Region of the environment."},
