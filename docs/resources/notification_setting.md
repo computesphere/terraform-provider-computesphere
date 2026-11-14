@@ -3,12 +3,12 @@
 page_title: "computesphere_notification_setting Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a notification setting resource.
+  Manages the notification settings of the person who owns the API token: which topics are delivered, and by in-app, email or webhook. Needs a full-access API token: notification settings span every account the person is in, so a token scoped to an account or a project is refused.
 ---
 
 # computesphere_notification_setting (Resource)
 
-Manages a notification setting resource.
+Manages the notification settings of the person who owns the API token: which topics are delivered, and by in-app, email or webhook. Needs a full-access API token: notification settings span every account the person is in, so a token scoped to an account or a project is refused.
 
 ## Example Usage
 
@@ -73,11 +73,24 @@ output "notification_setting_email_enabled" {
 - `invites` (Boolean) Invites notification enabled.
 - `payment` (Boolean) Payment notification enabled.
 - `webhook_enabled` (Boolean) Webhook notifications enabled.
+- `webhooks` (Attributes List, Sensitive) Webhooks that receive the notifications. Leave it out to keep the webhooks set in the console as they are; set it to manage them here (an empty list removes them all). (see [below for nested schema](#nestedatt--webhooks))
 
 ### Read-Only
 
 - `id` (String) Unique identifier for the notification setting.
 - `user_id` (String) User ID associated with the notification setting.
+
+<a id="nestedatt--webhooks"></a>
+### Nested Schema for `webhooks`
+
+Required:
+
+- `url` (String) Webhook URL. It must start with `https://`.
+
+Optional:
+
+- `content_type` (String) Body format: `json` (the default) or `text`.
+- `token` (String) Sent as the webhook's `Authorization` header. The API never returns it: leave it out to keep the token already stored for this URL. To remove a stored token, remove the webhook, apply, then add it back without a token (or change its URL).
 
 ## Import
 
