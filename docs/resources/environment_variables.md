@@ -3,12 +3,12 @@
 page_title: "computesphere_environment_variables Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages an environment's shared variables, one resource per environment: the plain variables every deployment in the environment inherits (a deployment's own value for a key wins). This resource owns the whole set: a variable set elsewhere and not listed here is removed. Changing a variable restarts the deployments that inherit it; a service whose deploy policy is approval gets the change with its next deploy unless a project admin makes it. Keep credentials out of plain variables.
+  Manages an environment's shared variables, one resource per environment: the plain variables every deployment in the environment inherits (a deployment's own value for a key wins). This resource owns the whole set: a variable set elsewhere and not listed here is removed. Changing a variable restarts the deployments that inherit it; a service whose deploy policy is approval gets the change with its next deploy unless a project admin makes it. Keep credentials out of plain variables: set them with computesphere_environment_secrets.
 ---
 
 # computesphere_environment_variables (Resource)
 
-Manages an environment's shared variables, one resource per environment: the plain variables every deployment in the environment inherits (a deployment's own value for a key wins). This resource owns the whole set: a variable set elsewhere and not listed here is removed. Changing a variable restarts the deployments that inherit it; a service whose deploy policy is `approval` gets the change with its next deploy unless a project admin makes it. Keep credentials out of plain variables.
+Manages an environment's shared variables, one resource per environment: the plain variables every deployment in the environment inherits (a deployment's own value for a key wins). This resource owns the whole set: a variable set elsewhere and not listed here is removed. Changing a variable restarts the deployments that inherit it; a service whose deploy policy is `approval` gets the change with its next deploy unless a project admin makes it. Keep credentials out of plain variables: set them with computesphere_environment_secrets.
 
 ## Example Usage
 
