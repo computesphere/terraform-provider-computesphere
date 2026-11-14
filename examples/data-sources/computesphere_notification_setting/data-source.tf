@@ -2,7 +2,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.3"
+      version = "~> 1.4"
     }
   }
 }
