@@ -82,7 +82,7 @@ output "alert_type" {
 
 ### Read-Only
 
-- `effective_evaluation_period` (Number) The window the rule really evaluates over, in seconds; 0 for a job alert.
+- `effective_evaluation_period` (Number) The window the rule actually evaluates over, in seconds; 0 for a job alert.
 - `id` (String) Unique identifier for the alert.
 - `status` (String) The rule's status as the API reports it, e.g. `inactive`.
 

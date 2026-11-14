@@ -22,7 +22,7 @@ func Schema(ctx context.Context) schema.Schema {
 			"active":            shared.Active,
 			"effective_evaluation_period": schema.Int64Attribute{
 				Computed:    true,
-				Description: "The window the rule really evaluates over, in seconds; 0 for a job alert.",
+				Description: "The window the rule actually evaluates over, in seconds; 0 for a job alert.",
 			},
 			"status": schema.StringAttribute{Computed: true, Description: "The rule's status as the API reports it, e.g. `inactive`."},
 		},
