@@ -69,6 +69,11 @@
   shared variables, which every deployment in it inherits (a deployment's
   own value for a key wins). It owns the whole set; an empty map removes
   them all. Import by environment id.
+- New data source `computesphere_database_connection`: the pooled and
+  direct routes of a database (host, port, database, user, URI), the public
+  routes when public access is on, and the CA details. The password is
+  masked unless `reveal = true`, which stores it in state and reveals it
+  (recorded in the activity log) on every plan and apply.
 - New resource `computesphere_environment_secrets`: an environment's shared
   secrets, which every deployment in it inherits. Values are write-only, so
   a value changed outside Terraform isn't detected; unchanged values aren't

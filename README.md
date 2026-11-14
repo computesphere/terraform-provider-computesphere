@@ -86,6 +86,7 @@ Full per-attribute documentation for every resource and data source lives under
 | Data Source  | computesphere_team / _teams          | [team/datasource](internal/provider/team/datasource/)        |
 | Data Source  | computesphere_alert / _alerts        | [alert/datasource](internal/provider/alert/datasource/)      |
 | Data Source  | computesphere_database_instance_types | [database/datasource](internal/provider/database/datasource/) |
+| Data Source  | computesphere_database_connection    | [database/datasource](internal/provider/database/datasource/) |
 | Data Source  | computesphere_cache_instance_types   | [cache/datasource](internal/provider/cache/datasource/)      |
 | Data Source  | computesphere_queue_instance_types   | [queue/datasource](internal/provider/queue/datasource/)      |
 | Data Source  | computesphere_spherelet_instance_types | [spherelet/datasource](internal/provider/spherelet/datasource/) |

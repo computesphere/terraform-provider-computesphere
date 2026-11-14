@@ -338,6 +338,7 @@ func (p *ComputeSphereProvider) DataSources(_ context.Context) []func() datasour
 		alertdatasource.NewAlertsDataSource,
 		cachedatasource.NewInstanceTypesDataSource,
 		databasedatasource.NewInstanceTypesDataSource,
+		databasedatasource.NewConnectionDataSource,
 		queuedatasource.NewInstanceTypesDataSource,
 		environmentdatasource.NewEnvironmentDataSource,
 		environmentdatasource.NewEnvironmentsDataSource,
