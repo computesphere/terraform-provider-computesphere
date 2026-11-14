@@ -78,7 +78,7 @@ func ReadConnection(ctx context.Context, client *csv2.ClientWithResponses, colle
 		return nil
 	}
 	if status == http.StatusNotFound {
-		resp.Diagnostics.AddAttributeError(path.Root("id"), "No such "+noun, ProblemSummary(raw, status))
+		resp.Diagnostics.AddAttributeError(path.Root(noun+"_id"), "No such "+noun, ProblemSummary(raw, status))
 		return nil
 	}
 	if status != http.StatusOK {
