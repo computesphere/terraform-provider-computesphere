@@ -14,6 +14,13 @@
 - `computesphere_project`: a project without a `description` applies and
   re-plans cleanly (it failed with "inconsistent result after apply"), and
   removing a description clears it.
+- `computesphere_service`: new `instance_type`, the spherelet size the
+  service runs on (e.g. `sl-1c-2g`, or the aliases `FLX`, `MAX` and `PWR`).
+  Changing it resizes the service in place. `plan_id` is deprecated and
+  can't be set together with `instance_type`. Services can now be imported.
+- New data source `computesphere_spherelet_instance_types`: the spherelet
+  sizes with vCPU, guaranteed vCPU, memory, monthly and annual price,
+  aliases and availability, optionally for one region.
 
 ## 1.2.0
 
