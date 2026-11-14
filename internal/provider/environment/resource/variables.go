@@ -51,7 +51,7 @@ func (r *EnvironmentVariablesResource) Schema(ctx context.Context, req resource.
 			"This resource owns the whole set: a variable set elsewhere and not listed here is removed. Changing " +
 			"a variable restarts the deployments that inherit it; a service whose deploy policy is `approval` " +
 			"gets the change with its next deploy unless a project admin makes it. Keep credentials out of " +
-			"plain variables.",
+			"plain variables: set them with computesphere_environment_secrets.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true, Description: "The environment id.",
@@ -83,7 +83,7 @@ func (r *EnvironmentVariablesResource) put(ctx context.Context, eid uuid.UUID, v
 	}
 	var editors []csv2.RequestEditorFn
 	if len(vars) == 0 {
-		editors = append(editors, withBodyField("allow_empty", true))
+		editors = append(editors, allowEmpty)
 	}
 	apiResp, err := r.client.ReplaceEnvironmentVariablesWithResponse(ctx, eid, csv2.SetEnvironmentVariablesRequest{Variables: vars}, editors...)
 	if err != nil {
@@ -191,7 +191,7 @@ func (r *EnvironmentVariablesResource) Delete(ctx context.Context, req resource.
 		return
 	}
 	apiResp, err := r.client.ReplaceEnvironmentVariablesWithResponse(ctx, eid,
-		csv2.SetEnvironmentVariablesRequest{Variables: map[string]string{}}, withBodyField("allow_empty", true))
+		csv2.SetEnvironmentVariablesRequest{Variables: map[string]string{}}, allowEmpty)
 	if err != nil {
 		resp.Diagnostics.AddError("Error removing environment variables", err.Error())
 		return
@@ -208,31 +208,29 @@ func (r *EnvironmentVariablesResource) ImportState(ctx context.Context, req reso
 	resource.ImportStatePassthroughID(ctx, path.Root("environment_id"), req, resp)
 }
 
-// withBodyField sets one top-level field in a JSON request body, for fields
-// the SDK's request types don't carry.
-func withBodyField(name string, value any) csv2.RequestEditorFn {
-	return func(_ context.Context, req *http.Request) error {
-		if req.Body == nil {
-			return nil
-		}
-		raw, err := io.ReadAll(req.Body)
-		if err != nil {
-			return err
-		}
-		body := map[string]any{}
-		if len(bytes.TrimSpace(raw)) > 0 {
-			if err := json.Unmarshal(raw, &body); err != nil {
-				return err
-			}
-		}
-		body[name] = value
-		out, err := json.Marshal(body)
-		if err != nil {
-			return err
-		}
-		req.Body = io.NopCloser(bytes.NewReader(out))
-		req.ContentLength = int64(len(out))
-		req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(out)), nil }
+// allowEmpty adds allow_empty: true to a request body: the API needs it to
+// replace a set with an empty one, and the SDK's request types don't carry it.
+func allowEmpty(_ context.Context, req *http.Request) error {
+	if req.Body == nil {
 		return nil
 	}
+	raw, err := io.ReadAll(req.Body)
+	if err != nil {
+		return err
+	}
+	body := map[string]any{}
+	if len(bytes.TrimSpace(raw)) > 0 {
+		if err := json.Unmarshal(raw, &body); err != nil {
+			return err
+		}
+	}
+	body["allow_empty"] = true
+	out, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req.Body = io.NopCloser(bytes.NewReader(out))
+	req.ContentLength = int64(len(out))
+	req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(out)), nil }
+	return nil
 }
