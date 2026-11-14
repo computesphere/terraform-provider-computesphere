@@ -27,6 +27,7 @@ var _ resource.ResourceWithModifyPlan = &EnvironmentResource{}
 // the new project (moving, copying or deleting them), which a configuration
 // that manages them would then plan to replace.
 func (r *EnvironmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	refuseDefaultURLOnCreate(ctx, req, resp)
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}

@@ -79,6 +79,11 @@
   a value changed outside Terraform isn't detected; unchanged values aren't
   sent again. It owns the set of names; an empty map removes them all.
   Import by environment id.
+- `computesphere_environment`: new `deploy_policy` (`auto` or `approval`),
+  `default_url_disabled` and `ip_allowlist` (CIDR ranges; an empty list makes
+  the environment public), changed in place, and read-only
+  `network_policy_enabled`, `sub_domain` and `kind`. Leaving a setting out
+  keeps it as it is.
 
 ## 1.2.0
 
