@@ -1,7 +1,10 @@
 package provider
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -203,8 +206,9 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 			return
 		}
 		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, depID, csv2.SetEnvVarsRequest{
-			EnvVars:    envVars,
-			SecretVars: secretVars,
+			EnvVars:      envVars,
+			SecretVars:   secretVars,
+			SkipRedeploy: &skipRedeploy,
 		}, wholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
@@ -226,7 +230,7 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, depID, upd); uerr != nil {
+		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, depID, upd, withSkipRedeploy); uerr != nil {
 			resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
 			return
 		} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
@@ -259,10 +263,9 @@ func deploymentNeedsUpdate(ctx context.Context, plan deploymentResourceModel, di
 // deploy triggers a deploy and, when wait_for_ready is set, blocks until the
 // deployment settles into a terminal state.
 func (r *DeploymentResource) deploy(ctx context.Context, id uuid.UUID, plan deploymentResourceModel, diags *diag.Diagnostics) bool {
+	// The deploy body takes no spherelet count: create sends it in the create
+	// body and Update saves a new one through scale first.
 	deployBody := csv2.DeployDeploymentJSONRequestBody{}
-	if !plan.SphereCount.IsNull() {
-		deployBody["sphere_count"] = int(plan.SphereCount.ValueInt64())
-	}
 	dResp, err := r.client.DeployDeploymentWithResponse(ctx, id, deployBody)
 	if err != nil {
 		diags.AddError("Error deploying", err.Error())
@@ -395,30 +398,69 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 	plan.ID = state.ID
+	plan.Name = state.Name
+	plan.Status = state.Status
 
-	upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd); uerr != nil {
-		resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
-		return
-	} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
-		resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+	patch := updateFieldsChanged(plan, state)
+	vars := !plan.EnvVars.Equal(state.EnvVars) || !plan.SecretVars.Equal(state.SecretVars)
+	if !patch && !vars && plan.SphereCount.Equal(state.SphereCount) {
+		// Only wait_for_ready changed: a provider setting, nothing to send.
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 		return
 	}
 
-	envVars := mapToStringPtr(ctx, plan.EnvVars, &resp.Diagnostics)
-	secretVars := mapToStringPtr(ctx, plan.SecretVars, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	if patch {
+		upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if plan.BuildArgs.IsNull() && !state.BuildArgs.IsNull() {
+			// An explicit null clears the saved build args.
+			if upd.BuildConfig == nil {
+				upd.BuildConfig = &csv2.DeploymentUpdateRequest_BuildConfig{}
+			}
+			upd.BuildConfig.Set("build_args", nil)
+		}
+		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd, withSkipRedeploy); uerr != nil {
+			resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
+			return
+		} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+			return
+		}
 	}
-	if envVars != nil || secretVars != nil {
-		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, csv2.SetEnvVarsRequest{EnvVars: envVars, SecretVars: secretVars}, wholeSet); everr != nil {
+
+	if vars {
+		// Send only the map that changed: an omitted map is left as it is, and
+		// an empty one clears it, so removing env_vars or secret_vars from the
+		// configuration removes the variables.
+		body := csv2.SetEnvVarsRequest{SkipRedeploy: &skipRedeploy}
+		if !plan.EnvVars.Equal(state.EnvVars) {
+			body.EnvVars = mapOrEmpty(ctx, plan.EnvVars, &resp.Diagnostics)
+		}
+		if !plan.SecretVars.Equal(state.SecretVars) {
+			body.SecretVars = mapOrEmpty(ctx, plan.SecretVars, &resp.Diagnostics)
+		}
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body, wholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
 			resp.Diagnostics.AddError("Error setting deployment env vars", cstypes.ProblemSummary(evResp.Body, evResp.StatusCode()))
+			return
+		}
+	}
+
+	if !plan.SphereCount.IsNull() && !plan.SphereCount.Equal(state.SphereCount) {
+		// The spherelet count changes only through scale.
+		body := csv2.ScaleRequest{Spherelets: int(plan.SphereCount.ValueInt64()), SkipRedeploy: &skipRedeploy}
+		if sResp, serr := r.client.ScaleDeploymentWithResponse(ctx, id, body); serr != nil {
+			resp.Diagnostics.AddError("Error scaling deployment", serr.Error())
+			return
+		} else if sResp.StatusCode() != http.StatusOK && sResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error scaling deployment", cstypes.ProblemSummary(sResp.Body, sResp.StatusCode()))
 			return
 		}
 	}
@@ -428,6 +470,27 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	r.refreshStatus(ctx, id, &plan, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// updateFieldsChanged reports whether a field sent through the update request
+// (image, registry auth, build args or port) differs between plan and state.
+func updateFieldsChanged(plan, state deploymentResourceModel) bool {
+	return !plan.Image.Equal(state.Image) ||
+		!plan.ImageType.Equal(state.ImageType) ||
+		!plan.ImageProvider.Equal(state.ImageProvider) ||
+		!plan.ImageUsername.Equal(state.ImageUsername) ||
+		!plan.ImagePassword.Equal(state.ImagePassword) ||
+		!plan.ImageURL.Equal(state.ImageURL) ||
+		!plan.BuildArgs.Equal(state.BuildArgs) ||
+		!plan.Port.Equal(state.Port)
+}
+
+// mapOrEmpty is the map's value, or an empty map when it is null.
+func mapOrEmpty(ctx context.Context, m types.Map, diags *diag.Diagnostics) *map[string]string {
+	if v := mapToStringPtr(ctx, m, diags); v != nil {
+		return v
+	}
+	return &map[string]string{}
 }
 
 func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -464,5 +527,37 @@ func wholeSet(_ context.Context, req *http.Request) error {
 	q := req.URL.Query()
 	q.Set("replace", "true")
 	req.URL.RawQuery = q.Encode()
+	return nil
+}
+
+// skipRedeploy is sent on every write before the deploy: each write would
+// otherwise roll the deployment out on its own, and the one deploy at the end
+// of Create and Update rolls out every saved change together.
+var skipRedeploy = true
+
+// withSkipRedeploy adds skip_redeploy to an update body. The SDK's update
+// request type doesn't carry the field, which the update API takes.
+func withSkipRedeploy(_ context.Context, req *http.Request) error {
+	if req.Body == nil {
+		return nil
+	}
+	raw, err := io.ReadAll(req.Body)
+	if err != nil {
+		return err
+	}
+	body := map[string]any{}
+	if len(bytes.TrimSpace(raw)) > 0 {
+		if err := json.Unmarshal(raw, &body); err != nil {
+			return err
+		}
+	}
+	body["skip_redeploy"] = true
+	out, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req.Body = io.NopCloser(bytes.NewReader(out))
+	req.ContentLength = int64(len(out))
+	req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(out)), nil }
 	return nil
 }
