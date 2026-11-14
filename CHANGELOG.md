@@ -6,6 +6,11 @@
   for the scheduled-job alert types (`job_run_failed`, `job_failing_streak`,
   `job_run_missed`) that don't use them. New read-only
   `effective_evaluation_period` and `status`.
+- New resource `computesphere_secret_source`: a secret manager (Doppler or
+  Azure Key Vault) for the account, which deployments and environments read
+  secrets from. Its `credential` is write-only, never stored in state;
+  change `credential_version` to send a rotated one. `all_projects` or
+  `project_ids` say which projects may use it. Needs Terraform 1.11 or later.
 
 ## 1.3.0
 
