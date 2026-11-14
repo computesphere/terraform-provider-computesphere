@@ -6,6 +6,9 @@
   addresses the region's services connect out from, and
   `build_outbound_ips`, the addresses builds connect out from, both as CIDR
   ranges for allowlists. Each is null until the API publishes it.
+- `computesphere_project`: a project without a `description` applies and
+  re-plans cleanly (it failed with "inconsistent result after apply"), and
+  removing a description clears it.
 
 ## 1.2.0
 
