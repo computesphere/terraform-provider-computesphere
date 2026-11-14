@@ -51,8 +51,9 @@
   `computesphere_database_instance_types` and `engine = "documentdb"`), and
   services get `MONGODB_URI` instead of `DATABASE_URL`.
 - `computesphere_environment`: new `deploy_policy` (`auto` or
-  `approval`), `default_url_disabled` and `ip_allowlist` (CIDR ranges; an
-  empty list makes the environment public), changed in place, and read-only
+  `approval`), `default_url_disabled` and `ip_allowlist` (IP addresses or
+  CIDR ranges; an empty list makes the environment public), changed in
+  place, and read-only
   `network_policy_enabled`, `sub_domain` and `kind`. Leaving a setting out
   keeps it as it is.
 - `computesphere_notification_setting`: new `webhooks` (URL, body format and
