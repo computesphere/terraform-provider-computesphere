@@ -74,6 +74,11 @@
   routes when public access is on, and the CA details. The password is
   masked unless `reveal = true`, which stores it in state and reveals it
   (recorded in the activity log) on every plan and apply.
+- `computesphere_environment`: new `deploy_policy` (`auto` or `approval`),
+  `default_url_disabled` and `ip_allowlist` (CIDR ranges; an empty list makes
+  the environment public), changed in place, and read-only
+  `network_policy_enabled`, `sub_domain` and `kind`. Leaving a setting out
+  keeps it as it is.
 
 ## 1.2.0
 

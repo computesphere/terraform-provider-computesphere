@@ -49,6 +49,13 @@ type environmentResourceModel struct {
 	ProjectID types.String `tfsdk:"project_id"`
 	ID        types.String `tfsdk:"id"`
 	CreatedAt types.String `tfsdk:"created_at"`
+
+	DeployPolicy         types.String `tfsdk:"deploy_policy"`
+	DefaultURLDisabled   types.Bool   `tfsdk:"default_url_disabled"`
+	NetworkPolicyEnabled types.Bool   `tfsdk:"network_policy_enabled"`
+	IPAllowlist          types.List   `tfsdk:"ip_allowlist"`
+	SubDomain            types.String `tfsdk:"sub_domain"`
+	Kind                 types.String `tfsdk:"kind"`
 }
 
 func (r *EnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -94,8 +101,25 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	created := apiResp.JSON201
+	eid, err := uuid.Parse(created.Id)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid environment id", err.Error())
+		return
+	}
+	// The create body takes no settings: send the ones the plan sets.
+	e := r.writeSettings(ctx, eid, plan, environmentResourceModel{}, false, nil, created, &resp.Diagnostics)
+	if e == nil {
+		// Save what was created so a retry doesn't create a second one.
+		var partial environmentResourceModel
+		partial.apply(created)
+		partial.applySettings(ctx, created, &resp.Diagnostics)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &partial)...)
+		return
+	}
 	var state environmentResourceModel
-	state.apply(apiResp.JSON201)
+	state.apply(e)
+	state.applySettings(ctx, e, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -127,6 +151,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	state.apply(apiResp.JSON200)
+	state.applySettings(ctx, apiResp.JSON200, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -167,20 +192,13 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	name := plan.Name.ValueString()
-	apiResp, err := r.client.UpdateEnvironmentWithResponse(ctx, eid, csv2.UpdateEnvironmentRequest{
-		Name: &name,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating environment", err.Error())
+	e := r.writeSettings(ctx, eid, plan, state, true, &name, nil, &resp.Diagnostics)
+	if e == nil {
 		return
 	}
-	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
-		resp.Diagnostics.AddError("Error updating environment", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
-		return
-	}
-
 	var newState environmentResourceModel
-	newState.apply(apiResp.JSON200)
+	newState.apply(e)
+	newState.applySettings(ctx, e, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 

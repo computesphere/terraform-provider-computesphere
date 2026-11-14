@@ -77,10 +77,19 @@ output "environment_project_id" {
 - `project_id` (String) Project ID associated with the environment. Changing it moves the environment to that project in the same account. While the environment runs services the change is refused at plan time: move it in the console or with the CLI, then set the new project here and on its services.
 - `region` (String) Region of the environment. It can't change after create; a change is refused at plan time.
 
+### Optional
+
+- `default_url_disabled` (Boolean) Turn the environment's default `computesphere.app` URL off. Needs a custom domain that is verified and serving.
+- `deploy_policy` (String) `auto` (the default): builds deploy when they finish. `approval`: builds wait for a project admin to approve them, and image deploys need the project admin role. Changing it needs the project admin role.
+- `ip_allowlist` (List of String) CIDR ranges allowed to reach the environment. An empty list makes it public (the default).
+
 ### Read-Only
 
 - `created_at` (String) Creation timestamp of the environment.
 - `id` (String) Unique identifier for the environment.
+- `kind` (String) `standard`, `preview` or `fork`.
+- `network_policy_enabled` (Boolean) Whether the environment's private network policy is on: its services reach each other over its private network, and services in other environments can't reach them.
+- `sub_domain` (String) The environment's generated subdomain.
 
 ## Import
 
