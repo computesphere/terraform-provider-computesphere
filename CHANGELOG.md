@@ -74,6 +74,11 @@
   routes when public access is on, and the CA details. The password is
   masked unless `reveal = true`, which stores it in state and reveals it
   (recorded in the activity log) on every plan and apply.
+- New resource `computesphere_environment_secrets`: an environment's shared
+  secrets, which every deployment in it inherits. Values are write-only, so
+  a value changed outside Terraform isn't detected; unchanged values aren't
+  sent again. It owns the set of names; an empty map removes them all.
+  Import by environment id.
 
 ## 1.2.0
 

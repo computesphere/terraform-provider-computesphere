@@ -322,6 +322,7 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		queueresource.NewQueueResource,
 		environmentresource.NewEnvironmentResource,
 		environmentresource.NewEnvironmentVariablesResource,
+		environmentresource.NewEnvironmentSecretsResource,
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
 		serviceresource.NewServiceResource,
