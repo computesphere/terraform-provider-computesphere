@@ -11,6 +11,9 @@
   instance types (`docdb-...`; list them with
   `computesphere_database_instance_types` and `engine = "documentdb"`), and
   services get `MONGODB_URI` instead of `DATABASE_URL`.
+- `computesphere_project`: a project without a `description` applies and
+  re-plans cleanly (it failed with "inconsistent result after apply"), and
+  removing a description clears it.
 
 ## 1.2.0
 
