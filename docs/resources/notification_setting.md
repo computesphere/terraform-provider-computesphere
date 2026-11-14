@@ -90,7 +90,7 @@ Required:
 Optional:
 
 - `content_type` (String) Body format: `json` (the default) or `text`.
-- `token` (String) Sent as the webhook's `Authorization` header. The API never returns it: leave it out to keep the token already stored for this URL. A stored token can't be removed from Terraform: change the URL, or remove the token in the console.
+- `token` (String) Sent as the webhook's `Authorization` header. The API never returns it: leave it out to keep the token already stored for this URL. To remove a stored token, remove the webhook, apply, then add it back without a token (or change its URL).
 
 ## Import
 
