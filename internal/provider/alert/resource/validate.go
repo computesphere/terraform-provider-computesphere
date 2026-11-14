@@ -15,6 +15,9 @@ var (
 
 var metricTypes = map[string]bool{"cpu": true, "memory": true, "disk": true}
 
+// defaultStreak is the API's default threshold for job_failing_streak.
+const defaultStreak = 3
+
 // ValidateConfig checks threshold and evaluation_period against the alert
 // type: a metric rule needs both (a percent from 1 to 100, and seconds), and
 // a failing-streak rule takes a threshold from 2 to 10.
@@ -41,8 +44,9 @@ func (r *AlertResource) ValidateConfig(ctx context.Context, req resource.Validat
 }
 
 // ModifyPlan: when alert_type changes, a threshold or evaluation_period the
-// configuration leaves out is no longer the old rule's value, so it's
-// unknown until the API answers instead of carried over.
+// configuration leaves out isn't carried over in the plan. The API keeps the
+// stored threshold when none is sent, which a job_failing_streak rule refuses
+// unless it's 2 to 10, so that type gets its default, 3, planned and sent.
 func (r *AlertResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
@@ -56,8 +60,13 @@ func (r *AlertResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanR
 	for _, attr := range []string{"threshold", "evaluation_period", "effective_evaluation_period"} {
 		var cfg types.Int64
 		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(attr), &cfg)...)
-		if cfg.IsNull() {
-			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(attr), types.Int64Unknown())...)
+		if !cfg.IsNull() {
+			continue
 		}
+		v := types.Int64Unknown()
+		if attr == "threshold" && planType.ValueString() == "job_failing_streak" {
+			v = types.Int64Value(defaultStreak)
+		}
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(attr), v)...)
 	}
 }

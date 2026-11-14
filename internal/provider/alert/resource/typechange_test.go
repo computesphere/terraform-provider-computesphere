@@ -76,9 +76,18 @@ func (f *fakeAlertAPI) handler() http.Handler {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		f.patches = append(f.patches, b)
-		if b["alert_type"] != f.rule["alert_type"] {
-			delete(f.rule, "threshold")
-			delete(f.rule, "evaluation_period")
+		// Like the API, a field left out keeps its stored value, and a
+		// failing-streak rule takes a threshold from 2 to 10 only.
+		next := map[string]any{}
+		for k, v := range f.rule {
+			next[k] = v
+		}
+		for k, v := range b {
+			next[k] = v
+		}
+		if th, _ := next["threshold"].(float64); next["alert_type"] == "job_failing_streak" && (th < 2 || th > 10) {
+			write(w, http.StatusBadRequest, map[string]any{"status": 400, "title": "threshold out of range"})
+			return
 		}
 		for k, v := range b {
 			f.rule[k] = v
@@ -143,8 +152,8 @@ func TestAccAlertResource_typeChange(t *testing.T) {
 						f.mu.Lock()
 						defer f.mu.Unlock()
 						last := f.patches[len(f.patches)-1]
-						if _, ok := last["threshold"]; ok {
-							return fmt.Errorf("threshold carried over in %v", last)
+						if last["threshold"] != float64(3) {
+							return fmt.Errorf("PATCH threshold = %v, want the default 3: %v", last["threshold"], last)
 						}
 						return nil
 					},

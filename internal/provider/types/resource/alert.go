@@ -49,7 +49,7 @@ var Threshold = schema.Int64Attribute{
 	PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 	Description: "Percent for `cpu`, `memory` and `disk` (1 to 100); failed runs in a row for " +
 		"`job_failing_streak` (2 to 10, default 3). `job_run_failed` and `job_run_missed` don't use it. " +
-		"When `alert_type` changes and this is left out, the new rule's own value is used.",
+		"When `alert_type` changes to `job_failing_streak` and this is left out, it's set to 3.",
 }
 
 var EvaluationPeriod = schema.Int64Attribute{
