@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Data source `computesphere_region`: new read-only `outbound_ips`, the
+  addresses the region's services connect out from, and
+  `build_outbound_ips`, the addresses builds connect out from, both as CIDR
+  ranges for allowlists. Each is null until the API publishes it.
 - `computesphere_database` accepts `engine = "documentdb"`: SphereDB built on
   the open-source DocumentDB engine (beta, where offered). It has its own
   instance types (`docdb-...`; list them with
