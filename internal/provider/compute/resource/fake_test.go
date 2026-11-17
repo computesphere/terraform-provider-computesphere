@@ -36,6 +36,12 @@ type fakeDeploymentsAPI struct {
 	buildReads map[string]int
 	seq        int
 	calls      []call
+	// nameHold is how many creates a deleted service's name answers 409
+	// to in its environment, as the API holds it until the delete
+	// finishes. taken answers 409 to every create: a name in use.
+	nameHold int
+	held     map[string]int
+	taken    bool
 }
 
 type call struct {
@@ -44,7 +50,7 @@ type call struct {
 }
 
 func newFakeDeploymentsAPI(t *testing.T) *fakeDeploymentsAPI {
-	return &fakeDeploymentsAPI{t: t, deps: map[string]map[string]any{}, builds: map[string]string{}, buildReads: map[string]int{}}
+	return &fakeDeploymentsAPI{t: t, deps: map[string]map[string]any{}, builds: map[string]string{}, buildReads: map[string]int{}, held: map[string]int{}}
 }
 
 func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +69,12 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method == http.MethodPost && p == "/deployments" {
+		key := fmt.Sprint(body["environment_id"], "/", body["name"])
+		if f.taken || f.held[key] > 0 {
+			f.held[key]--
+			conflict(w, fmt.Sprintf("A resource named %q in this environment is still being deleted.", body["name"]))
+			return
+		}
 		f.seq++
 		id := fmt.Sprintf("00000000-0000-4000-8000-%012d", f.seq)
 		typ, _ := body["type"].(string)
@@ -180,11 +192,20 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodPut && action == "env-vars":
 		_ = json.NewEncoder(w).Encode(map[string]any{"object": "env_vars", "env_vars": body["env_vars"], "secret_vars": map[string]any{}})
 	case r.Method == http.MethodDelete && action == "":
+		if raw, ok := d["raw"].(map[string]any); ok && f.nameHold > 0 {
+			f.held[fmt.Sprint(raw["env_id"], "/", d["name"])] = f.nameHold
+		}
 		delete(f.deps, parts[0])
 		w.WriteHeader(http.StatusNoContent)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func conflict(w http.ResponseWriter, detail string) {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(http.StatusConflict)
+	_ = json.NewEncoder(w).Encode(map[string]any{"title": "Conflict", "status": 409, "code": "conflict", "detail": detail})
 }
 
 func problem(w http.ResponseWriter, status int, detail string) {

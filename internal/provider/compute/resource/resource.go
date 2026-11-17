@@ -278,12 +278,23 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	rdr, err := jsonBody(body)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating "+r.kind.noun, err.Error())
-		return
-	}
-	created, err := r.client.CreateDeploymentWithBodyWithResponse(ctx, "application/json", rdr)
+	// A replacement under the same name waits out the API's hold on the
+	// name its delete just released.
+	held := !present(plan.ServiceID) &&
+		justDeleted(r.client, plan.EnvironmentID.ValueString(), plan.Name.ValueString())
+	var created *csv2.CreateDeploymentResp
+	err := createWaitingForName(ctx, held, func() (int, []byte, error) {
+		rdr, err := jsonBody(body)
+		if err != nil {
+			return 0, nil, err
+		}
+		c, err := r.client.CreateDeploymentWithBodyWithResponse(ctx, "application/json", rdr)
+		if err != nil {
+			return 0, nil, err
+		}
+		created = c
+		return c.StatusCode(), c.Body, nil
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating "+r.kind.noun, err.Error())
 		return
@@ -788,6 +799,7 @@ func (r *computeResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 	switch d.StatusCode() {
 	case http.StatusOK, http.StatusNoContent, http.StatusAccepted, http.StatusNotFound:
+		noteDeleted(r.client, state.EnvironmentID.ValueString(), state.Name.ValueString())
 		resp.State.RemoveResource(ctx)
 	default:
 		resp.Diagnostics.AddError("Error deleting "+r.kind.noun, cstypes.ProblemSummary(d.Body, d.StatusCode()))
