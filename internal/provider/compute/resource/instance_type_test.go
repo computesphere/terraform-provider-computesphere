@@ -6,7 +6,9 @@ import (
 
 	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/checks"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 
 	th "github.com/computesphere/terraform-provider-computesphere/internal/provider/testhelpers"
 )
@@ -64,6 +66,9 @@ func TestWorker_instanceType(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						checks.ExpectNoReplace(),
 						plancheck.ExpectResourceAction(name, plancheck.ResourceActionUpdate),
+						// An image worker has no git_repo_id; a change doesn't
+						// show it as "known after apply".
+						plancheck.ExpectKnownValue(name, tfjsonpath.New("git_repo_id"), knownvalue.Null()),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(

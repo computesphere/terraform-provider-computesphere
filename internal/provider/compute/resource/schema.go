@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -59,6 +60,24 @@ func objMods(replace bool) []planmodifier.Object {
 		return []planmodifier.Object{objectplanmodifier.RequiresReplace()}
 	}
 	return nil
+}
+
+// keepPriorValue plans an unconfigured value as the one in state, null
+// included, so a service with no git_repo_id doesn't show it as "known after
+// apply" on every change. UseStateForUnknown keeps only non-null values.
+type keepPriorValue struct{}
+
+func (keepPriorValue) Description(context.Context) string {
+	return "Keeps the value in state when the configuration doesn't set it."
+}
+
+func (m keepPriorValue) MarkdownDescription(ctx context.Context) string { return m.Description(ctx) }
+
+func (keepPriorValue) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.State.Raw.IsNull() || !req.ConfigValue.IsNull() || !req.PlanValue.IsUnknown() {
+		return
+	}
+	resp.PlanValue = req.StateValue
 }
 
 // describe appends the replacement note to a description when needed.
@@ -169,7 +188,7 @@ var attrDefs = map[string]attrDef{
 	"git_connection_id": optString("Git connection that clones the repository and delivers pushes."),
 	"git_repo_id": func(k kind, _ bool) schema.Attribute {
 		return schema.StringAttribute{Optional: true, Computed: true,
-			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			PlanModifiers: []planmodifier.String{keepPriorValue{}},
 			Description: "The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab " +
 				"sources. Sent at create, and read back. If the " + k.noun + " has none at ComputeSphere (e.g. one " +
 				"created without it), setting it only records it here. Removing it from the configuration keeps " +

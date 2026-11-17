@@ -67,7 +67,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			d["outputs"] = map[string]any{"internal_url": "app-private.example.test:8080", "url": "https://leak.example.test"}
 		}
 		if it, ok := body["instance_type"].(string); ok {
-			d["raw"].(map[string]any)["instance_type"] = resolveSize(it)
+			if raw, ok := d["raw"].(map[string]any); ok {
+				raw["instance_type"] = resolveSize(it)
+			}
 		}
 		f.deps[id] = d
 		w.WriteHeader(http.StatusCreated)
@@ -105,7 +107,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(d)
 	case r.Method == http.MethodPost && action == "scale":
 		if it, ok := body["instance_type"].(string); ok {
-			d["raw"].(map[string]any)["instance_type"] = resolveSize(it)
+			if raw, ok := d["raw"].(map[string]any); ok {
+				raw["instance_type"] = resolveSize(it)
+			}
 		}
 		w.WriteHeader(http.StatusAccepted)
 		_ = json.NewEncoder(w).Encode(d)
