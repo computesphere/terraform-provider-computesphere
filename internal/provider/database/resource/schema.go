@@ -13,7 +13,6 @@ import (
 
 func Schema(ctx context.Context) schema.Schema {
 	keep := []planmodifier.String{stringplanmodifier.UseStateForUnknown()}
-	replace := []planmodifier.String{stringplanmodifier.RequiresReplace()}
 	return schema.Schema{
 		Description: "Manages a SphereDB database: a managed database the platform runs for you. " +
 			"Pick an instance type (see the `computesphere_database_instance_types` data source), " +
@@ -24,50 +23,50 @@ func Schema(ctx context.Context) schema.Schema {
 				Description: "Database identifier.",
 			},
 			"name": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
-				Description: "Lowercase letters, digits and hyphens; unique in the environment. Changing it creates a new database.",
+				Required:    true,
+				Description: "Lowercase letters, digits and hyphens; unique in the environment. It can't change after create; a change is refused at plan time.",
 			},
 			"environment_id": schema.StringAttribute{
-				Required: true, PlanModifiers: replace,
-				Description: "Environment the database belongs to. Changing it creates a new database.",
+				Required:    true,
+				Description: "Environment the database belongs to. It can't change after create; a change is refused at plan time.",
 			},
 			"engine": schema.StringAttribute{
 				Optional: true, Computed: true, Default: stringdefault.StaticString("postgresql"),
-				PlanModifiers: replace,
-				Description:   "Database engine. Only `postgresql` today.",
+				Description: "Database engine: `postgresql` (the default), or `documentdb` for SphereDB built on the " +
+					"open-source DocumentDB engine (where offered; no extensions or public access yet). " +
+					"It can't change after create; a change is refused at plan time.",
 			},
 			"version": schema.StringAttribute{
 				Optional: true, Computed: true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
-				Description:   "Major version. Defaults to the latest supported. Changing it creates a new database.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Description:   "Major version. Defaults to the latest supported. It can't change after create; a change is refused at plan time.",
 			},
 			"instance_type": schema.StringAttribute{
-				Optional: true, Computed: true, PlanModifiers: keep,
-				Description: "Instance type id, e.g. `pg-2c-4g` (Standard 2). List them with the " +
+				Optional: true, Computed: true, PlanModifiers: sizing("instance_type"),
+				Description: "Instance type id, e.g. `pg-2c-4g` (Standard 2; `docdb-2c-4g` on the `documentdb` engine). List them with the " +
 					"`computesphere_database_instance_types` data source. Changing it resizes the database " +
 					"in place with a short restart.",
 			},
 			"high_availability": schema.StringAttribute{
-				Optional: true, Computed: true, PlanModifiers: keep,
-				Description: "`none` (one instance), `standby` (a standby in another zone with automatic failover) or " +
-					"`three_zone` (two standbys across three zones, synchronous). Standbys need an instance type " +
-					"with 1 vCPU or more.",
+				Optional: true, Computed: true, PlanModifiers: sizing("high_availability"),
+				Description: "`none` (one instance) or `standby` (a standby in another zone with automatic failover). " +
+					"Standbys need an instance type with 1 vCPU or more.",
 			},
 			"plan": schema.StringAttribute{
-				Optional: true, Computed: true, PlanModifiers: keep,
+				Optional: true, Computed: true, PlanModifiers: sizing("plan"),
 				DeprecationMessage: "Use instance_type and high_availability instead.",
 				Description: "Deprecated: use `instance_type` and `high_availability`. `hobby` is Standard 1, " +
-					"`standard` is Standard 2 on zone-redundant storage, `ha` is Standard 2 with `three_zone`.",
+					"`standard` is Standard 2 on zone-redundant storage.",
 			},
 			"storage_gb": schema.Int64Attribute{
 				Optional: true, Computed: true,
 				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
-				Description:   "Storage in GB. Defaults to 10. It can only grow.",
+				Description:   "Storage in GB. Defaults to the instance type's included storage. It can only grow.",
 			},
 			"inject": schema.BoolAttribute{
 				Optional: true, Computed: true, Default: booldefault.StaticBool(true),
 				Description: "At create, give every service in the environment the pooled connection string as " +
-					"`DATABASE_URL`. Only applies when the database is created.",
+					"`DATABASE_URL` (`MONGODB_URI` on the `documentdb` engine). Only applies when the database is created.",
 			},
 			"status":        schema.StringAttribute{Computed: true, Description: "Current status, e.g. `available`."},
 			"region":        schema.StringAttribute{Computed: true, PlanModifiers: keep, Description: "Region of the environment."},

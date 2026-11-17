@@ -48,3 +48,18 @@ func TimePtrString(t *time.Time) types.String {
 	}
 	return types.StringValue(t.Format(time.RFC3339))
 }
+
+// notificationTokenHint explains the API's 403 on notification settings: they
+// belong to a person across every account, so an API token scoped to an
+// account or a project can't read or change them.
+const notificationTokenHint = "Notification settings belong to a person across every account they're in, so an " +
+	"API token scoped to an account or a project can't read or change them. Use a full-access API token."
+
+// NotificationProblem is ProblemSummary for the notification settings
+// routes, with notificationTokenHint first on a 403.
+func NotificationProblem(body []byte, status int) string {
+	if status == http.StatusForbidden {
+		return notificationTokenHint + "\n\n" + ProblemSummary(body, status)
+	}
+	return ProblemSummary(body, status)
+}

@@ -3,12 +3,12 @@
 page_title: "computesphere_deployment Resource - computesphere"
 subcategory: ""
 description: |-
-  Deprecated: use the resource for the service's type (computesphere_web_service, computesphere_private_service, computesphere_worker, computesphere_cron_job or computesphere_static_site); a moved block carries an existing deployment over without redeploying it. Manages a deployment: a running copy of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
+  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 ---
 
 # computesphere_deployment (Resource)
 
-Deprecated: use the resource for the service's type (`computesphere_web_service`, `computesphere_private_service`, `computesphere_worker`, `computesphere_cron_job` or `computesphere_static_site`); a `moved` block carries an existing deployment over without redeploying it. Manages a deployment: a running copy of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready.
+Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 
 ## Example Usage
 
@@ -17,7 +17,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.4"
     }
   }
 }
@@ -50,17 +50,6 @@ variable "registry_password" {
   type        = string
   sensitive   = true
 }
-
-# computesphere_deployment is deprecated. Use the resource for the service's
-# type instead: computesphere_web_service, computesphere_private_service,
-# computesphere_worker, computesphere_cron_job or computesphere_static_site.
-# To carry an existing deployment over without redeploying it, replace its
-# block with the new resource and add a moved block, e.g.:
-#
-#   moved {
-#     from = computesphere_deployment.example
-#     to   = computesphere_web_service.example
-#   }
 
 # Public image, optionally with public docker build args.
 resource "computesphere_deployment" "example" {
@@ -132,10 +121,11 @@ output "deployment_status" {
 - `image_type` (String) Image visibility: "public" (default) or "private". Set to "private" to pull from an authenticated registry using image_provider/image_username/image_password/image_url.
 - `image_url` (String) Registry endpoint for a private image. Required for providers that authenticate with username + password (azure, docker, other, custom).
 - `image_username` (String) Registry username for a private image.
-- `plan_id` (String, Deprecated) Deprecated: the plan comes from the service, and the API refuses a deployment plan that differs from it.
+- `instance_type` (String) The spherelet size the deployment runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the deployment in place; the account needs room for its spherelets at that size. Set the size on the service or on its deployments, not both: a service size change resizes every deployment of the service.
+- `plan_id` (String, Deprecated) Deprecated: use `instance_type`. Plan id of the spherelet size; changing it to another plan id replaces the deployment, while removing it (to move to `instance_type`) doesn't. Can't be set together with `instance_type`.
 - `port` (Number) Container port.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables.
-- `sphere_count` (Number) Number of spherelets (replicas) to run.
+- `sphere_count` (Number) Number of spherelets to run.
 - `wait_for_ready` (Boolean) Wait for the deployment to reach a ready state after deploying.
 
 ### Read-Only

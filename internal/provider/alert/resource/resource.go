@@ -1,7 +1,10 @@
 package provider
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 
 	csv2 "github.com/computesphere/computesphere-go"
@@ -48,6 +51,8 @@ type alertResourceModel struct {
 	Threshold        types.Int64  `tfsdk:"threshold"`
 	EvaluationPeriod types.Int64  `tfsdk:"evaluation_period"`
 	Active           types.Bool   `tfsdk:"active"`
+	EffectivePeriod  types.Int64  `tfsdk:"effective_evaluation_period"`
+	Status           types.String `tfsdk:"status"`
 	ID               types.String `tfsdk:"id"`
 }
 
@@ -68,6 +73,44 @@ func (m *alertResourceModel) apply(a *csv2.AlertRule) {
 	m.Threshold = types.Int64Value(int64(a.Threshold))
 	m.EvaluationPeriod = types.Int64Value(int64(a.EvaluationPeriod))
 	m.Active = types.BoolValue(a.Active)
+	m.EffectivePeriod = types.Int64Value(int64(a.EffectiveEvaluationPeriod))
+	m.Status = types.StringValue(a.Status)
+}
+
+// set reports whether a planned value was given in the configuration.
+func set(v types.Int64) bool { return !v.IsNull() && !v.IsUnknown() }
+
+// omitUnset drops threshold and evaluation_period from a create body when
+// they aren't configured: the SDK's request type always sends them, and the
+// job alert types don't take them.
+func omitUnset(plan alertResourceModel) csv2.RequestEditorFn {
+	return func(_ context.Context, req *http.Request) error {
+		if req.Body == nil || (set(plan.Threshold) && set(plan.EvaluationPeriod)) {
+			return nil
+		}
+		raw, err := io.ReadAll(req.Body)
+		if err != nil {
+			return err
+		}
+		body := map[string]any{}
+		if err := json.Unmarshal(raw, &body); err != nil {
+			return err
+		}
+		if !set(plan.Threshold) {
+			delete(body, "threshold")
+		}
+		if !set(plan.EvaluationPeriod) {
+			delete(body, "evaluation_period")
+		}
+		out, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
+		req.Body = io.NopCloser(bytes.NewReader(out))
+		req.ContentLength = int64(len(out))
+		req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(out)), nil }
+		return nil
+	}
 }
 
 func (r *AlertResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -102,7 +145,7 @@ func (r *AlertResource) Create(ctx context.Context, req resource.CreateRequest, 
 		body.EnvironmentId = &envID
 	}
 
-	apiResp, err := r.client.CreateAlertRuleWithResponse(ctx, &csv2.CreateAlertRuleParams{XAccountId: accountID}, body)
+	apiResp, err := r.client.CreateAlertRuleWithResponse(ctx, &csv2.CreateAlertRuleParams{XAccountId: accountID}, body, omitUnset(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating alert", err.Error())
 		return
@@ -165,13 +208,17 @@ func (r *AlertResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	alertType := csv2.UpdateAlertRuleRequestAlertType(plan.AlertType.ValueString())
 	severity := csv2.UpdateAlertRuleRequestSeverityLevel(plan.Severity.ValueString())
-	evalPeriod := int(plan.EvaluationPeriod.ValueInt64())
-	threshold := int(plan.Threshold.ValueInt64())
 	body := csv2.UpdateAlertRuleRequest{
-		AlertType:        &alertType,
-		SeverityLevel:    &severity,
-		EvaluationPeriod: &evalPeriod,
-		Threshold:        &threshold,
+		AlertType:     &alertType,
+		SeverityLevel: &severity,
+	}
+	if set(plan.EvaluationPeriod) {
+		evalPeriod := int(plan.EvaluationPeriod.ValueInt64())
+		body.EvaluationPeriod = &evalPeriod
+	}
+	if set(plan.Threshold) {
+		threshold := int(plan.Threshold.ValueInt64())
+		body.Threshold = &threshold
 	}
 	if !plan.Active.IsNull() && !plan.Active.IsUnknown() {
 		active := plan.Active.ValueBool()

@@ -17,7 +17,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.4"
     }
   }
 }
@@ -64,7 +64,7 @@ output "available_instance_types" {
 
 ### Optional
 
-- `engine` (String) Database engine. Only `postgresql` today.
+- `engine` (String) Database engine: `postgresql` (the default) or `documentdb`. Their instance types share names, not ids.
 - `environment_id` (String) Price and check availability for this environment's region.
 
 ### Read-Only
@@ -80,7 +80,7 @@ Read-Only:
 - `burstable` (Boolean) True on 1–2 vCPU types, which burst to their full vCPU.
 - `engine` (String) Database engine.
 - `family` (String) `free`, `flex` (shared CPU), `standard` or `plus` (twice the memory per vCPU).
-- `high_availability_allowed` (Boolean) Whether `standby` and `three_zone` are offered.
+- `high_availability_allowed` (Boolean) Whether `standby` is offered.
 - `id` (String) Instance type id used on `computesphere_database`, e.g. `pg-2c-4g`.
 - `included_storage_gb` (Number) Storage included in the price.
 - `max_connections` (Number) Direct connections; pooled connections allow 5×.

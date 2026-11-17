@@ -1,12 +1,16 @@
 package provider
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -44,6 +48,7 @@ type deploymentResourceModel struct {
 	ProjectID     types.String `tfsdk:"project_id"`
 	Type          types.String `tfsdk:"type"`
 	PlanID        types.String `tfsdk:"plan_id"`
+	InstanceType  types.String `tfsdk:"instance_type"`
 	Image         types.String `tfsdk:"image"`
 	ImageType     types.String `tfsdk:"image_type"`
 	ImageProvider types.String `tfsdk:"image_provider"`
@@ -178,6 +183,9 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 	if !plan.SphereCount.IsNull() {
 		body.Set("spherelets", int(plan.SphereCount.ValueInt64()))
 	}
+	if v := plan.InstanceType.ValueString(); !plan.InstanceType.IsNull() && !plan.InstanceType.IsUnknown() && v != "" {
+		body.Set(spherelet.FieldType, v)
+	}
 
 	createResp, err := r.client.CreateDeploymentWithResponse(ctx, body)
 	if err != nil {
@@ -203,9 +211,10 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 			return
 		}
 		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, depID, csv2.SetEnvVarsRequest{
-			EnvVars:    envVars,
-			SecretVars: secretVars,
-		}); everr != nil {
+			EnvVars:      envVars,
+			SecretVars:   secretVars,
+			SkipRedeploy: &skipRedeploy,
+		}, wholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
@@ -226,7 +235,7 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, depID, upd); uerr != nil {
+		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, depID, upd, withSkipRedeploy); uerr != nil {
 			resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
 			return
 		} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
@@ -259,10 +268,9 @@ func deploymentNeedsUpdate(ctx context.Context, plan deploymentResourceModel, di
 // deploy triggers a deploy and, when wait_for_ready is set, blocks until the
 // deployment settles into a terminal state.
 func (r *DeploymentResource) deploy(ctx context.Context, id uuid.UUID, plan deploymentResourceModel, diags *diag.Diagnostics) bool {
+	// The deploy body takes no spherelet count: create sends it in the create
+	// body and Update saves a new one through scale first.
 	deployBody := csv2.DeployDeploymentJSONRequestBody{}
-	if !plan.SphereCount.IsNull() {
-		deployBody["sphere_count"] = int(plan.SphereCount.ValueInt64())
-	}
 	dResp, err := r.client.DeployDeploymentWithResponse(ctx, id, deployBody)
 	if err != nil {
 		diags.AddError("Error deploying", err.Error())
@@ -342,6 +350,8 @@ func (r *DeploymentResource) refreshStatus(ctx context.Context, id uuid.UUID, m 
 	m.Name = types.StringValue(getResp.JSON200.Name)
 	m.Status = types.StringValue(getResp.JSON200.Status)
 	m.Type = types.StringValue(getResp.JSON200.Type)
+	f := spherelet.ReadDeploymentFields(getResp.Body)
+	m.InstanceType = spherelet.Value(m.InstanceType, f.InstanceType, f.InstanceTypePresent, spherelet.AliasLookup(ctx, r.client))
 
 	if st, serr := r.client.GetDeploymentStatusWithResponse(ctx, id); serr == nil && st.StatusCode() == http.StatusOK && st.JSON200 != nil {
 		m.Status = types.StringValue(st.JSON200.Status)
@@ -376,6 +386,8 @@ func (r *DeploymentResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.Name = types.StringValue(getResp.JSON200.Name)
 	state.Status = types.StringValue(getResp.JSON200.Status)
 	state.Type = types.StringValue(getResp.JSON200.Type)
+	f := spherelet.ReadDeploymentFields(getResp.Body)
+	state.InstanceType = spherelet.Value(state.InstanceType, f.InstanceType, f.InstanceTypePresent, spherelet.AliasLookup(ctx, r.client))
 	if st, serr := r.client.GetDeploymentStatusWithResponse(ctx, id); serr == nil && st.StatusCode() == http.StatusOK && st.JSON200 != nil {
 		state.Status = types.StringValue(st.JSON200.Status)
 	}
@@ -395,30 +407,83 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 	plan.ID = state.ID
+	plan.Name = state.Name
+	plan.Status = state.Status
 
-	upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	if plan.InstanceType.IsUnknown() {
+		// Not configured and not known before (the API didn't say): keep
+		// what state has; the read after the deploy fills it in.
+		plan.InstanceType = state.InstanceType
 	}
-	if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd); uerr != nil {
-		resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
-		return
-	} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
-		resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+	patch := updateFieldsChanged(plan, state)
+	vars := !plan.EnvVars.Equal(state.EnvVars) || !plan.SecretVars.Equal(state.SecretVars)
+	countChanged := !plan.SphereCount.IsNull() && !plan.SphereCount.Equal(state.SphereCount)
+	sizeChanged := !plan.InstanceType.IsNull() && !plan.InstanceType.IsUnknown() && !plan.InstanceType.Equal(state.InstanceType)
+	if !patch && !vars && !countChanged && !sizeChanged {
+		// Only wait_for_ready changed: a provider setting, nothing to send.
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 		return
 	}
 
-	envVars := mapToStringPtr(ctx, plan.EnvVars, &resp.Diagnostics)
-	secretVars := mapToStringPtr(ctx, plan.SecretVars, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	if patch {
+		upd := buildUpdateBody(ctx, plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if plan.BuildArgs.IsNull() && !state.BuildArgs.IsNull() {
+			// An explicit null clears the saved build args.
+			if upd.BuildConfig == nil {
+				upd.BuildConfig = &csv2.DeploymentUpdateRequest_BuildConfig{}
+			}
+			upd.BuildConfig.Set("build_args", nil)
+		}
+		if uResp, uerr := r.client.UpdateDeploymentWithResponse(ctx, id, upd, withSkipRedeploy); uerr != nil {
+			resp.Diagnostics.AddError("Error updating deployment", uerr.Error())
+			return
+		} else if uResp.StatusCode() != http.StatusOK && uResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error updating deployment", cstypes.ProblemSummary(uResp.Body, uResp.StatusCode()))
+			return
+		}
 	}
-	if envVars != nil || secretVars != nil {
-		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, csv2.SetEnvVarsRequest{EnvVars: envVars, SecretVars: secretVars}); everr != nil {
+
+	if vars {
+		// Send only the map that changed: an omitted map is left as it is, and
+		// an empty one clears it, so removing env_vars or secret_vars from the
+		// configuration removes the variables.
+		body := csv2.SetEnvVarsRequest{SkipRedeploy: &skipRedeploy}
+		if !plan.EnvVars.Equal(state.EnvVars) {
+			body.EnvVars = mapOrEmpty(ctx, plan.EnvVars, &resp.Diagnostics)
+		}
+		if !plan.SecretVars.Equal(state.SecretVars) {
+			body.SecretVars = mapOrEmpty(ctx, plan.SecretVars, &resp.Diagnostics)
+		}
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body, wholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
 			resp.Diagnostics.AddError("Error setting deployment env vars", cstypes.ProblemSummary(evResp.Body, evResp.StatusCode()))
+			return
+		}
+	}
+
+	if countChanged || sizeChanged {
+		// The spherelet count and size change only through scale.
+		body := csv2.ScaleRequest{SkipRedeploy: &skipRedeploy}
+		if countChanged {
+			body.Spherelets = int(plan.SphereCount.ValueInt64())
+		}
+		size := ""
+		if sizeChanged {
+			size = plan.InstanceType.ValueString()
+		}
+		if sResp, serr := r.client.ScaleDeploymentWithResponse(ctx, id, body, scaleBody(countChanged, size)); serr != nil {
+			resp.Diagnostics.AddError("Error scaling deployment", serr.Error())
+			return
+		} else if sResp.StatusCode() != http.StatusOK && sResp.StatusCode() != http.StatusAccepted {
+			resp.Diagnostics.AddError("Error scaling deployment", cstypes.ProblemSummary(sResp.Body, sResp.StatusCode()))
 			return
 		}
 	}
@@ -428,6 +493,27 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	r.refreshStatus(ctx, id, &plan, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// updateFieldsChanged reports whether a field sent through the update request
+// (image, registry auth, build args or port) differs between plan and state.
+func updateFieldsChanged(plan, state deploymentResourceModel) bool {
+	return !plan.Image.Equal(state.Image) ||
+		!plan.ImageType.Equal(state.ImageType) ||
+		!plan.ImageProvider.Equal(state.ImageProvider) ||
+		!plan.ImageUsername.Equal(state.ImageUsername) ||
+		!plan.ImagePassword.Equal(state.ImagePassword) ||
+		!plan.ImageURL.Equal(state.ImageURL) ||
+		!plan.BuildArgs.Equal(state.BuildArgs) ||
+		!plan.Port.Equal(state.Port)
+}
+
+// mapOrEmpty is the map's value, or an empty map when it is null.
+func mapOrEmpty(ctx context.Context, m types.Map, diags *diag.Diagnostics) *map[string]string {
+	if v := mapToStringPtr(ctx, m, diags); v != nil {
+		return v
+	}
+	return &map[string]string{}
 }
 
 func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -456,4 +542,78 @@ func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *DeploymentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// wholeSet marks an env-var write as the whole set (replace=true): the maps
+// Terraform sends are the configuration, so keys left out are meant to go.
+func wholeSet(_ context.Context, req *http.Request) error {
+	q := req.URL.Query()
+	q.Set("replace", "true")
+	req.URL.RawQuery = q.Encode()
+	return nil
+}
+
+// skipRedeploy is sent on every write before the deploy: each write would
+// otherwise roll the deployment out on its own, and the one deploy at the end
+// of Create and Update rolls out every saved change together.
+var skipRedeploy = true
+
+// withSkipRedeploy adds skip_redeploy to an update body. The SDK's update
+// request type doesn't carry the field, which the update API takes.
+func withSkipRedeploy(_ context.Context, req *http.Request) error {
+	if req.Body == nil {
+		return nil
+	}
+	raw, err := io.ReadAll(req.Body)
+	if err != nil {
+		return err
+	}
+	body := map[string]any{}
+	if len(bytes.TrimSpace(raw)) > 0 {
+		if err := json.Unmarshal(raw, &body); err != nil {
+			return err
+		}
+	}
+	body["skip_redeploy"] = true
+	out, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req.Body = io.NopCloser(bytes.NewReader(out))
+	req.ContentLength = int64(len(out))
+	req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(out)), nil }
+	return nil
+}
+
+// scaleBody fits the scale request to what changes: the SDK's request type
+// always sends spherelets and has no instance_type, so a size-only change
+// would otherwise ask for 0 spherelets.
+func scaleBody(withCount bool, instanceType string) csv2.RequestEditorFn {
+	return func(_ context.Context, req *http.Request) error {
+		if req.Body == nil {
+			return nil
+		}
+		raw, err := io.ReadAll(req.Body)
+		if err != nil {
+			return err
+		}
+		body := map[string]any{}
+		if err := json.Unmarshal(raw, &body); err != nil {
+			return err
+		}
+		if !withCount {
+			delete(body, "spherelets")
+		}
+		if instanceType != "" {
+			body[spherelet.FieldType] = instanceType
+		}
+		out, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
+		req.Body = io.NopCloser(bytes.NewReader(out))
+		req.ContentLength = int64(len(out))
+		req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(out)), nil }
+		return nil
+	}
 }

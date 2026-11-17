@@ -7,6 +7,7 @@ import (
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/dataproduct"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -76,10 +77,13 @@ func (r *DatabaseResource) Configure(ctx context.Context, req resource.Configure
 }
 
 var (
-	validEngines  = map[string]bool{"postgresql": true}
+	validEngines  = map[string]bool{"postgresql": true, "documentdb": true}
 	validVersions = map[string]bool{"16": true, "17": true, "18": true}
-	validHA       = map[string]bool{"none": true, "standby": true, "three_zone": true}
-	validPlans    = map[string]bool{"hobby": true, "standard": true, "ha": true}
+	// three_zone isn't offered for new databases (the API refuses it; see
+	// ModifyPlan) and the deprecated plan ha isn't listed, but both stay valid so
+	// existing configurations keep planning.
+	validHA    = map[string]bool{"none": true, "standby": true, "three_zone": true}
+	validPlans = map[string]bool{"hobby": true, "standard": true, "ha": true}
 )
 
 // ValidateConfig mirrors the API's create rules so mistakes surface at plan
@@ -109,13 +113,30 @@ func (r *DatabaseResource) ValidateConfig(ctx context.Context, req resource.Vali
 			resp.Diagnostics.AddAttributeError(path.Root(attr), "Invalid value", fmt.Sprintf("%s must be one of %s.", attr, list))
 		}
 	}
-	check("engine", c.Engine, validEngines, "postgresql")
+	check("engine", c.Engine, validEngines, "postgresql, documentdb")
 	check("version", c.Version, validVersions, "16, 17, 18")
-	check("high_availability", c.HighAvailability, validHA, "none, standby, three_zone")
-	check("plan", c.Plan, validPlans, "hobby, standard, ha")
+	if msg := engineVersionError(c.Engine.ValueString(), c.Version.ValueString()); set(c.Engine) && set(c.Version) && msg != "" {
+		resp.Diagnostics.AddAttributeError(path.Root("version"), "Invalid value", msg)
+	}
+	if set(c.Plan) && c.Engine.ValueString() == "documentdb" {
+		resp.Diagnostics.AddAttributeError(path.Root("plan"), "Invalid value",
+			"plan is deprecated and not available on the documentdb engine; set instance_type.")
+	}
+	check("high_availability", c.HighAvailability, validHA, "none, standby")
+	check("plan", c.Plan, validPlans, "hobby, standard")
 	if !c.StorageGB.IsNull() && !c.StorageGB.IsUnknown() && (c.StorageGB.ValueInt64() < 1 || c.StorageGB.ValueInt64() > 2048) {
 		resp.Diagnostics.AddAttributeError(path.Root("storage_gb"), "Invalid value", "storage_gb must be between 1 and 2048.")
 	}
+}
+
+// engineVersionError says why a version doesn't fit the engine, or "".
+// On the documentdb engine, version is the PostgreSQL major it runs on:
+// 18 only, and the default when left unset.
+func engineVersionError(engine, version string) string {
+	if engine == "documentdb" && version != "18" {
+		return "version must be 18 (the PostgreSQL version the DocumentDB engine runs on), or left unset."
+	}
+	return ""
 }
 
 // apply maps a v2 Database into Terraform state. inject is create-only and
@@ -292,6 +313,13 @@ func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, r
 		resp.State.RemoveResource(ctx)
 		return
 	}
+	if state.Inject.IsNull() {
+		// Just imported: take inject from the database's current injection so
+		// the first plan doesn't show a change. Kept as the default on failure.
+		if inj, err := r.client.GetDatabaseInjectionWithResponse(ctx, id); err == nil && inj.JSON200 != nil {
+			state.Inject = types.BoolValue(inj.JSON200.Mode != csv2.DatabaseInjectionModeNone)
+		}
+	}
 	state.apply(db)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -301,6 +329,9 @@ func (r *DatabaseResource) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !dataproduct.RefuseChangeInUpdate(ctx, req, resp, "database", "name", "environment_id", "engine", "version") {
 		return
 	}
 	id, err := uuid.Parse(state.ID.ValueString())

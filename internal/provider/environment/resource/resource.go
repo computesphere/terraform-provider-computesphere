@@ -2,12 +2,14 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -47,6 +49,13 @@ type environmentResourceModel struct {
 	ProjectID types.String `tfsdk:"project_id"`
 	ID        types.String `tfsdk:"id"`
 	CreatedAt types.String `tfsdk:"created_at"`
+
+	DeployPolicy         types.String `tfsdk:"deploy_policy"`
+	DefaultURLDisabled   types.Bool   `tfsdk:"default_url_disabled"`
+	NetworkPolicyEnabled types.Bool   `tfsdk:"network_policy_enabled"`
+	IPAllowlist          types.List   `tfsdk:"ip_allowlist"`
+	SubDomain            types.String `tfsdk:"sub_domain"`
+	Kind                 types.String `tfsdk:"kind"`
 }
 
 func (r *EnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -92,8 +101,25 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	created := apiResp.JSON201
+	eid, err := uuid.Parse(created.Id)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid environment id", err.Error())
+		return
+	}
+	// The create body takes no settings: send the ones the plan sets.
+	e := r.writeSettings(ctx, eid, plan, environmentResourceModel{}, false, nil, created, &resp.Diagnostics)
+	if e == nil {
+		// Save what was created so a retry doesn't create a second one.
+		var partial environmentResourceModel
+		partial.apply(created)
+		partial.applySettings(ctx, created, &resp.Diagnostics)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &partial)...)
+		return
+	}
 	var state environmentResourceModel
-	state.apply(apiResp.JSON201)
+	state.apply(e)
+	state.applySettings(ctx, e, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -125,6 +151,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	state.apply(apiResp.JSON200)
+	state.applySettings(ctx, apiResp.JSON200, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -143,21 +170,35 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	name := plan.Name.ValueString()
-	apiResp, err := r.client.UpdateEnvironmentWithResponse(ctx, eid, csv2.UpdateEnvironmentRequest{
-		Name: &name,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating environment", err.Error())
-		return
-	}
-	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
-		resp.Diagnostics.AddError("Error updating environment", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
-		return
+	if !plan.ProjectID.Equal(state.ProjectID) {
+		// A project change moves the environment and everything in it. The
+		// plan-time check can't run when the project was unknown then, so
+		// check again before anything is sent.
+		n, cerr := r.deploymentCount(ctx, eid.String())
+		if cerr != nil {
+			resp.Diagnostics.AddError("Can't check the environment's services", cerr.Error())
+			return
+		}
+		if n > 0 {
+			resp.Diagnostics.AddAttributeError(path.Root("project_id"), "project_id can't change while the environment runs services",
+				fmt.Sprintf("This environment runs %d service(s); nothing was moved. Move it in the console or with "+
+					"the CLI, then set project_id here and on the services that moved with it.", n))
+			return
+		}
+		if err := moveEnvironment(ctx, r.client, eid.String(), plan.ProjectID.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Error moving environment to another project", err.Error())
+			return
+		}
 	}
 
+	name := plan.Name.ValueString()
+	e := r.writeSettings(ctx, eid, plan, state, true, &name, nil, &resp.Diagnostics)
+	if e == nil {
+		return
+	}
 	var newState environmentResourceModel
-	newState.apply(apiResp.JSON200)
+	newState.apply(e)
+	newState.applySettings(ctx, e, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 

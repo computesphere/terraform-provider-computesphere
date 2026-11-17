@@ -23,6 +23,7 @@ import (
 
 	alertresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/resource"
 	apitokenresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/api_token/resource"
+	cacheresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/cache/resource"
 	computeresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/compute/resource"
 	customdomainresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/custom_domain/resource"
 	databaseresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/database/resource"
@@ -31,20 +32,25 @@ import (
 	guardrailresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/resource"
 	notificationresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/resource"
 	projectresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/project/resource"
+	queueresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/queue/resource"
+	secretsourceresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/secret_source/resource"
 	serviceresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/service/resource"
 	teamresource "github.com/computesphere/terraform-provider-computesphere/internal/provider/team/resource"
 
 	// Datasource imports
 
 	alertdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/alert/datasource"
+	cachedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/cache/datasource"
 	databasedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/database/datasource"
 	environmentdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/environment/datasource"
 	guardraildatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/guardrail/datasource"
 	notificationdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/notification_setting/datasource"
 	plandatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/plan/datasource"
 	projectdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/project/datasource"
+	queuedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/queue/datasource"
 	regiondatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/region/datasource"
 	servicedatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/service/datasource"
+	sphereletdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet/datasource"
 	subscriptiondatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/subscription/datasource"
 	teamdatasource "github.com/computesphere/terraform-provider-computesphere/internal/provider/team/datasource"
 )
@@ -313,11 +319,16 @@ func (p *ComputeSphereProvider) Resources(_ context.Context) []func() resource.R
 		alertresource.NewAlertResource,
 		deploymentresource.NewDeploymentResource,
 		customdomainresource.NewCustomDomainResource,
+		cacheresource.NewCacheResource,
 		databaseresource.NewDatabaseResource,
+		queueresource.NewQueueResource,
 		environmentresource.NewEnvironmentResource,
+		environmentresource.NewEnvironmentVariablesResource,
+		environmentresource.NewEnvironmentSecretsResource,
 		guardrailresource.NewGuardrailResource,
 		projectresource.NewProjectResource,
 		serviceresource.NewServiceResource,
+		secretsourceresource.NewSecretSourceResource,
 		apitokenresource.NewApiTokenResource,
 		teamresource.NewTeamResource,
 		computeresource.NewWebServiceResource,
@@ -333,7 +344,12 @@ func (p *ComputeSphereProvider) DataSources(_ context.Context) []func() datasour
 		notificationdatasource.NewNotificationSettingDataSource,
 		alertdatasource.NewAlertDataSource,
 		alertdatasource.NewAlertsDataSource,
+		cachedatasource.NewInstanceTypesDataSource,
+		cachedatasource.NewConnectionDataSource,
 		databasedatasource.NewInstanceTypesDataSource,
+		databasedatasource.NewConnectionDataSource,
+		queuedatasource.NewInstanceTypesDataSource,
+		queuedatasource.NewConnectionDataSource,
 		environmentdatasource.NewEnvironmentDataSource,
 		environmentdatasource.NewEnvironmentsDataSource,
 		environmentdatasource.NewEnvironmentVariablesDataSource,
@@ -347,6 +363,7 @@ func (p *ComputeSphereProvider) DataSources(_ context.Context) []func() datasour
 		regiondatasource.NewRegionsDataSource,
 		servicedatasource.NewServiceDataSource,
 		servicedatasource.NewServicesDataSource,
+		sphereletdatasource.NewTypesDataSource,
 		subscriptiondatasource.NewSubscriptionDataSource,
 		subscriptiondatasource.NewSubscriptionsDataSource,
 		teamdatasource.NewTeamDataSource,

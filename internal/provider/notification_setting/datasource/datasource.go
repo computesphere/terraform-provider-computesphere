@@ -63,7 +63,7 @@ func (d *NotificationSettingDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 	if apiResp.StatusCode() != http.StatusOK || apiResp.JSON200 == nil {
-		resp.Diagnostics.AddError("Error reading notification setting", cstypes.ProblemSummary(apiResp.Body, apiResp.StatusCode()))
+		resp.Diagnostics.AddError("Error reading notification setting", cstypes.NotificationProblem(apiResp.Body, apiResp.StatusCode()))
 		return
 	}
 	n := apiResp.JSON200
