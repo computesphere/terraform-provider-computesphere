@@ -67,7 +67,12 @@ Full per-attribute documentation for every resource and data source lives under
 | Resource     | computesphere_environment_variables  | [environment/resource](internal/provider/environment/resource/) |
 | Resource     | computesphere_environment_secrets    | [environment/resource](internal/provider/environment/resource/) |
 | Resource     | computesphere_service                | [service/resource](internal/provider/service/resource/)      |
-| Resource     | computesphere_deployment             | [deployment/resource](internal/provider/deployment/resource/) |
+| Resource     | computesphere_web_service            | [compute/resource](internal/provider/compute/resource/)      |
+| Resource     | computesphere_private_service        | [compute/resource](internal/provider/compute/resource/)      |
+| Resource     | computesphere_worker                 | [compute/resource](internal/provider/compute/resource/)      |
+| Resource     | computesphere_cron_job               | [compute/resource](internal/provider/compute/resource/)      |
+| Resource     | computesphere_static_site            | [compute/resource](internal/provider/compute/resource/)      |
+| Resource     | computesphere_deployment (deprecated) | [deployment/resource](internal/provider/deployment/resource/) |
 | Resource     | computesphere_team                   | [team/resource](internal/provider/team/resource/)            |
 | Resource     | computesphere_api_token              | [api_token/resource](internal/provider/api_token/resource/)  |
 | Resource     | computesphere_alert                  | [alert/resource](internal/provider/alert/resource/)          |

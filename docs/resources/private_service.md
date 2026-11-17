@@ -17,7 +17,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.5"
     }
   }
 }
@@ -119,6 +119,7 @@ moved {
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
 - `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password.
 - `image_username` (String) Registry username of a private image.
+- `instance_type` (String) The spherelet size the private service runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the private service in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
 - `port` (Number) Port the service listens on. Defaults to 8080.
 - `predeploy_command` (String) Command run before each new version starts serving, e.g. database migrations. Changing it creates a new private service.

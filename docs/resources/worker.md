@@ -17,7 +17,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.5"
     }
   }
 }
@@ -50,9 +50,10 @@ resource "computesphere_worker" "jobs" {
   environment_id = var.environment_id
   project_id     = var.project_id
 
-  image        = "acme/app:2.4.0"
-  command      = "bin/worker --queue default"
-  sphere_count = 2
+  image         = "acme/app:2.4.0"
+  command       = "bin/worker --queue default"
+  sphere_count  = 2
+  instance_type = "FLX"
 
   env_vars = {
     QUEUE_CONCURRENCY = "8"
@@ -115,6 +116,7 @@ moved {
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
 - `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password.
 - `image_username` (String) Registry username of a private image.
+- `instance_type` (String) The spherelet size the background worker runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the background worker in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.

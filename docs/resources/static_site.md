@@ -17,7 +17,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.5"
     }
   }
 }
@@ -96,19 +96,19 @@ moved {
 
 ### Required
 
+- `build_command` (String) Build command.
 - `environment_id` (String) Environment the static site runs in. Changing it creates a new static site.
+- `git_url` (String) Repository to build from. Set this or `image`.
 - `project_id` (String) Project the service belongs to. Changing it creates a new static site.
 - `service_id` (String) Service this static site runs; its name and plan are taken from the service. Changing it creates a new static site.
 
 ### Optional
 
 - `branch` (String) Branch to build and to deploy on push.
-- `build_command` (String) Build command.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
 - `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the static site has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the static site's is refused at plan time, because the API can't change it.
-- `git_url` (String) Repository to build from. Set this or `image`.
 - `install_command` (String) Dependency install command, e.g. `npm ci`.
 - `network_access` (Attributes) Who can reach the static site. (see [below for nested schema](#nestedatt--network_access))
 - `publish_directory` (String) Directory the build emits and that gets published, e.g. `dist`. Defaults to `dist`.
@@ -135,7 +135,7 @@ Required:
 
 Optional:
 
-- `default_url_disabled` (Boolean) Turn off the default ComputeSphere address. Needs a verified custom domain that is serving.
+- `default_url_disabled` (Boolean) Turn off the default ComputeSphere address. Needs a custom domain that is verified and serving, so it can't be set when the static site is created: add the domain first, then set this.
 - `whitelisted_ips` (List of String) Addresses or CIDR ranges allowed in when `type` is `restricted_access`.
 
 ## Import

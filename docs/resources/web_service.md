@@ -17,7 +17,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.5"
     }
   }
 }
@@ -50,9 +50,10 @@ resource "computesphere_web_service" "app" {
   environment_id = var.environment_id
   project_id     = var.project_id
 
-  image        = "nginx:1.27"
-  port         = 8080
-  sphere_count = 2
+  image         = "nginx:1.27"
+  port          = 8080
+  sphere_count  = 2
+  instance_type = "sl-1c-2g" # or leave it out to use the service's size
 
   env_vars = {
     LOG_LEVEL = "info"
@@ -171,6 +172,7 @@ moved {
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
 - `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password.
 - `image_username` (String) Registry username of a private image.
+- `instance_type` (String) The spherelet size the web service runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the web service in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
 - `network_access` (Attributes) Who can reach the web service. (see [below for nested schema](#nestedatt--network_access))
 - `port` (Number) Port the service listens on. Defaults to 8080.
@@ -234,7 +236,7 @@ Required:
 
 Optional:
 
-- `default_url_disabled` (Boolean) Turn off the default ComputeSphere address. Needs a verified custom domain that is serving.
+- `default_url_disabled` (Boolean) Turn off the default ComputeSphere address. Needs a custom domain that is verified and serving, so it can't be set when the web service is created: add the domain first, then set this.
 - `whitelisted_ips` (List of String) Addresses or CIDR ranges allowed in when `type` is `restricted_access`.
 
 ## Import

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.5"
     }
   }
 }
@@ -35,9 +35,10 @@ resource "computesphere_web_service" "app" {
   environment_id = var.environment_id
   project_id     = var.project_id
 
-  image        = "nginx:1.27"
-  port         = 8080
-  sphere_count = 2
+  image         = "nginx:1.27"
+  port          = 8080
+  sphere_count  = 2
+  instance_type = "sl-1c-2g" # or leave it out to use the service's size
 
   env_vars = {
     LOG_LEVEL = "info"

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     computesphere = {
       source  = "computesphere/computesphere"
-      version = "~> 1.1"
+      version = "~> 1.5"
     }
   }
 }
@@ -35,9 +35,10 @@ resource "computesphere_worker" "jobs" {
   environment_id = var.environment_id
   project_id     = var.project_id
 
-  image        = "acme/app:2.4.0"
-  command      = "bin/worker --queue default"
-  sphere_count = 2
+  image         = "acme/app:2.4.0"
+  command       = "bin/worker --queue default"
+  sphere_count  = 2
+  instance_type = "FLX"
 
   env_vars = {
     QUEUE_CONCURRENCY = "8"
