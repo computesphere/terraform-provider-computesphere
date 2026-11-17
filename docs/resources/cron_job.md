@@ -127,7 +127,7 @@ moved {
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
 - `version` (String) Language version of a native build, e.g. `20` for Node.js.
-- `wait_for_ready` (Boolean) Wait for the cron job to finish deploying after create and change. Defaults to true.
+- `wait_for_ready` (Boolean) Wait for the cron job to finish deploying after create and change, and for a build first when the change starts one. Defaults to true.
 - `watch_paths` (List of String) gitignore-style globs; a push builds only when a changed file matches one. Defaults to `root_dir`, else every push.
 
 ### Read-Only
