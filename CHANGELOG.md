@@ -1,5 +1,56 @@
 # Changelog
 
+## Unreleased
+
+### New resources
+
+- New resources, one per compute type: `computesphere_web_service`,
+  `computesphere_private_service`, `computesphere_worker`,
+  `computesphere_cron_job` and `computesphere_static_site`. Each takes only
+  its type's fields. A field the API can set only at create forces a new
+  resource (the pre-deploy command); everything else changes in place, and
+  an apply rolls the service out once, however many settings it changes.
+  A git-built service rolls out through a new build when its build settings
+  change; its first build starts when it's created.
+  - Set `service_id` to run an existing service, or `name` to create a new
+    service with the resource. A private service can only be created with
+    `name`. Deleting a resource also deletes its service when it's the
+    service's last deployment, with `service_id` too; set
+    `create_before_destroy` on a `service_id` resource whose changes replace
+    it.
+  - `env_vars` and `secret_vars`, once set, own the whole set: a variable
+    set elsewhere and not listed is removed.
+  - `instance_type` (all but static sites): the spherelet size, e.g.
+    `sl-1c-2g` or `FLX`. It defaults to the service's size and changes in
+    place, except on a cron job, where a new size creates a new cron job.
+  - `git_repo_id` (needed for GitLab sources) is sent at create and read
+    back. Setting it on a service that has none only records it, removing
+    it from the configuration keeps the recorded value, and a value that
+    differs from the service's is refused at plan time.
+  - `image_password` is write-only (Terraform 1.11 or later): never stored
+    in state. Increase `image_password_wo_version` to rotate it in place; it
+    is also sent with every image change, since the API keeps a stored
+    password only for the same registry.
+  - A cron job needs `schedule` and `command`, and a static site `git_url`
+    and `build_command`.
+  - Removing `network_access` opens the service to everyone again.
+    `default_url_disabled` can't be set when the service is created: add
+    its custom domain first.
+  - Warnings the API returns (for example a size it picked, or a plain
+    variable that looks like a credential) show as Terraform warnings.
+- Switching a git-built web service, private service, worker or cron job to
+  an image in place is refused at plan time for now. Create a new resource
+  for the image instead.
+
+### Deprecated
+
+- `computesphere_deployment`. A `moved` block carries a deployment over to
+  the resource for its type (Terraform 1.8 or later); its size carries over
+  as `instance_type`. Keep `service_id` in the new block. The move itself
+  doesn't redeploy; settings the old resource didn't track (for example a
+  health check, or a cron job's schedule) apply as one in-place update,
+  which rolls the service out.
+
 ## 1.4.0
 
 ### New resources and data sources

@@ -27,13 +27,20 @@ func Schema(ctx context.Context) schema.Schema {
 		}, removedDescription, removedDescription,
 	)}
 	return schema.Schema{
-		Description: "Manages a deployment: a running instance of a service in an environment. " +
+		Description: "Deprecated: use the resource for the service's type (`computesphere_web_service`, " +
+			"`computesphere_private_service`, `computesphere_worker`, `computesphere_cron_job` or " +
+			"`computesphere_static_site`); a `moved` block carries an existing deployment over without " +
+			"redeploying it. Manages a deployment: a running copy of a service in an environment. " +
 			"Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, " +
 			"and (by default) waits for it to become ready. " +
 			"Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update " +
 			"the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet " +
 			"size (plan_id), or removing the image, an image_* setting, port or the spherelet count " +
 			"(sphere_count), replaces it.",
+		DeprecationMessage: "Use the resource for the service's type: computesphere_web_service, " +
+			"computesphere_private_service, computesphere_worker, computesphere_cron_job or " +
+			"computesphere_static_site. A moved block (Terraform 1.8 or later) carries an existing deployment " +
+			"over; the move itself doesn't redeploy.",
 		Attributes: map[string]schema.Attribute{
 			// The id stays the same through an in-place update.
 			"id": schema.StringAttribute{Computed: true, Description: "Deployment id.", PlanModifiers: []planmodifier.String{

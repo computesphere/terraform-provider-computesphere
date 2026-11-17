@@ -3,12 +3,12 @@
 page_title: "computesphere_deployment Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
+  Deprecated: use the resource for the service's type (computesphere_web_service, computesphere_private_service, computesphere_worker, computesphere_cron_job or computesphere_static_site); a moved block carries an existing deployment over without redeploying it. Manages a deployment: a running copy of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 ---
 
 # computesphere_deployment (Resource)
 
-Manages a deployment: a running instance of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
+Deprecated: use the resource for the service's type (`computesphere_web_service`, `computesphere_private_service`, `computesphere_worker`, `computesphere_cron_job` or `computesphere_static_site`); a `moved` block carries an existing deployment over without redeploying it. Manages a deployment: a running copy of a service in an environment. Creating this resource creates the deployment, applies any env/secret vars, triggers a deploy, and (by default) waits for it to become ready. Changes to the image, registry auth, build args, port, spherelet count and env/secret vars update the deployment in place. Changing service_id, environment_id, project_id, type or the spherelet size (plan_id), or removing the image, an image_* setting, port or the spherelet count (sphere_count), replaces it.
 
 ## Example Usage
 
@@ -50,6 +50,19 @@ variable "registry_password" {
   type        = string
   sensitive   = true
 }
+
+# computesphere_deployment is deprecated. Use the resource for the service's
+# type instead: computesphere_web_service, computesphere_private_service,
+# computesphere_worker, computesphere_cron_job or computesphere_static_site.
+# To carry an existing deployment over (Terraform 1.8 or later), replace its
+# block with the new resource, keeping service_id, and add a moved block. The
+# move itself doesn't redeploy; settings the old resource didn't track apply
+# as one in-place update, which rolls the service out. For example:
+#
+#   moved {
+#     from = computesphere_deployment.example
+#     to   = computesphere_web_service.example
+#   }
 
 # Public image, optionally with public docker build args.
 resource "computesphere_deployment" "example" {

@@ -214,7 +214,7 @@ func (r *DeploymentResource) Create(ctx context.Context, req resource.CreateRequ
 			EnvVars:      envVars,
 			SecretVars:   secretVars,
 			SkipRedeploy: &skipRedeploy,
-		}, wholeSet); everr != nil {
+		}, cstypes.WholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
@@ -452,15 +452,15 @@ func (r *DeploymentResource) Update(ctx context.Context, req resource.UpdateRequ
 		// configuration removes the variables.
 		body := csv2.SetEnvVarsRequest{SkipRedeploy: &skipRedeploy}
 		if !plan.EnvVars.Equal(state.EnvVars) {
-			body.EnvVars = mapOrEmpty(ctx, plan.EnvVars, &resp.Diagnostics)
+			body.EnvVars = cstypes.MapOrEmpty(ctx, plan.EnvVars, &resp.Diagnostics)
 		}
 		if !plan.SecretVars.Equal(state.SecretVars) {
-			body.SecretVars = mapOrEmpty(ctx, plan.SecretVars, &resp.Diagnostics)
+			body.SecretVars = cstypes.MapOrEmpty(ctx, plan.SecretVars, &resp.Diagnostics)
 		}
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body, wholeSet); everr != nil {
+		if evResp, everr := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, body, cstypes.WholeSet); everr != nil {
 			resp.Diagnostics.AddError("Error setting deployment env vars", everr.Error())
 			return
 		} else if evResp.StatusCode() != http.StatusOK {
@@ -508,14 +508,6 @@ func updateFieldsChanged(plan, state deploymentResourceModel) bool {
 		!plan.Port.Equal(state.Port)
 }
 
-// mapOrEmpty is the map's value, or an empty map when it is null.
-func mapOrEmpty(ctx context.Context, m types.Map, diags *diag.Diagnostics) *map[string]string {
-	if v := mapToStringPtr(ctx, m, diags); v != nil {
-		return v
-	}
-	return &map[string]string{}
-}
-
 func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state deploymentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -542,15 +534,6 @@ func (r *DeploymentResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *DeploymentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-// wholeSet marks an env-var write as the whole set (replace=true): the maps
-// Terraform sends are the configuration, so keys left out are meant to go.
-func wholeSet(_ context.Context, req *http.Request) error {
-	q := req.URL.Query()
-	q.Set("replace", "true")
-	req.URL.RawQuery = q.Encode()
-	return nil
 }
 
 // skipRedeploy is sent on every write before the deploy: each write would

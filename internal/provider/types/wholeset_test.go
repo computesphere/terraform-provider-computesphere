@@ -1,4 +1,4 @@
-package provider
+package types
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 func TestWholeSetAddsReplace(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPut, "https://api.example.com/v2/deployments/x/env-vars?a=1", nil)
 	require.NoError(t, err)
-	require.NoError(t, wholeSet(context.Background(), req))
+	require.NoError(t, WholeSet(context.Background(), req))
 	assert.Equal(t, "true", req.URL.Query().Get("replace"))
 	assert.Equal(t, "1", req.URL.Query().Get("a"))
 }
