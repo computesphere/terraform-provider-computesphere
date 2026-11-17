@@ -21,6 +21,7 @@ type deploymentState struct {
 	ProjectID     types.String `tfsdk:"project_id"`
 	Type          types.String `tfsdk:"type"`
 	PlanID        types.String `tfsdk:"plan_id"`
+	InstanceType  types.String `tfsdk:"instance_type"`
 	Image         types.String `tfsdk:"image"`
 	ImageType     types.String `tfsdk:"image_type"`
 	ImageProvider types.String `tfsdk:"image_provider"`
