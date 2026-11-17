@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -326,17 +327,22 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 	// A git-built create starts its first build, which rolls the service out;
 	// a /deploy before it finishes is refused. The nested form (git_repo_id)
 	// starts none, so start it here.
+	wait := r.waitForReady
 	switch {
 	case nestedGit(r.kind, plan):
-		if !r.build(ctx, id, &resp.Diagnostics) {
+		bid, ok := r.build(ctx, id, &resp.Diagnostics)
+		if !ok {
 			return
+		}
+		wait = func(ctx context.Context, id uuid.UUID, diags *diag.Diagnostics) bool {
+			return r.waitForBuild(ctx, id, bid, diags)
 		}
 	case !gitBuilt(r.kind, plan):
 		if !r.deploy(ctx, id, &resp.Diagnostics) {
 			return
 		}
 	}
-	if waitFor(plan) && !r.waitForReady(ctx, id, &resp.Diagnostics) {
+	if waitFor(plan) && !wait(ctx, id, &resp.Diagnostics) {
 		return
 	}
 	r.refresh(ctx, id, &state, &resp.Diagnostics)
@@ -408,18 +414,65 @@ func (r *computeResource) deploy(ctx context.Context, id uuid.UUID, diags *diag.
 // build starts a build of the saved source and settings
 // (POST /deployments/{id}/builds with an empty manifest, which the API
 // completes from the saved one); a successful build rolls the service out.
-func (r *computeResource) build(ctx context.Context, id uuid.UUID, diags *diag.Diagnostics) bool {
+func (r *computeResource) build(ctx context.Context, id uuid.UUID, diags *diag.Diagnostics) (string, bool) {
 	body := map[string]any{"manifest": map[string]any{}}
-	status, raw, err := cstypes.DoJSON(ctx, r.client, http.MethodPost, "/deployments/"+id.String()+"/builds", nil, body, nil)
+	var out struct {
+		ID string `json:"id"`
+	}
+	status, raw, err := cstypes.DoJSON(ctx, r.client, http.MethodPost, "/deployments/"+id.String()+"/builds", nil, body, &out)
 	if err != nil {
 		diags.AddError("Error building "+r.kind.noun, err.Error())
-		return false
+		return "", false
 	}
 	if status != http.StatusOK && status != http.StatusAccepted && status != http.StatusCreated {
 		diags.AddError("Error building "+r.kind.noun, cstypes.ProblemSummary(raw, status))
-		return false
+		return "", false
 	}
-	return true
+	return out.ID, true
+}
+
+// waitForBuild waits until the build finishes. The service's status may
+// still read as running when the build has only just started, so the wait
+// follows the build record, then the rollout the build starts.
+func (r *computeResource) waitForBuild(ctx context.Context, id uuid.UUID, bid string, diags *diag.Diagnostics) bool {
+	if bid == "" {
+		return r.waitForReady(ctx, id, diags)
+	}
+	deadline := time.Now().Add(waitTimeout)
+	for {
+		var b struct {
+			Status string `json:"status"`
+		}
+		status, raw, err := cstypes.DoJSON(ctx, r.client, http.MethodGet,
+			"/deployments/"+id.String()+"/builds/"+url.PathEscape(bid), nil, nil, &b)
+		if err != nil {
+			diags.AddError("Error waiting for the "+r.kind.noun+"'s build", err.Error())
+			return false
+		}
+		if status != http.StatusOK {
+			diags.AddError("Error waiting for the "+r.kind.noun+"'s build", cstypes.ProblemSummary(raw, status))
+			return false
+		}
+		switch s := strings.ToLower(b.Status); {
+		case s == "succeeded":
+			return r.waitForReady(ctx, id, diags)
+		case isFailure(s):
+			diags.AddError("The "+r.kind.noun+"'s build failed",
+				fmt.Sprintf("Build %s ended with status %s. Its log is at GET /deployments/%s/builds/%s.", bid, b.Status, id, bid))
+			return false
+		}
+		if time.Now().After(deadline) {
+			diags.AddError("Timed out waiting for the "+r.kind.noun+"'s build",
+				fmt.Sprintf("build %s didn't finish within %s", bid, waitTimeout))
+			return false
+		}
+		select {
+		case <-ctx.Done():
+			diags.AddError("Cancelled waiting for the "+r.kind.noun+"'s build", ctx.Err().Error())
+			return false
+		case <-time.After(pollInterval):
+		}
+	}
 }
 
 // setEnvVars writes the variable maps that changed, each as the whole set
@@ -686,14 +739,19 @@ func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest
 		wrote = true
 	}
 	if wrote {
-		rollout := r.deploy
+		wait := r.waitForReady
 		if rebuild {
-			rollout = r.build
-		}
-		if !rollout(ctx, id, &resp.Diagnostics) {
+			bid, ok := r.build(ctx, id, &resp.Diagnostics)
+			if !ok {
+				return
+			}
+			wait = func(ctx context.Context, id uuid.UUID, diags *diag.Diagnostics) bool {
+				return r.waitForBuild(ctx, id, bid, diags)
+			}
+		} else if !r.deploy(ctx, id, &resp.Diagnostics) {
 			return
 		}
-		if waitFor(plan) && !r.waitForReady(ctx, id, &resp.Diagnostics) {
+		if waitFor(plan) && !wait(ctx, id, &resp.Diagnostics) {
 			return
 		}
 	}

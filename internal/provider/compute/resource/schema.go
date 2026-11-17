@@ -168,8 +168,8 @@ var attrDefs = map[string]attrDef{
 	},
 	"wait_for_ready": func(k kind, _ bool) schema.Attribute {
 		return schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true),
-			Description: "Wait for the " + k.noun + " to finish deploying after create and change. Defaults to " +
-				"true."}
+			Description: "Wait for the " + k.noun + " to finish deploying after create and change, and for a " +
+				"build first when the change starts one. Defaults to true."}
 	},
 	"deploy_policy": optString("Deploy policy: `auto` or `approval`. Leave it out to use the " +
 		"environment's policy. Setting it needs the project admin role."),
