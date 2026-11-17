@@ -21,7 +21,10 @@ const ids = `
   project_id     = "22222222-2222-2222-2222-222222222222"
 `
 
-func init() { computeresource.SetPollIntervalForTest(time.Millisecond) }
+func init() {
+	computeresource.SetPollIntervalForTest(time.Millisecond)
+	computeresource.SetNameRetryForTest(time.Millisecond, time.Second)
+}
 
 func webServiceConfig(image string, port int, envValue string, count int) string {
 	return fmt.Sprintf(`

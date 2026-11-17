@@ -23,6 +23,10 @@
   - `instance_type` (all but static sites): the spherelet size, e.g.
     `sl-1c-2g` or `FLX`. It defaults to the service's size and changes in
     place, except on a cron job, where a new size creates a new cron job.
+  - A change that replaces a resource created with `name` deletes it and
+    creates it again under the same name. For a few seconds after a delete
+    the API still holds the name, so the create is retried for up to two
+    minutes while the name is held. Any other name conflict fails at once.
   - `git_repo_id` (needed for GitLab sources) is sent at create and read
     back. Setting it on a service that has none only records it, removing
     it from the configuration keeps the recorded value, and a value that
