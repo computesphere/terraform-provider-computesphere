@@ -10,12 +10,19 @@
   its type's fields. A field the API can set only at create forces a new
   resource (the pre-deploy command); everything else changes in place, and
   an apply rolls the service out once, however many settings it changes.
+  A git-built service rolls out through a new build when its build settings
+  change; its first build starts when it's created.
   - Set `service_id` to run an existing service, or `name` to create a new
-    service with the resource (and delete it with it). A private service
-    can only be created with `name`.
+    service with the resource. A private service can only be created with
+    `name`. Deleting a resource also deletes its service when it's the
+    service's last deployment, with `service_id` too; set
+    `create_before_destroy` on a `service_id` resource whose changes replace
+    it.
+  - `env_vars` and `secret_vars`, once set, own the whole set: a variable
+    set elsewhere and not listed is removed.
   - `instance_type` (all but static sites): the spherelet size, e.g.
     `sl-1c-2g` or `FLX`. It defaults to the service's size and changes in
-    place.
+    place, except on a cron job, where a new size creates a new cron job.
   - `git_repo_id` (needed for GitLab sources) is sent at create and read
     back. Setting it on a service that has none only records it, removing
     it from the configuration keeps the recorded value, and a value that
@@ -38,8 +45,11 @@
 ### Deprecated
 
 - `computesphere_deployment`. A `moved` block carries a deployment over to
-  the resource for its type without redeploying it (Terraform 1.8 or
-  later); its size carries over as `instance_type`.
+  the resource for its type (Terraform 1.8 or later); its size carries over
+  as `instance_type`. Keep `service_id` in the new block. The move itself
+  doesn't redeploy; settings the old resource didn't track (for example a
+  health check, or a cron job's schedule) apply as one in-place update,
+  which rolls the service out.
 
 ## 1.4.0
 

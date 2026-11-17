@@ -131,8 +131,14 @@ var attrDefs = map[string]attrDef{
 		return schema.StringAttribute{Computed: true, Description: "Current status."}
 	},
 	"service_id": func(k kind, _ bool) schema.Attribute {
-		text := "Existing service this " + k.noun + " runs; its name and size are taken from the service. Set " +
-			"`service_id` or `name`, not both. Without it, `name` creates a new service with the " + k.noun + "."
+		from := "its name and size are taken from the service"
+		if !k.has("instance_type") {
+			from = "its name is taken from the service"
+		}
+		text := "Existing service this " + k.noun + " runs; " + from + ". Set `service_id` or `name`, not " +
+			"both. Without it, `name` creates a new service with the " + k.noun + ". Deleting the " + k.noun +
+			" also deletes the service when this is its last deployment, so a change that replaces the " + k.noun +
+			" can't create it again in that service: set `lifecycle { create_before_destroy = true }`."
 		if k.is(privateService) {
 			text += " A private service can only be created this way, so set `name`."
 		}
@@ -151,15 +157,19 @@ var attrDefs = map[string]attrDef{
 	},
 	"env_vars": func(k kind, _ bool) schema.Attribute {
 		return schema.MapAttribute{Optional: true, ElementType: types.StringType,
-			Description: "Plain environment variables, name to value. Changing them redeploys."}
+			Description: "Plain environment variables, name to value. Once set, this owns the whole set: a " +
+				"variable set elsewhere and not listed here is removed. Changing them redeploys."}
 	},
 	"secret_vars": func(k kind, _ bool) schema.Attribute {
 		return schema.MapAttribute{Optional: true, Sensitive: true, ElementType: types.StringType,
-			Description: "Secret environment variables, name to value. Changing them redeploys."}
+			Description: "Secret environment variables, name to value. Once set, this owns the whole set: a " +
+				"secret set elsewhere and not listed here is removed. An empty value keeps the stored secret. " +
+				"Changing them redeploys."}
 	},
 	"wait_for_ready": func(k kind, _ bool) schema.Attribute {
 		return schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true),
-			Description: "Wait for the " + k.noun + " to finish deploying after create and change."}
+			Description: "Wait for the " + k.noun + " to finish deploying after create and change. Defaults to " +
+				"true."}
 	},
 	"deploy_policy": optString("Deploy policy: `auto` or `approval`. Leave it out to use the " +
 		"environment's policy. Setting it needs the project admin role."),
@@ -169,14 +179,21 @@ var attrDefs = map[string]attrDef{
 
 	"port":         optInt64("Port the service listens on. Defaults to 8080."),
 	"sphere_count": optInt64("Spherelets to run. Defaults to 1. Changing it scales in place."),
-	"instance_type": func(k kind, _ bool) schema.Attribute {
-		return schema.StringAttribute{Optional: true, Computed: true,
-			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+	"instance_type": func(k kind, replace bool) schema.Attribute {
+		mods := []planmodifier.String{stringplanmodifier.UseStateForUnknown()}
+		change := "Changing it resizes the " + k.noun + " in place; the account needs room for its spherelets " +
+			"at that size."
+		if replace {
+			// The kind's change body has no size and scale refuses it, so a
+			// new size is a new resource.
+			mods = append(mods, stringplanmodifier.RequiresReplaceIfConfigured())
+			change = "Changing it creates a new " + k.noun + "."
+		}
+		return schema.StringAttribute{Optional: true, Computed: true, PlanModifiers: mods,
 			Description: "The spherelet size the " + k.noun + " runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). " +
 				"Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data " +
-				"source. Changing it resizes the " + k.noun + " in place; the account needs room for its spherelets " +
-				"at that size. Set the size on the service or here, not both: a service size change resizes every " +
-				"deployment of the service."}
+				"source. " + change + " Set the size on the service or here, not both: a service size change " +
+				"resizes every deployment of the service."}
 	},
 	"image": optString("Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`."),
 	"image_type": optString("`public` (the default) or `private`. A private image is pulled with " +
@@ -193,12 +210,19 @@ var attrDefs = map[string]attrDef{
 	"image_password_wo_version": func(k kind, _ bool) schema.Attribute {
 		return schema.Int64Attribute{Optional: true,
 			Description: "Version of `image_password`. Increase it to send a new password; the change applies in " +
-				"place. Setting it for the first time on an imported or moved resource only records it."}
+				"place. Setting it for the first time on an existing resource only records it; increase it " +
+				"after that to send a new password."}
 	},
 	"image_url": optString("Registry endpoint of a private image. Needed for providers that sign in with a " +
 		"username and password."),
 
-	"git_url":           optString("Repository to build from. Set this or `image`."),
+	"git_url": func(k kind, replace bool) schema.Attribute {
+		desc := "Repository to build from. Set this or `image`."
+		if !k.has("image") {
+			desc = "Repository to build from."
+		}
+		return schema.StringAttribute{Optional: true, PlanModifiers: strMods(replace), Description: describe(k, replace, desc)}
+	},
 	"branch":            optString("Branch to build and to deploy on push."),
 	"git_connection_id": optString("Git connection that clones the repository and delivers pushes."),
 	"git_repo_id": func(k kind, _ bool) schema.Attribute {
@@ -234,17 +258,22 @@ var attrDefs = map[string]attrDef{
 	"install_command":   optString("Dependency install command, e.g. `npm ci`."),
 	"publish_directory": optString("Directory the build emits and that gets published, e.g. `dist`. Defaults to `dist`."),
 	"spa": optBool("Single-page-app fallback: serve `index.html` for paths that match no file. Defaults to " +
-		"true. Changes apply to the live site without a build."),
+		"true."),
 
 	"command": func(k kind, replace bool) schema.Attribute {
 		desc := "Command to run instead of the image's own."
+		if k.is(cronJob) {
+			desc = "Command the job runs."
+		}
 		if k.is(worker) {
 			desc = "Command an image worker runs instead of the image's own. A worker built from `git_url` " +
 				"runs `start_command` instead, so setting both is refused."
 		}
 		return schema.StringAttribute{Optional: true, PlanModifiers: strMods(replace), Description: describe(k, replace, desc)}
 	},
-	"schedule":          optString("Cron expression, evaluated in UTC unless it starts with `CRON_TZ=<zone>`, e.g. `CRON_TZ=Europe/London 0 9 * * *`."),
+	"schedule": optString("Cron expression, e.g. `0 9 * * *`, evaluated in UTC unless it starts with " +
+		"`CRON_TZ=<zone>` (an IANA time zone, e.g. `CRON_TZ=Europe/London 0 9 * * *`). A zone is refused in " +
+		"an environment whose schedules run in UTC."),
 	"predeploy_command": optString("Command run before each new version starts serving, e.g. database migrations."),
 
 	"health_check": func(k kind, replace bool) schema.Attribute {
@@ -255,7 +284,7 @@ var attrDefs = map[string]attrDef{
 				"path":                        schema.StringAttribute{Optional: true, Description: "HTTP path probed. Required while `enabled` is true."},
 				"port":                        schema.Int64Attribute{Optional: true, Description: "Port probed; leave it out to probe the service port."},
 				"initial_delay_seconds":       schema.Int64Attribute{Optional: true, Description: "Seconds before the first probe (0-300). Defaults to 10."},
-				"period_seconds":              schema.Int64Attribute{Optional: true, Description: "Seconds between probes (0-300). Defaults to 30."},
+				"period_seconds":              schema.Int64Attribute{Optional: true, Description: "Seconds between probes (1-300). Defaults to 30."},
 				"timeout_seconds":             schema.Int64Attribute{Optional: true, Description: "Probe timeout in seconds (0-60); 0 uses the platform default of 3."},
 				"readiness_failure_threshold": schema.Int64Attribute{Optional: true, Description: "Failures in a row before a spherelet is taken out of traffic (0-20); 0 uses the platform default of 3."},
 			},

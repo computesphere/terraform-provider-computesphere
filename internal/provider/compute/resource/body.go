@@ -94,6 +94,43 @@ func networkBody(ctx context.Context, v types.Object, withDefaultURL bool, diags
 
 func present(v attr.Value) bool { return !v.IsNull() && !v.IsUnknown() }
 
+// gitBuilt reports whether the service builds from a git repository: a
+// static site always does. Its create starts its first build, and a /deploy
+// before that build has finished is refused.
+func gitBuilt(k kind, m model) bool {
+	return k.is(staticSite) || (k.has("git_url") && hasGitSource(m))
+}
+
+// nestedGit reports whether a create must send the git source in its nested
+// ci_config form: git_repo_id exists only there, and a create with ci_config
+// is read from that object alone and starts no build (the caller starts it).
+// A static site reads ci_config.git_repo_id beside its flat keys.
+func nestedGit(k kind, m model) bool {
+	return !k.is(staticSite) && gitBuilt(k, m) && k.has("git_repo_id") && present(m.GitRepoID) &&
+		m.GitRepoID.ValueString() != ""
+}
+
+// ciConfigNames maps the flat git keys to their names in ci_config.
+var ciConfigNames = map[string]string{
+	"git_url": "git_url", "branch": "git_branch", "git_connection_id": "git_connection_id",
+	"runtime_type": "build_type", "language": "base_image", "version": "base_version",
+	"build_command": "build_script", "start_command": "start_script", "dockerfile": "dockerfile",
+	"context": "docker_context", "root_dir": "root_dir", "watch_paths": "watch_paths", "build_args": "build_args",
+}
+
+// nestGitSource moves the flat git keys of a create body into ci_config.
+func nestGitSource(b map[string]any, repoID string) {
+	ci := map[string]any{"git_repo_id": repoID}
+	for flat, nested := range ciConfigNames {
+		if v, ok := b[flat]; ok {
+			ci[nested] = v
+			delete(b, flat)
+		}
+	}
+	delete(b, "build_source")
+	b["ci_config"] = ci
+}
+
 // createBody renders the kind's closed create body (POST /deployments).
 func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) map[string]any {
 	b := map[string]any{"type": k.apiType}
@@ -138,7 +175,7 @@ func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) m
 	case present(m.Image) && m.Image.ValueString() != "":
 		b["build_source"] = "image"
 	}
-	if k.has("git_repo_id") && present(m.GitRepoID) && m.GitRepoID.ValueString() != "" {
+	if k.is(staticSite) && present(m.GitRepoID) && m.GitRepoID.ValueString() != "" {
 		b["ci_config"] = map[string]any{"git_repo_id": m.GitRepoID.ValueString()}
 	}
 	if k.has("root_dir") {
@@ -162,6 +199,9 @@ func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) m
 	}
 	if k.has("command") {
 		setString(b, "command", m.Command)
+	}
+	if nestedGit(k, m) {
+		nestGitSource(b, m.GitRepoID.ValueString())
 	}
 	if k.has("schedule") {
 		setString(b, "schedule", m.Schedule)
@@ -289,7 +329,7 @@ func hasGitSource(m model) bool {
 }
 
 // passwordRotated reports a new image_password_wo_version over a recorded
-// one. A first version on an imported or moved resource only records it.
+// one. A first version on an existing resource only records it.
 func passwordRotated(plan, state model) bool {
 	return !state.ImagePwVer.IsNull() && !plan.ImagePwVer.IsNull() && !plan.ImagePwVer.Equal(state.ImagePwVer)
 }

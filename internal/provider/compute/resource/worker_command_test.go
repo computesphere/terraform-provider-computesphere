@@ -3,6 +3,7 @@ package provider_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/computesphere/terraform-provider-computesphere/internal/provider/common/checks"
@@ -45,16 +46,18 @@ func changeBodyIs(t *testing.T, before, after string, want map[string]any) {
 						return fmt.Errorf("want 1 change, got %v", p)
 					}
 					checkClosed(t, "worker change", p[0], changeKeys["background-worker"])
-					// Every change is saved without a rollout; the one deploy
-					// after it rolls the change out.
+					// Every change is saved without a rollout; one rollout after
+					// it applies the change: a build for a git worker (a deploy
+					// would roll out the image already running), else a deploy.
 					want["skip_redeploy"] = true
 					if fmt.Sprint(p[0]) != fmt.Sprint(want) {
 						return fmt.Errorf("change body = %v, want %v", p[0], want)
 					}
-					if n := api.count("POST", "/deploy"); n != 1 {
-						return fmt.Errorf("want one deploy after the change, got %d", n)
+					deploys, builds := 1, 0
+					if strings.Contains(after, "git_url") {
+						deploys, builds = 0, 1
 					}
-					return nil
+					return checkRollouts(api, deploys, builds)(nil)
 				},
 			},
 		},

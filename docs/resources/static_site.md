@@ -82,9 +82,12 @@ output "url" {
   value = computesphere_static_site.docs.url
 }
 
-# Moving from computesphere_deployment: replace the old resource block with
-# this one and keep a moved block. Terraform carries the deployment over
-# without redeploying it.
+# Moving from computesphere_deployment (Terraform 1.8 or later): replace the
+# old resource block with this one and keep a moved block. The move itself
+# doesn't redeploy. Settings the old resource didn't track (for example a
+# health check, or a cron job's schedule) apply as one in-place update, which
+# rolls the service out. Keep service_id in the new block: name would create a
+# new service.
 moved {
   from = computesphere_deployment.docs
   to   = computesphere_static_site.docs
@@ -98,14 +101,14 @@ moved {
 
 - `build_command` (String) Build command.
 - `environment_id` (String) Environment the static site runs in. Changing it creates a new static site.
-- `git_url` (String) Repository to build from. Set this or `image`.
+- `git_url` (String) Repository to build from.
 - `project_id` (String) Project the service belongs to. Changing it creates a new static site.
 
 ### Optional
 
 - `branch` (String) Branch to build and to deploy on push.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
-- `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
+- `env_vars` (Map of String) Plain environment variables, name to value. Once set, this owns the whole set: a variable set elsewhere and not listed here is removed. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the static site has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the static site's is refused at plan time, because the API can't change it.
 - `install_command` (String) Dependency install command, e.g. `npm ci`.
@@ -113,12 +116,12 @@ moved {
 - `network_access` (Attributes) Who can reach the static site. (see [below for nested schema](#nestedatt--network_access))
 - `publish_directory` (String) Directory the build emits and that gets published, e.g. `dist`. Defaults to `dist`.
 - `root_directory` (String) The site's directory in a monorepo.
-- `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
-- `service_id` (String) Existing service this static site runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the static site. Changing it creates a new static site.
-- `spa` (Boolean) Single-page-app fallback: serve `index.html` for paths that match no file. Defaults to true. Changes apply to the live site without a build.
+- `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Once set, this owns the whole set: a secret set elsewhere and not listed here is removed. An empty value keeps the stored secret. Changing them redeploys.
+- `service_id` (String) Existing service this static site runs; its name is taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the static site. Deleting the static site also deletes the service when this is its last deployment, so a change that replaces the static site can't create it again in that service: set `lifecycle { create_before_destroy = true }`. Changing it creates a new static site.
+- `spa` (Boolean) Single-page-app fallback: serve `index.html` for paths that match no file. Defaults to true.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
-- `wait_for_ready` (Boolean) Wait for the static site to finish deploying after create and change.
+- `wait_for_ready` (Boolean) Wait for the static site to finish deploying after create and change. Defaults to true.
 
 ### Read-Only
 

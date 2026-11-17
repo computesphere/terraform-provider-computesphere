@@ -38,7 +38,7 @@ resource "computesphere_web_service" "app" {
   image         = "nginx:1.27"
   port          = 8080
   sphere_count  = 2
-  instance_type = "sl-1c-2g" # or leave it out to use the service's size
+  instance_type = "sl-1c-2g" # or leave it out to use the service's size; not both
 
   env_vars = {
     LOG_LEVEL = "info"
@@ -116,9 +116,12 @@ output "url" {
   value = computesphere_web_service.app.url
 }
 
-# Moving from computesphere_deployment: replace the old resource block with
-# this one and keep a moved block. Terraform carries the deployment over
-# without redeploying it.
+# Moving from computesphere_deployment (Terraform 1.8 or later): replace the
+# old resource block with this one and keep a moved block. The move itself
+# doesn't redeploy. Settings the old resource didn't track (for example a
+# health check, or a cron job's schedule) apply as one in-place update, which
+# rolls the service out. Keep service_id in the new block: name would create a
+# new service.
 moved {
   from = computesphere_deployment.app
   to   = computesphere_web_service.app

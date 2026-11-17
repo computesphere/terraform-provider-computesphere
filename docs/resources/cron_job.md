@@ -51,7 +51,7 @@ resource "computesphere_cron_job" "nightly_report" {
   project_id     = var.project_id
 
   image    = "acme/app:2.4.0"
-  schedule = "CRON_TZ=Europe/London 0 6 * * *"
+  schedule = "0 6 * * *" # UTC
   command  = "bin/report --daily"
 
   env_vars = {
@@ -74,9 +74,12 @@ variable "project_id" {
   type        = string
 }
 
-# Moving from computesphere_deployment: replace the old resource block with
-# this one and keep a moved block. Terraform carries the deployment over
-# without redeploying it.
+# Moving from computesphere_deployment (Terraform 1.8 or later): replace the
+# old resource block with this one and keep a moved block. The move itself
+# doesn't redeploy. Settings the old resource didn't track (for example a
+# health check, or a cron job's schedule) apply as one in-place update, which
+# rolls the service out. Keep service_id in the new block: name would create a
+# new service.
 moved {
   from = computesphere_deployment.nightly_report
   to   = computesphere_cron_job.nightly_report
@@ -88,10 +91,10 @@ moved {
 
 ### Required
 
-- `command` (String) Command to run instead of the image's own.
+- `command` (String) Command the job runs.
 - `environment_id` (String) Environment the cron job runs in. Changing it creates a new cron job.
 - `project_id` (String) Project the service belongs to. Changing it creates a new cron job.
-- `schedule` (String) Cron expression, evaluated in UTC unless it starts with `CRON_TZ=<zone>`, e.g. `CRON_TZ=Europe/London 0 9 * * *`.
+- `schedule` (String) Cron expression, e.g. `0 9 * * *`, evaluated in UTC unless it starts with `CRON_TZ=<zone>` (an IANA time zone, e.g. `CRON_TZ=Europe/London 0 9 * * *`). A zone is refused in an environment whose schedules run in UTC.
 
 ### Optional
 
@@ -103,28 +106,28 @@ moved {
 - `context` (String) Docker build context directory.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
 - `dockerfile` (String) Dockerfile path of a Docker build.
-- `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
+- `env_vars` (Map of String) Plain environment variables, name to value. Once set, this owns the whole set: a variable set elsewhere and not listed here is removed. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the cron job has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the cron job's is refused at plan time, because the API can't change it.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.
 - `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). It goes with every image change, because the API keeps a stored password only while the registry stays the same. To rotate it, set the new value and increase `image_password_wo_version`.
-- `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an imported or moved resource only records it.
+- `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an existing resource only records it; increase it after that to send a new password.
 - `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`.
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
 - `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password.
 - `image_username` (String) Registry username of a private image.
-- `instance_type` (String) The spherelet size the cron job runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the cron job in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
+- `instance_type` (String) The spherelet size the cron job runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it creates a new cron job. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
 - `name` (String) Name of a new service to create with the cron job, when there is no `service_id`. The service is created and deleted with the cron job. Set `service_id` or `name`, not both. With `service_id`, this is the service's name. Changing it creates a new cron job.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
-- `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
-- `service_id` (String) Existing service this cron job runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the cron job. Changing it creates a new cron job.
+- `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Once set, this owns the whole set: a secret set elsewhere and not listed here is removed. An empty value keeps the stored secret. Changing them redeploys.
+- `service_id` (String) Existing service this cron job runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the cron job. Deleting the cron job also deletes the service when this is its last deployment, so a change that replaces the cron job can't create it again in that service: set `lifecycle { create_before_destroy = true }`. Changing it creates a new cron job.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
 - `version` (String) Language version of a native build, e.g. `20` for Node.js.
-- `wait_for_ready` (Boolean) Wait for the cron job to finish deploying after create and change.
+- `wait_for_ready` (Boolean) Wait for the cron job to finish deploying after create and change. Defaults to true.
 - `watch_paths` (List of String) gitignore-style globs; a push builds only when a changed file matches one. Defaults to `root_dir`, else every push.
 
 ### Read-Only

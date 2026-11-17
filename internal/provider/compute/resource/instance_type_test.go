@@ -103,3 +103,57 @@ func TestWorker_instanceType(t *testing.T) {
 		},
 	})
 }
+
+func sizedCronConfig(size string) string {
+	return fmt.Sprintf(`
+resource "computesphere_cron_job" "nightly" {
+%s
+  image         = "acme/report:1"
+  schedule      = "0 2 * * *"
+  command       = "bin/report"
+  instance_type = %q
+}
+`, ids, size)
+}
+
+// A cron job's change body has no size and scale refuses a cron job, so a
+// new instance_type creates a new cron job and never calls scale.
+func TestCronJob_instanceTypeReplaces(t *testing.T) {
+	api := newFakeDeploymentsAPI(t)
+	name := "computesphere_cron_job.nightly"
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+		Steps: []resource.TestStep{
+			{
+				Config: sizedCronConfig("FLX"),
+				Check: func(_ *terraformState) error {
+					if c := api.bodies("POST", "/deployments")[0]; c["instance_type"] != "FLX" {
+						return fmt.Errorf("create body = %v, want instance_type FLX", c)
+					}
+					return nil
+				},
+			},
+			{
+				PreConfig: api.reset,
+				Config:    sizedCronConfig("sl-1c-2g"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(name, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(name, "instance_type", "sl-1c-2g"),
+					func(_ *terraformState) error {
+						if n := api.count("POST", "/scale"); n != 0 {
+							return fmt.Errorf("a cron job size change called scale %d times", n)
+						}
+						if c := api.bodies("POST", "/deployments"); len(c) != 1 || c[0]["instance_type"] != "sl-1c-2g" {
+							return fmt.Errorf("want one create with the new size, got %v", c)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}

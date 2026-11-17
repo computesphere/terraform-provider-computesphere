@@ -372,14 +372,16 @@ resource "computesphere_private_service" "api" {
 					func(_ *terraformState) error {
 						c := api.bodies("POST", "/deployments")[0]
 						checkClosed(t, "private service create", c, createKeys["private-service"])
-						if c["build_source"] != "git" || c["predeploy_command"] != "./app migrate" {
+						// git_repo_id puts the whole git source in ci_config.
+						if _, flat := c["git_url"]; flat || c["predeploy_command"] != "./app migrate" {
 							return fmt.Errorf("create body = %v", c)
 						}
 						ci, _ := c["ci_config"].(map[string]any)
-						if len(ci) != 1 || ci["git_repo_id"] != "4821" {
-							return fmt.Errorf("ci_config = %v, want only git_repo_id", c["ci_config"])
+						if ci["git_repo_id"] != "4821" || ci["git_url"] != "acme/api" || ci["build_type"] != "native" ||
+							ci["base_image"] != "go" || ci["start_script"] != "./app" {
+							return fmt.Errorf("ci_config = %v, want the nested git source", c["ci_config"])
 						}
-						return nil
+						return checkRollouts(api, 0, 1)(nil)
 					},
 				),
 			},

@@ -39,7 +39,8 @@ func Schema(ctx context.Context) schema.Schema {
 			"(sphere_count), replaces it.",
 		DeprecationMessage: "Use the resource for the service's type: computesphere_web_service, " +
 			"computesphere_private_service, computesphere_worker, computesphere_cron_job or " +
-			"computesphere_static_site. A moved block carries an existing deployment over without redeploying it.",
+			"computesphere_static_site. A moved block (Terraform 1.8 or later) carries an existing deployment " +
+			"over; the move itself doesn't redeploy.",
 		Attributes: map[string]schema.Attribute{
 			// The id stays the same through an in-place update.
 			"id": schema.StringAttribute{Computed: true, Description: "Deployment id.", PlanModifiers: []planmodifier.String{

@@ -116,7 +116,8 @@ var (
 		apiType: "private-service", typeName: "computesphere_private_service",
 		noun: "private service",
 		summary: "Manages a private service in an environment: a web service with no public address, reachable " +
-			"only by other services in the environment.",
+			"only by other services in the environment. Only environments that support private services can " +
+			"run one.",
 		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "instance_type",
 			"predeploy_command", "health_check", "autoscaling", "internal_url"}),
 		replace: []string{"predeploy_command"},
@@ -139,6 +140,8 @@ var (
 			"a git build.",
 		attrs:    join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command", "instance_type"}),
 		required: []string{"schedule", "command"},
+		// The change body has no size, and scale refuses a cron job.
+		replace: []string{"instance_type"},
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",

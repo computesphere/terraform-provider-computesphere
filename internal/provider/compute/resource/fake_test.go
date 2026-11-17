@@ -20,8 +20,14 @@ type fakeDeploymentsAPI struct {
 	t           *testing.T
 	mu          sync.Mutex
 	deps        map[string]map[string]any
-	seq         int
-	calls       []call
+	// builds is the build state of a git-built deployment, as the API keeps
+	// it: "running" while a build runs (a /deploy is refused until the first
+	// build has finished), "none" when no build was ever started, "lost"
+	// when the create's git source was dropped. A read finishes a running
+	// build. Image deployments have no entry.
+	builds map[string]string
+	seq    int
+	calls  []call
 }
 
 type call struct {
@@ -30,7 +36,7 @@ type call struct {
 }
 
 func newFakeDeploymentsAPI(t *testing.T) *fakeDeploymentsAPI {
-	return &fakeDeploymentsAPI{t: t, deps: map[string]map[string]any{}}
+	return &fakeDeploymentsAPI{t: t, deps: map[string]map[string]any{}, builds: map[string]string{}}
 }
 
 func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +66,7 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		d := map[string]any{
 			"object": "deployment", "id": id, "type": typ, "name": name, "status": "deploying",
-			"raw": map[string]any{"service_id": serviceID, "environment_id": body["environment_id"], "project_id": body["project_id"],
+			"raw": map[string]any{"service_id": serviceID, "env_id": body["environment_id"], "project_id": body["project_id"],
 				// The read always carries ci_config.git_repo_id, "" when unset.
 				"ci_config": map[string]any{"git_repo_id": repoID(body)}},
 		}
@@ -78,6 +84,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		f.deps[id] = d
+		if st := createBuildState(typ, body); st != "" {
+			f.builds[id] = st
+		}
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(d)
 		return
@@ -91,6 +100,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	action := ""
 	if len(parts) > 1 {
 		action = parts[1]
+	}
+	if r.Method == http.MethodGet && f.builds[parts[0]] == "running" {
+		f.builds[parts[0]] = "done"
 	}
 	switch {
 	case r.Method == http.MethodGet && action == "":
@@ -110,7 +122,23 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte(`{"title":"Unprocessable","status":422,"detail":"image changes aren't available for this type yet"}`))
 			return
 		}
+		if bc, ok := body["build_config"].(map[string]any); ok && bc["git_url"] != nil && f.builds[parts[0]] == "" {
+			// An image service switched to git: its manifest is saved, and
+			// the image keeps serving until a build replaces it.
+			f.builds[parts[0]] = "done"
+		}
 		_ = json.NewEncoder(w).Encode(d)
+	case r.Method == http.MethodPost && action == "scale" && d["type"] == "cron-job":
+		// A cron job isn't scalable.
+		problem(w, http.StatusUnprocessableEntity, "cron-job does not support scale")
+	case r.Method == http.MethodPost && action == "builds":
+		if f.builds[parts[0]] == "lost" || f.builds[parts[0]] == "" {
+			problem(w, http.StatusBadRequest, "no saved manifest to build from")
+			return
+		}
+		f.builds[parts[0]] = "running"
+		w.WriteHeader(http.StatusAccepted)
+		_ = json.NewEncoder(w).Encode(map[string]any{"object": "build", "status": "dispatched"})
 	case r.Method == http.MethodPost && action == "scale":
 		if it, ok := body["instance_type"].(string); ok {
 			if raw, ok := d["raw"].(map[string]any); ok {
@@ -119,6 +147,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusAccepted)
 		_ = json.NewEncoder(w).Encode(d)
+	case r.Method == http.MethodPost && action == "deploy" && f.builds[parts[0]] != "" && f.builds[parts[0]] != "done":
+		// Nothing built yet: the API refuses a redeploy before the first build.
+		problem(w, http.StatusBadRequest, "no built image available — trigger a new build to deploy this service")
 	case r.Method == http.MethodPost && action == "deploy":
 		w.WriteHeader(http.StatusAccepted)
 		_ = json.NewEncoder(w).Encode(d)
@@ -130,6 +161,32 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+func problem(w http.ResponseWriter, status int, detail string) {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]any{"title": http.StatusText(status), "status": status, "detail": detail})
+}
+
+// createBuildState is the build state a create leaves, as the API decides it:
+// a static site and a flat git create start their first build; a create
+// with ci_config is read from ci_config alone and starts none, so one whose
+// ci_config has no git_url loses its git source.
+func createBuildState(typ string, body map[string]any) string {
+	ci, nested := body["ci_config"].(map[string]any)
+	flat := body["git_url"] != nil || body["build_source"] == "git"
+	switch {
+	case typ == "static-site":
+		return "running"
+	case nested && ci["git_url"] != nil:
+		return "none"
+	case nested && flat:
+		return "lost"
+	case flat:
+		return "running"
+	}
+	return ""
 }
 
 // resolveSize stores a size alias as its code, as the API does.
@@ -160,7 +217,7 @@ func (f *fakeDeploymentsAPI) seedWithRepo(typ, repo string) string {
 		"object": "deployment", "id": id, "type": typ, "name": "app", "status": "running",
 		"outputs": map[string]any{"url": "https://app.example.test", "internal_url": "app-private.example.test:8080"},
 		"raw": map[string]any{"service_id": "44444444-4444-4444-4444-444444444444",
-			"environment_id": "33333333-3333-3333-3333-333333333333", "project_id": "22222222-2222-2222-2222-222222222222",
+			"env_id": "33333333-3333-3333-3333-333333333333", "project_id": "22222222-2222-2222-2222-222222222222",
 			"ci_config": map[string]any{"git_repo_id": repo}},
 	}
 	return id
@@ -211,6 +268,18 @@ var (
 )
 
 // checkClosed fails when body has a key outside allowed, or a forbidden key.
+// ciConfigKeys are the customer keys of the nested git source (the spec's
+// ComputeCIConfig); tag, is_build_complete and webhook_id are server-only.
+var ciConfigKeys = map[string]bool{}
+
+func init() {
+	for _, k := range strings.Fields("git_url git_branch git_connection_id git_repo_id git_username git_password " +
+		"type working_dir base_image base_version build_script start_script install_script publish_directory " +
+		"build_type dockerfile docker_context root_dir watch_paths build_args webhook_enabled spa") {
+		ciConfigKeys[k] = true
+	}
+}
+
 func checkClosed(t *testing.T, what string, body map[string]any, allowed string) {
 	t.Helper()
 	ok := map[string]bool{}
@@ -225,7 +294,7 @@ func checkClosed(t *testing.T, what string, body map[string]any, allowed string)
 		if k == "ci_config" {
 			ci, _ := body[k].(map[string]any)
 			for ck := range ci {
-				if ck != "git_repo_id" {
+				if !ciConfigKeys[ck] {
 					bad = append(bad, "ci_config."+ck)
 				}
 			}

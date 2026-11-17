@@ -323,8 +323,18 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 			return
 		}
 	}
-	if !r.deploy(ctx, id, &resp.Diagnostics) {
-		return
+	// A git-built create starts its first build, which rolls the service out;
+	// a /deploy before it finishes is refused. The nested form (git_repo_id)
+	// starts none, so start it here.
+	switch {
+	case nestedGit(r.kind, plan):
+		if !r.build(ctx, id, &resp.Diagnostics) {
+			return
+		}
+	case !gitBuilt(r.kind, plan):
+		if !r.deploy(ctx, id, &resp.Diagnostics) {
+			return
+		}
 	}
 	if waitFor(plan) && !r.waitForReady(ctx, id, &resp.Diagnostics) {
 		return
@@ -390,6 +400,23 @@ func (r *computeResource) deploy(ctx context.Context, id uuid.UUID, diags *diag.
 	}
 	if resp.StatusCode() != http.StatusAccepted && resp.StatusCode() != http.StatusOK {
 		diags.AddError("Error deploying "+r.kind.noun, cstypes.ProblemSummary(resp.Body, resp.StatusCode()))
+		return false
+	}
+	return true
+}
+
+// build starts a build of the saved source and settings
+// (POST /deployments/{id}/builds with an empty manifest, which the API
+// completes from the saved one); a successful build rolls the service out.
+func (r *computeResource) build(ctx context.Context, id uuid.UUID, diags *diag.Diagnostics) bool {
+	body := map[string]any{"manifest": map[string]any{}}
+	status, raw, err := cstypes.DoJSON(ctx, r.client, http.MethodPost, "/deployments/"+id.String()+"/builds", nil, body, nil)
+	if err != nil {
+		diags.AddError("Error building "+r.kind.noun, err.Error())
+		return false
+	}
+	if status != http.StatusOK && status != http.StatusAccepted && status != http.StatusCreated {
+		diags.AddError("Error building "+r.kind.noun, cstypes.ProblemSummary(raw, status))
 		return false
 	}
 	return true
@@ -558,6 +585,8 @@ func (r *computeResource) refresh(ctx context.Context, id uuid.UUID, m *model, d
 			}
 		}
 		fill(&m.ServiceID, "service_id")
+		// The deployment record names the environment env_id.
+		fill(&m.EnvironmentID, "env_id")
 		fill(&m.EnvironmentID, "environment_id")
 		fill(&m.ProjectID, "project_id")
 	}
@@ -624,11 +653,17 @@ func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	// Every write saves its change without rolling it out (skip_redeploy);
 	// one deploy at the end rolls out everything this apply changed.
-	wrote := false
+	// A git-built service's build settings take effect only through a build
+	// (with skip_redeploy the change body starts none, and /deploy rolls out
+	// the image already running), so the apply ends with a build instead.
+	// A static site's deploy is a build.
+	wrote, rebuild := false, false
 	if body := changeBody(ctx, r.kind, plan, state, &resp.Diagnostics); len(body) > 0 {
 		if resp.Diagnostics.HasError() || !r.patch(ctx, id, body, &resp.Diagnostics) {
 			return
 		}
+		_, hasBuild := body["build_config"]
+		rebuild = hasBuild && !r.kind.is(staticSite) && gitBuilt(r.kind, plan)
 		wrote = true
 	}
 	if !plan.EnvVars.Equal(state.EnvVars) || !plan.SecretVars.Equal(state.SecretVars) {
@@ -651,7 +686,11 @@ func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest
 		wrote = true
 	}
 	if wrote {
-		if !r.deploy(ctx, id, &resp.Diagnostics) {
+		rollout := r.deploy
+		if rebuild {
+			rollout = r.build
+		}
+		if !rollout(ctx, id, &resp.Diagnostics) {
 			return
 		}
 		if waitFor(plan) && !r.waitForReady(ctx, id, &resp.Diagnostics) {

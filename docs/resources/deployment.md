@@ -54,8 +54,10 @@ variable "registry_password" {
 # computesphere_deployment is deprecated. Use the resource for the service's
 # type instead: computesphere_web_service, computesphere_private_service,
 # computesphere_worker, computesphere_cron_job or computesphere_static_site.
-# To carry an existing deployment over without redeploying it, replace its
-# block with the new resource and add a moved block, e.g.:
+# To carry an existing deployment over (Terraform 1.8 or later), replace its
+# block with the new resource, keeping service_id, and add a moved block. The
+# move itself doesn't redeploy; settings the old resource didn't track apply
+# as one in-place update, which rolls the service out. For example:
 #
 #   moved {
 #     from = computesphere_deployment.example

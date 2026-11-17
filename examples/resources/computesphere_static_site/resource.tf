@@ -67,9 +67,12 @@ output "url" {
   value = computesphere_static_site.docs.url
 }
 
-# Moving from computesphere_deployment: replace the old resource block with
-# this one and keep a moved block. Terraform carries the deployment over
-# without redeploying it.
+# Moving from computesphere_deployment (Terraform 1.8 or later): replace the
+# old resource block with this one and keep a moved block. The move itself
+# doesn't redeploy. Settings the old resource didn't track (for example a
+# health check, or a cron job's schedule) apply as one in-place update, which
+# rolls the service out. Keep service_id in the new block: name would create a
+# new service.
 moved {
   from = computesphere_deployment.docs
   to   = computesphere_static_site.docs

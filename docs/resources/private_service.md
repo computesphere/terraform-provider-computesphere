@@ -3,12 +3,12 @@
 page_title: "computesphere_private_service Resource - computesphere"
 subcategory: ""
 description: |-
-  Manages a private service in an environment: a web service with no public address, reachable only by other services in the environment.
+  Manages a private service in an environment: a web service with no public address, reachable only by other services in the environment. Only environments that support private services can run one.
 ---
 
 # computesphere_private_service (Resource)
 
-Manages a private service in an environment: a web service with no public address, reachable only by other services in the environment.
+Manages a private service in an environment: a web service with no public address, reachable only by other services in the environment. Only environments that support private services can run one.
 
 ## Example Usage
 
@@ -74,9 +74,12 @@ output "internal_url" {
   value = computesphere_private_service.api.internal_url
 }
 
-# Moving from computesphere_deployment: replace the old resource block with
-# this one and keep a moved block. Terraform carries the deployment over
-# without redeploying it.
+# Moving from computesphere_deployment (Terraform 1.8 or later): replace the
+# old resource block with this one and keep a moved block. The move itself
+# doesn't redeploy. Settings the old resource didn't track (for example a
+# health check, or a cron job's schedule) apply as one in-place update, which
+# rolls the service out. Keep service_id in the new block: name would create a
+# new service.
 moved {
   from = computesphere_deployment.api
   to   = computesphere_private_service.api
@@ -102,14 +105,14 @@ moved {
 - `context` (String) Docker build context directory.
 - `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
 - `dockerfile` (String) Dockerfile path of a Docker build.
-- `env_vars` (Map of String) Plain environment variables, name to value. Changing them redeploys.
+- `env_vars` (Map of String) Plain environment variables, name to value. Once set, this owns the whole set: a variable set elsewhere and not listed here is removed. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the private service has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the private service's is refused at plan time, because the API can't change it.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `health_check` (Attributes) HTTP health check. A spherelet that fails it is taken out of traffic. (see [below for nested schema](#nestedatt--health_check))
 - `image` (String) Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`.
 - `image_password` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Registry password or token of a private image. Write-only: it is sent to the API and never stored in state or plan (Terraform 1.11 or later). It goes with every image change, because the API keeps a stored password only while the registry stays the same. To rotate it, set the new value and increase `image_password_wo_version`.
-- `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an imported or moved resource only records it.
+- `image_password_wo_version` (Number) Version of `image_password`. Increase it to send a new password; the change applies in place. Setting it for the first time on an existing resource only records it; increase it after that to send a new password.
 - `image_provider` (String) Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`.
 - `image_type` (String) `public` (the default) or `private`. A private image is pulled with `image_provider`, `image_username`, `image_password` and `image_url`.
 - `image_url` (String) Registry endpoint of a private image. Needed for providers that sign in with a username and password.
@@ -121,14 +124,14 @@ moved {
 - `predeploy_command` (String) Command run before each new version starts serving, e.g. database migrations. Changing it creates a new private service.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
-- `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
-- `service_id` (String) Existing service this private service runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the private service. A private service can only be created this way, so set `name`. Changing it creates a new private service.
+- `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Once set, this owns the whole set: a secret set elsewhere and not listed here is removed. An empty value keeps the stored secret. Changing them redeploys.
+- `service_id` (String) Existing service this private service runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the private service. Deleting the private service also deletes the service when this is its last deployment, so a change that replaces the private service can't create it again in that service: set `lifecycle { create_before_destroy = true }`. A private service can only be created this way, so set `name`. Changing it creates a new private service.
 - `sphere_count` (Number) Spherelets to run. Defaults to 1. Changing it scales in place.
 - `start_command` (String) Start command of a git build.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
 - `version` (String) Language version of a native build, e.g. `20` for Node.js.
-- `wait_for_ready` (Boolean) Wait for the private service to finish deploying after create and change.
+- `wait_for_ready` (Boolean) Wait for the private service to finish deploying after create and change. Defaults to true.
 - `watch_paths` (List of String) gitignore-style globs; a push builds only when a changed file matches one. Defaults to `root_dir`, else every push.
 
 ### Read-Only
@@ -162,7 +165,7 @@ Optional:
 
 - `initial_delay_seconds` (Number) Seconds before the first probe (0-300). Defaults to 10.
 - `path` (String) HTTP path probed. Required while `enabled` is true.
-- `period_seconds` (Number) Seconds between probes (0-300). Defaults to 30.
+- `period_seconds` (Number) Seconds between probes (1-300). Defaults to 30.
 - `port` (Number) Port probed; leave it out to probe the service port.
 - `readiness_failure_threshold` (Number) Failures in a row before a spherelet is taken out of traffic (0-20); 0 uses the platform default of 3.
 - `timeout_seconds` (Number) Probe timeout in seconds (0-60); 0 uses the platform default of 3.
