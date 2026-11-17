@@ -52,9 +52,15 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		f.seq++
 		id := fmt.Sprintf("00000000-0000-4000-8000-%012d", f.seq)
 		typ, _ := body["type"].(string)
+		name, serviceID := "app", body["service_id"]
+		if serviceID == nil {
+			// A standalone create: the API creates the service with the name.
+			name, _ = body["name"].(string)
+			serviceID = fmt.Sprintf("55555555-5555-4555-8555-%012d", f.seq)
+		}
 		d := map[string]any{
-			"object": "deployment", "id": id, "type": typ, "name": "app", "status": "deploying",
-			"raw": map[string]any{"service_id": body["service_id"], "environment_id": body["environment_id"], "project_id": body["project_id"],
+			"object": "deployment", "id": id, "type": typ, "name": name, "status": "deploying",
+			"raw": map[string]any{"service_id": serviceID, "environment_id": body["environment_id"], "project_id": body["project_id"],
 				// The read always carries ci_config.git_repo_id, "" when unset.
 				"ci_config": map[string]any{"git_repo_id": repoID(body)}},
 		}

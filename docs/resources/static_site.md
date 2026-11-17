@@ -100,7 +100,6 @@ moved {
 - `environment_id` (String) Environment the static site runs in. Changing it creates a new static site.
 - `git_url` (String) Repository to build from. Set this or `image`.
 - `project_id` (String) Project the service belongs to. Changing it creates a new static site.
-- `service_id` (String) Service this static site runs; its name and plan are taken from the service. Changing it creates a new static site.
 
 ### Optional
 
@@ -110,10 +109,12 @@ moved {
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
 - `git_repo_id` (String) The repository's id at its git provider, e.g. a GitLab project id. Needed for GitLab sources. Sent at create, and read back. If the static site has none at ComputeSphere (e.g. one created without it), setting it only records it here. Removing it from the configuration keeps the recorded value, and a value that differs from the static site's is refused at plan time, because the API can't change it.
 - `install_command` (String) Dependency install command, e.g. `npm ci`.
+- `name` (String) Name of a new service to create with the static site, when there is no `service_id`. The service is created and deleted with the static site. Set `service_id` or `name`, not both. With `service_id`, this is the service's name. Changing it creates a new static site.
 - `network_access` (Attributes) Who can reach the static site. (see [below for nested schema](#nestedatt--network_access))
 - `publish_directory` (String) Directory the build emits and that gets published, e.g. `dist`. Defaults to `dist`.
 - `root_directory` (String) The site's directory in a monorepo.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
+- `service_id` (String) Existing service this static site runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the static site. Changing it creates a new static site.
 - `spa` (Boolean) Single-page-app fallback: serve `index.html` for paths that match no file. Defaults to true. Changes apply to the live site without a build.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
@@ -122,7 +123,6 @@ moved {
 ### Read-Only
 
 - `id` (String) Deployment id of the static site.
-- `name` (String) Name, taken from the service.
 - `status` (String) Current status.
 - `url` (String) Public address.
 

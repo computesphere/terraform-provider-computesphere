@@ -30,8 +30,9 @@ provider "computesphere" {
   api_url    = var.api_url    # or set COMPUTESPHERE_API_URL env variable
 }
 
+# A private service is created with its own service: set name, not service_id.
 resource "computesphere_private_service" "api" {
-  service_id     = var.service_id
+  name           = "api"
   environment_id = var.environment_id
   project_id     = var.project_id
 
@@ -42,11 +43,6 @@ resource "computesphere_private_service" "api" {
     enabled = true
     path    = "/ready"
   }
-}
-
-variable "service_id" {
-  description = "Service this resource runs"
-  type        = string
 }
 
 variable "environment_id" {

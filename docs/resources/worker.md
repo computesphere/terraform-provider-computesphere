@@ -91,7 +91,6 @@ moved {
 
 - `environment_id` (String) Environment the background worker runs in. Changing it creates a new background worker.
 - `project_id` (String) Project the service belongs to. Changing it creates a new background worker.
-- `service_id` (String) Service this background worker runs; its name and plan are taken from the service. Changing it creates a new background worker.
 
 ### Optional
 
@@ -118,9 +117,11 @@ moved {
 - `image_username` (String) Registry username of a private image.
 - `instance_type` (String) The spherelet size the background worker runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the background worker in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
+- `name` (String) Name of a new service to create with the background worker, when there is no `service_id`. The service is created and deleted with the background worker. Set `service_id` or `name`, not both. With `service_id`, this is the service's name. Changing it creates a new background worker.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
+- `service_id` (String) Existing service this background worker runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the background worker. Changing it creates a new background worker.
 - `sphere_count` (Number) Spherelets to run. Defaults to 1. Changing it scales in place.
 - `start_command` (String) Start command of a git build.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
@@ -132,7 +133,6 @@ moved {
 ### Read-Only
 
 - `id` (String) Deployment id of the background worker.
-- `name` (String) Name, taken from the service.
 - `status` (String) Current status.
 
 <a id="nestedatt--autoscaling"></a>

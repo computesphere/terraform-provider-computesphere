@@ -10,6 +10,9 @@
   its type's fields. A field the API can set only at create forces a new
   resource (the pre-deploy command); everything else changes in place, and
   an apply rolls the service out once, however many settings it changes.
+  - Set `service_id` to run an existing service, or `name` to create a new
+    service with the resource (and delete it with it). A private service
+    can only be created with `name`.
   - `instance_type` (all but static sites): the spherelet size, e.g.
     `sl-1c-2g` or `FLX`. It defaults to the service's size and changes in
     place.

@@ -92,6 +92,7 @@ type attrGetter interface {
 // ValidateConfig refuses a worker that sets both command (an image
 // worker's command) and git_url: a git worker runs start_command.
 func (r *computeResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	r.validateServiceOrName(ctx, req.Config, &resp.Diagnostics)
 	if !r.kind.is(worker) {
 		return
 	}
@@ -104,6 +105,26 @@ func (r *computeResource) ValidateConfig(ctx context.Context, req resource.Valid
 	resp.Diagnostics.AddAttributeError(path.Root("command"), "command and git_url can't both be set",
 		"command is the command an image worker runs. A worker built from git_url runs start_command instead: "+
 			"set start_command and remove command, or remove git_url to run an image.")
+}
+
+// validateServiceOrName asks for exactly one of service_id (an existing
+// service) and name (a new service created with this one).
+func (r *computeResource) validateServiceOrName(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) {
+	var serviceID, name types.String
+	diags.Append(config.GetAttribute(ctx, path.Root("service_id"), &serviceID)...)
+	diags.Append(config.GetAttribute(ctx, path.Root("name"), &name)...)
+	if diags.HasError() || serviceID.IsUnknown() || name.IsUnknown() {
+		return
+	}
+	switch {
+	case serviceID.IsNull() && name.IsNull():
+		diags.AddAttributeError(path.Root("name"), "Set service_id or name",
+			fmt.Sprintf("Set service_id to run an existing service, or name to create a new service with this %s.",
+				r.kind.noun))
+	case !serviceID.IsNull() && !name.IsNull():
+		diags.AddAttributeError(path.Root("name"), "Set service_id or name, not both",
+			"With service_id, the name is the service's. Remove name, or remove service_id to create a new service.")
+	}
 }
 
 // ModifyPlan refuses a git_repo_id that differs from the one the service
@@ -241,6 +262,9 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 		attr string
 		v    types.String
 	}{{"service_id", plan.ServiceID}, {"environment_id", plan.EnvironmentID}, {"project_id", plan.ProjectID}} {
+		if f.attr == "service_id" && !present(f.v) {
+			continue // a standalone create names a new service instead
+		}
 		if _, err := uuid.Parse(f.v.ValueString()); err != nil {
 			resp.Diagnostics.AddAttributeError(path.Root(f.attr), "Invalid "+f.attr, err.Error())
 		}
@@ -274,6 +298,15 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	state := plan
+	if !present(state.ServiceID) {
+		// The API created the service; take its id from the new deployment.
+		state.ServiceID = types.StringNull()
+		if created.JSON201.Raw != nil {
+			if v, ok := created.JSON201.Raw.AdditionalProperties["service_id"].(string); ok && v != "" {
+				state.ServiceID = types.StringValue(v)
+			}
+		}
+	}
 	state.ID = types.StringValue(created.JSON201.Id)
 	state.Name = types.StringValue(created.JSON201.Name)
 	state.Status = types.StringValue(created.JSON201.Status)

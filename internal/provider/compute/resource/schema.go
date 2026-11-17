@@ -118,13 +118,28 @@ var attrDefs = map[string]attrDef{
 		return schema.StringAttribute{Computed: true, Description: "Deployment id of the " + k.noun + ".",
 			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}}
 	},
-	"name": computedString("Name, taken from the service."),
+	"name": func(k kind, _ bool) schema.Attribute {
+		return schema.StringAttribute{Optional: true, Computed: true,
+			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(),
+				stringplanmodifier.RequiresReplaceIfConfigured()},
+			Description: "Name of a new service to create with the " + k.noun + ", when there is no " +
+				"`service_id`. The service is created and deleted with the " + k.noun + ". Set `service_id` or " +
+				"`name`, not both. With `service_id`, this is the service's name. Changing it creates a new " +
+				k.noun + "."}
+	},
 	"status": func(k kind, _ bool) schema.Attribute {
 		return schema.StringAttribute{Computed: true, Description: "Current status."}
 	},
 	"service_id": func(k kind, _ bool) schema.Attribute {
-		return schema.StringAttribute{Required: true, PlanModifiers: strMods(true),
-			Description: describe(k, true, "Service this "+k.noun+" runs; its name and plan are taken from the service.")}
+		text := "Existing service this " + k.noun + " runs; its name and size are taken from the service. Set " +
+			"`service_id` or `name`, not both. Without it, `name` creates a new service with the " + k.noun + "."
+		if k.is(privateService) {
+			text += " A private service can only be created this way, so set `name`."
+		}
+		return schema.StringAttribute{Optional: true, Computed: true,
+			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(),
+				stringplanmodifier.RequiresReplaceIfConfigured()},
+			Description: text + fmt.Sprintf(" Changing it creates a new %s.", k.noun)}
 	},
 	"environment_id": func(k kind, _ bool) schema.Attribute {
 		return schema.StringAttribute{Required: true, PlanModifiers: strMods(true),

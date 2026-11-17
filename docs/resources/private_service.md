@@ -45,8 +45,9 @@ provider "computesphere" {
   api_url    = var.api_url    # or set COMPUTESPHERE_API_URL env variable
 }
 
+# A private service is created with its own service: set name, not service_id.
 resource "computesphere_private_service" "api" {
-  service_id     = var.service_id
+  name           = "api"
   environment_id = var.environment_id
   project_id     = var.project_id
 
@@ -57,11 +58,6 @@ resource "computesphere_private_service" "api" {
     enabled = true
     path    = "/ready"
   }
-}
-
-variable "service_id" {
-  description = "Service this resource runs"
-  type        = string
 }
 
 variable "environment_id" {
@@ -94,7 +90,6 @@ moved {
 
 - `environment_id` (String) Environment the private service runs in. Changing it creates a new private service.
 - `project_id` (String) Project the service belongs to. Changing it creates a new private service.
-- `service_id` (String) Service this private service runs; its name and plan are taken from the service. Changing it creates a new private service.
 
 ### Optional
 
@@ -121,11 +116,13 @@ moved {
 - `image_username` (String) Registry username of a private image.
 - `instance_type` (String) The spherelet size the private service runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the private service in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
+- `name` (String) Name of a new service to create with the private service, when there is no `service_id`. The service is created and deleted with the private service. Set `service_id` or `name`, not both. With `service_id`, this is the service's name. Changing it creates a new private service.
 - `port` (Number) Port the service listens on. Defaults to 8080.
 - `predeploy_command` (String) Command run before each new version starts serving, e.g. database migrations. Changing it creates a new private service.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
+- `service_id` (String) Existing service this private service runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the private service. A private service can only be created this way, so set `name`. Changing it creates a new private service.
 - `sphere_count` (Number) Spherelets to run. Defaults to 1. Changing it scales in place.
 - `start_command` (String) Start command of a git build.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
@@ -138,7 +135,6 @@ moved {
 
 - `id` (String) Deployment id of the private service.
 - `internal_url` (String) Address other services in the same environment use.
-- `name` (String) Name, taken from the service.
 - `status` (String) Current status.
 
 <a id="nestedatt--autoscaling"></a>

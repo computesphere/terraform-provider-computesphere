@@ -98,6 +98,10 @@ func present(v attr.Value) bool { return !v.IsNull() && !v.IsUnknown() }
 func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) map[string]any {
 	b := map[string]any{"type": k.apiType}
 	setString(b, "service_id", m.ServiceID)
+	if !present(m.ServiceID) {
+		// A standalone create: the API creates the service with this name.
+		setString(b, "name", m.Name)
+	}
 	setString(b, "environment_id", m.EnvironmentID)
 	setString(b, "project_id", m.ProjectID)
 	setStringMap(ctx, b, "env_vars", m.EnvVars, diags)

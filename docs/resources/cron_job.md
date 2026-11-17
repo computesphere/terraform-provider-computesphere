@@ -92,7 +92,6 @@ moved {
 - `environment_id` (String) Environment the cron job runs in. Changing it creates a new cron job.
 - `project_id` (String) Project the service belongs to. Changing it creates a new cron job.
 - `schedule` (String) Cron expression, evaluated in UTC unless it starts with `CRON_TZ=<zone>`, e.g. `CRON_TZ=Europe/London 0 9 * * *`.
-- `service_id` (String) Service this cron job runs; its name and plan are taken from the service. Changing it creates a new cron job.
 
 ### Optional
 
@@ -117,9 +116,11 @@ moved {
 - `image_username` (String) Registry username of a private image.
 - `instance_type` (String) The spherelet size the cron job runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the cron job in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
+- `name` (String) Name of a new service to create with the cron job, when there is no `service_id`. The service is created and deleted with the cron job. Set `service_id` or `name`, not both. With `service_id`, this is the service's name. Changing it creates a new cron job.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
+- `service_id` (String) Existing service this cron job runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the cron job. Changing it creates a new cron job.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
 - `version` (String) Language version of a native build, e.g. `20` for Node.js.
@@ -129,7 +130,6 @@ moved {
 ### Read-Only
 
 - `id` (String) Deployment id of the cron job.
-- `name` (String) Name, taken from the service.
 - `status` (String) Current status.
 
 ## Import

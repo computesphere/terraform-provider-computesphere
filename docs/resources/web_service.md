@@ -147,7 +147,6 @@ moved {
 
 - `environment_id` (String) Environment the web service runs in. Changing it creates a new web service.
 - `project_id` (String) Project the service belongs to. Changing it creates a new web service.
-- `service_id` (String) Service this web service runs; its name and plan are taken from the service. Changing it creates a new web service.
 
 ### Optional
 
@@ -174,12 +173,14 @@ moved {
 - `image_username` (String) Registry username of a private image.
 - `instance_type` (String) The spherelet size the web service runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data source. Changing it resizes the web service in place; the account needs room for its spherelets at that size. Set the size on the service or here, not both: a service size change resizes every deployment of the service.
 - `language` (String) Managed toolchain of a native build, e.g. `nodejs`, `python` or `go`.
+- `name` (String) Name of a new service to create with the web service, when there is no `service_id`. The service is created and deleted with the web service. Set `service_id` or `name`, not both. With `service_id`, this is the service's name. Changing it creates a new web service.
 - `network_access` (Attributes) Who can reach the web service. (see [below for nested schema](#nestedatt--network_access))
 - `port` (Number) Port the service listens on. Defaults to 8080.
 - `predeploy_command` (String) Command run before each new version starts serving, e.g. database migrations. Changing it creates a new web service.
 - `root_dir` (String) The service's directory in a monorepo.
 - `runtime_type` (String) Build mode of a git source: `native` (a managed toolchain set by `language`) or `docker` (a Dockerfile). Derived from the source when left out.
 - `secret_vars` (Map of String, Sensitive) Secret environment variables, name to value. Changing them redeploys.
+- `service_id` (String) Existing service this web service runs; its name and size are taken from the service. Set `service_id` or `name`, not both. Without it, `name` creates a new service with the web service. Changing it creates a new web service.
 - `sphere_count` (Number) Spherelets to run. Defaults to 1. Changing it scales in place.
 - `start_command` (String) Start command of a git build.
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
@@ -192,7 +193,6 @@ moved {
 
 - `id` (String) Deployment id of the web service.
 - `internal_url` (String) Address other services in the same environment use.
-- `name` (String) Name, taken from the service.
 - `status` (String) Current status.
 - `url` (String) Public address.
 
