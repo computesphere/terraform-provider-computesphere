@@ -57,7 +57,11 @@ func justDeleted(c *csv2.ClientWithResponses, env, name string) bool {
 		return false
 	}
 	v, ok := recentDeletes.Load(deletedName{c, env, name})
-	return ok && time.Since(v.(time.Time)) < deleteMemory
+	if !ok {
+		return false
+	}
+	at, ok := v.(time.Time)
+	return ok && time.Since(at) < deleteMemory
 }
 
 // isConflict reports whether a response is the API's 409 conflict problem.
