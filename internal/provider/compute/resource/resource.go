@@ -460,8 +460,8 @@ func (r *computeResource) waitForBuild(ctx context.Context, id uuid.UUID, bid st
 			// Built, but the deploy policy is approval: nothing rolls out until
 			// a project admin approves, so there's nothing more to wait for.
 			diags.AddWarning("The "+r.kind.noun+"'s build waits for approval",
-				fmt.Sprintf("Build %s is built and waits for a project admin to approve its rollout. The %s keeps "+
-					"running its current version until then.", bid, r.kind.noun))
+				fmt.Sprintf("Build %s is built and waits for a project admin to approve its rollout. Nothing new "+
+					"rolls out until then.", bid))
 			return true
 		case s == "canceled" || s == "canceling":
 			diags.AddError("The "+r.kind.noun+"'s build was canceled",

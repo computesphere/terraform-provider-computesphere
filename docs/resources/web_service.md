@@ -160,7 +160,7 @@ moved {
 - `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`.
 - `build_command` (String) Build command.
 - `context` (String) Docker build context directory.
-- `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
+- `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role. With `approval`, an apply that builds the web service finishes once the build waits for approval; the rollout follows when a project admin approves it.
 - `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Once set, this owns the whole set: a variable set elsewhere and not listed here is removed. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.

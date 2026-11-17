@@ -105,7 +105,7 @@ moved {
 - `build_command` (String) Build command.
 - `command` (String) Command an image worker runs instead of the image's own. A worker built from `git_url` runs `start_command` instead, so setting both is refused.
 - `context` (String) Docker build context directory.
-- `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
+- `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role. With `approval`, an apply that builds the background worker finishes once the build waits for approval; the rollout follows when a project admin approves it.
 - `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Once set, this owns the whole set: a variable set elsewhere and not listed here is removed. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
