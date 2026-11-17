@@ -456,6 +456,18 @@ func (r *computeResource) waitForBuild(ctx context.Context, id uuid.UUID, bid st
 		switch s := strings.ToLower(b.Status); {
 		case s == "succeeded":
 			return r.waitForReady(ctx, id, diags)
+		case s == "awaiting_approval":
+			// Built, but the deploy policy is approval: nothing rolls out until
+			// a project admin approves, so there's nothing more to wait for.
+			diags.AddWarning("The "+r.kind.noun+"'s build waits for approval",
+				fmt.Sprintf("Build %s is built and waits for a project admin to approve its rollout. The %s keeps "+
+					"running its current version until then.", bid, r.kind.noun))
+			return true
+		case s == "canceled" || s == "canceling":
+			diags.AddError("The "+r.kind.noun+"'s build was canceled",
+				fmt.Sprintf("Build %s was canceled: stopped, rejected, expired, or replaced by a newer build. "+
+					"Its log is at GET /deployments/%s/builds/%s.", bid, id, bid))
+			return false
 		case isFailure(s):
 			diags.AddError("The "+r.kind.noun+"'s build failed",
 				fmt.Sprintf("Build %s ended with status %s. Its log is at GET /deployments/%s/builds/%s.", bid, b.Status, id, bid))

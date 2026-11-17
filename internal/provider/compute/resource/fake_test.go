@@ -32,6 +32,7 @@ type fakeDeploymentsAPI struct {
 	// build record: the first answers dispatched, the next its result,
 	// while the deployment's own status keeps reading running.
 	failBuild  bool
+	buildEnd   string // when set, the status a build ends in instead
 	buildReads map[string]int
 	seq        int
 	calls      []call
@@ -153,6 +154,8 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		st := "dispatched"
 		switch {
 		case f.buildReads[parts[2]] < 2:
+		case f.buildEnd != "":
+			st = f.buildEnd
 		case f.failBuild:
 			st = "failed"
 		default:

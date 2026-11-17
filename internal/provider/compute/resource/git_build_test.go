@@ -208,3 +208,34 @@ func TestWebService_failedBuild(t *testing.T) {
 		},
 	})
 }
+
+// With the approval deploy policy a build stops at awaiting_approval until a
+// project admin approves: the apply ends there with a warning, not a
+// timeout. A canceled build fails the apply.
+func TestWebService_buildEnds(t *testing.T) {
+	for _, tc := range []struct{ end, want string }{
+		{"awaiting_approval", ""},
+		{"canceled", `The web service's build was canceled`},
+	} {
+		t.Run(tc.end, func(t *testing.T) {
+			api := newFakeDeploymentsAPI(t)
+			api.buildEnd = tc.end
+			step := resource.TestStep{Config: gitBuiltWebService("4821", "make", "info")}
+			if tc.want != "" {
+				step.ExpectError = regexp.MustCompile(tc.want)
+			} else {
+				step.Check = func(_ *terraformState) error {
+					// The second read answers awaiting_approval; the wait ends there.
+					if n := api.buildRecordReads(); n != 2 {
+						return fmt.Errorf("read the build record %d times; want the wait to end at awaiting_approval", n)
+					}
+					return nil
+				}
+			}
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: th.SetupFakeAPIProvider(t, api),
+				Steps:                    []resource.TestStep{step},
+			})
+		})
+	}
+}

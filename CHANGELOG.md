@@ -61,8 +61,9 @@
   deployment without losing its service, set
   `lifecycle { create_before_destroy = true }`.
 - With `wait_for_ready`, an apply that builds a git-built service waits
-  for the build to finish, then for the rollout. A failed build fails the
-  apply.
+  for the build to finish, then for the rollout. A failed or canceled
+  build fails the apply. With the `approval` deploy policy, the wait ends
+  with a warning once the build waits for a project admin's approval.
 
 ## 1.4.0
 
