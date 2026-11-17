@@ -51,6 +51,20 @@
   health check, or a cron job's schedule) apply as one in-place update,
   which rolls the service out.
 
+### Upgrade notes
+
+- Destroying a deployment also deletes its service when it's the
+  service's last deployment. That's how the API works, and it's the same
+  for `computesphere_deployment` and for the new resources with
+  `service_id`. A `computesphere_service` managed beside them then shows
+  as missing and is created again on the next apply. To replace a
+  deployment without losing its service, set
+  `lifecycle { create_before_destroy = true }`.
+- With `wait_for_ready`, an apply that builds a git-built service waits
+  for the build to finish, then for the rollout. A failed or canceled
+  build fails the apply. With the `approval` deploy policy, the wait ends
+  with a warning once the build waits for a project admin's approval.
+
 ## 1.4.0
 
 ### New resources and data sources

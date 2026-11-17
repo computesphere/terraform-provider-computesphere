@@ -21,13 +21,21 @@ type fakeDeploymentsAPI struct {
 	mu          sync.Mutex
 	deps        map[string]map[string]any
 	// builds is the build state of a git-built deployment, as the API keeps
-	// it: "running" while a build runs (a /deploy is refused until the first
-	// build has finished), "none" when no build was ever started, "lost"
+	// it: "running" while a build the create started runs, "requested" while
+	// one started by POST /builds runs (it finishes when its record reads
+	// succeeded); a /deploy is refused until the first build has finished.
+	// "none" when no build was ever started, "lost"
 	// when the create's git source was dropped. A read finishes a running
 	// build. Image deployments have no entry.
 	builds map[string]string
-	seq    int
-	calls  []call
+	// failBuild makes every build fail. buildReads counts reads of each
+	// build record: the first answers dispatched, the next its result,
+	// while the deployment's own status keeps reading running.
+	failBuild  bool
+	buildEnd   string // when set, the status a build ends in instead
+	buildReads map[string]int
+	seq        int
+	calls      []call
 }
 
 type call struct {
@@ -36,7 +44,7 @@ type call struct {
 }
 
 func newFakeDeploymentsAPI(t *testing.T) *fakeDeploymentsAPI {
-	return &fakeDeploymentsAPI{t: t, deps: map[string]map[string]any{}, builds: map[string]string{}}
+	return &fakeDeploymentsAPI{t: t, deps: map[string]map[string]any{}, builds: map[string]string{}, buildReads: map[string]int{}}
 }
 
 func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -136,9 +144,25 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			problem(w, http.StatusBadRequest, "no saved manifest to build from")
 			return
 		}
-		f.builds[parts[0]] = "running"
+		f.builds[parts[0]] = "requested"
+		f.seq++
 		w.WriteHeader(http.StatusAccepted)
-		_ = json.NewEncoder(w).Encode(map[string]any{"object": "build", "status": "dispatched"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"object": "build", "status": "dispatched",
+			"id": fmt.Sprintf("bbbbbbbb-0000-4000-8000-%012d", f.seq)})
+	case r.Method == http.MethodGet && action == "builds" && len(parts) == 3:
+		f.buildReads[parts[2]]++
+		st := "dispatched"
+		switch {
+		case f.buildReads[parts[2]] < 2:
+		case f.buildEnd != "":
+			st = f.buildEnd
+		case f.failBuild:
+			st = "failed"
+		default:
+			st = "succeeded"
+			f.builds[parts[0]] = "done"
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"object": "build", "id": parts[2], "status": st})
 	case r.Method == http.MethodPost && action == "scale":
 		if it, ok := body["instance_type"].(string); ok {
 			if raw, ok := d["raw"].(map[string]any); ok {

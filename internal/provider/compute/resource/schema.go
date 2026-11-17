@@ -168,11 +168,18 @@ var attrDefs = map[string]attrDef{
 	},
 	"wait_for_ready": func(k kind, _ bool) schema.Attribute {
 		return schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true),
-			Description: "Wait for the " + k.noun + " to finish deploying after create and change. Defaults to " +
-				"true."}
+			Description: "Wait for the " + k.noun + " to finish deploying after create and change, and for a " +
+				"build first when the change starts one. Defaults to true."}
 	},
-	"deploy_policy": optString("Deploy policy: `auto` or `approval`. Leave it out to use the " +
-		"environment's policy. Setting it needs the project admin role."),
+	"deploy_policy": func(k kind, replace bool) schema.Attribute {
+		desc := "Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it " +
+			"needs the project admin role."
+		if !k.is(staticSite) {
+			desc += " With `approval`, an apply that builds the " + k.noun + " finishes once the build waits for " +
+				"approval; the rollout follows when a project admin approves it."
+		}
+		return schema.StringAttribute{Optional: true, PlanModifiers: strMods(replace), Description: describe(k, replace, desc)}
+	},
 	"trigger_on": optString("What a git push must be to build: `branch` (pushes to `branch`, the default) or " +
 		"`tag` (tags matching `tag_pattern`)."),
 	"tag_pattern": optString("Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`."),

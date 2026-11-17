@@ -104,7 +104,7 @@ moved {
 - `build_args` (Map of String) Docker build args. Public values only: they are baked into the image, so secrets belong in `secret_vars`.
 - `build_command` (String) Build command.
 - `context` (String) Docker build context directory.
-- `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role.
+- `deploy_policy` (String) Deploy policy: `auto` or `approval`. Leave it out to use the environment's policy. Setting it needs the project admin role. With `approval`, an apply that builds the cron job finishes once the build waits for approval; the rollout follows when a project admin approves it.
 - `dockerfile` (String) Dockerfile path of a Docker build.
 - `env_vars` (Map of String) Plain environment variables, name to value. Once set, this owns the whole set: a variable set elsewhere and not listed here is removed. Changing them redeploys.
 - `git_connection_id` (String) Git connection that clones the repository and delivers pushes.
@@ -127,7 +127,7 @@ moved {
 - `tag_pattern` (String) Glob a tag must match to build when `trigger_on` is `tag`, e.g. `v*`.
 - `trigger_on` (String) What a git push must be to build: `branch` (pushes to `branch`, the default) or `tag` (tags matching `tag_pattern`).
 - `version` (String) Language version of a native build, e.g. `20` for Node.js.
-- `wait_for_ready` (Boolean) Wait for the cron job to finish deploying after create and change. Defaults to true.
+- `wait_for_ready` (Boolean) Wait for the cron job to finish deploying after create and change, and for a build first when the change starts one. Defaults to true.
 - `watch_paths` (List of String) gitignore-style globs; a push builds only when a changed file matches one. Defaults to `root_dir`, else every push.
 
 ### Read-Only
