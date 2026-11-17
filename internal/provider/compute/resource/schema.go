@@ -135,7 +135,16 @@ var attrDefs = map[string]attrDef{
 
 	"port":         optInt64("Port the service listens on. Defaults to 8080."),
 	"sphere_count": optInt64("Spherelets to run. Defaults to 1. Changing it scales in place."),
-	"image":        optString("Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`."),
+	"instance_type": func(k kind, _ bool) schema.Attribute {
+		return schema.StringAttribute{Optional: true, Computed: true,
+			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			Description: "The spherelet size the " + k.noun + " runs on, e.g. `sl-1c-2g` (or `FLX`, `MAX`, `PWR`). " +
+				"Defaults to the service's size. List sizes with the `computesphere_spherelet_instance_types` data " +
+				"source. Changing it resizes the " + k.noun + " in place; the account needs room for its spherelets " +
+				"at that size. Set the size on the service or here, not both: a service size change resizes every " +
+				"deployment of the service."}
+	},
+	"image": optString("Container image to deploy, e.g. `nginx:1.27`. Set this or `git_url`."),
 	"image_type": optString("`public` (the default) or `private`. A private image is pulled with " +
 		"`image_provider`, `image_username`, `image_password` and `image_url`."),
 	"image_provider": optString("Registry provider of a private image, e.g. `docker`, `azure`, `other` or `custom`."),

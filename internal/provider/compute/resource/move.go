@@ -121,14 +121,15 @@ func moveFromDeployment(ctx context.Context, k kind, d deploymentState, resp *re
 	carry("build_args", !d.BuildArgs.IsNull(), func() { m.BuildArgs = d.BuildArgs })
 	carry("port", !d.Port.IsNull(), func() { m.Port = d.Port })
 	carry("sphere_count", !d.SphereCount.IsNull(), func() { m.SphereCount = d.SphereCount })
+	carry("instance_type", !d.InstanceType.IsNull(), func() { m.InstanceType = d.InstanceType })
 	if !d.PlanID.IsNull() && d.PlanID.ValueString() != "" {
 		dropped = append(dropped, "plan_id")
 	}
 	if len(dropped) > 0 {
 		detail := fmt.Sprintf("%s has no %s. The deployment keeps running as it is; leave them out of the "+
 			"configuration.", k.typeName, strings.Join(dropped, ", "))
-		if !d.PlanID.IsNull() && d.PlanID.ValueString() != "" {
-			detail += " The plan always comes from the service."
+		if !d.PlanID.IsNull() && d.PlanID.ValueString() != "" && k.has("instance_type") {
+			detail += " Set the deployment's size with instance_type instead of plan_id."
 		}
 		resp.Diagnostics.AddWarning("Some deployment settings don't carry over", detail)
 	}

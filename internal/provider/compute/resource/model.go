@@ -27,8 +27,9 @@ type model struct {
 	TriggerOn     types.String `tfsdk:"trigger_on"`
 	TagPattern    types.String `tfsdk:"tag_pattern"`
 
-	Port        types.Int64 `tfsdk:"port"`
-	SphereCount types.Int64 `tfsdk:"sphere_count"`
+	Port         types.Int64  `tfsdk:"port"`
+	SphereCount  types.Int64  `tfsdk:"sphere_count"`
+	InstanceType types.String `tfsdk:"instance_type"`
 
 	Image         types.String `tfsdk:"image"`
 	ImageType     types.String `tfsdk:"image_type"`

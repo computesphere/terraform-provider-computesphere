@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -107,6 +108,9 @@ func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) m
 	}
 	if k.has("sphere_count") {
 		setInt64(b, "sphere_count", m.SphereCount)
+	}
+	if k.has("instance_type") {
+		setString(b, spherelet.FieldType, m.InstanceType)
 	}
 	if k.has("image") {
 		setString(b, "image", m.Image)

@@ -84,8 +84,8 @@ func TestWebService_lifecycle(t *testing.T) {
 							return fmt.Errorf("autoscaling not sent on create: %v", c)
 						}
 						patches := api.bodies("PATCH", "")
-						if len(patches) != 1 || patches[0]["deploy_policy"] != "auto" || len(patches[0]) != 2 {
-							return fmt.Errorf("post-create change = %v, want only type and deploy_policy", patches)
+						if len(patches) != 1 || patches[0]["deploy_policy"] != "auto" || len(patches[0]) != 3 || patches[0]["skip_redeploy"] != true {
+							return fmt.Errorf("post-create change = %v, want only type, deploy_policy and skip_redeploy", patches)
 						}
 						checkClosed(t, "web service change", patches[0], changeKeys["web-service"])
 						return nil
@@ -115,8 +115,23 @@ func TestWebService_lifecycle(t *testing.T) {
 					if _, ok := p["health_check"]; ok {
 						return fmt.Errorf("unchanged health check was sent: %v", p)
 					}
-					if api.count("POST", "/scale") != 1 || api.count("PUT", "/env-vars") != 1 {
+					if p["skip_redeploy"] != true {
+						return fmt.Errorf("change body without skip_redeploy: %v", p)
+					}
+					scales, vars := api.bodies("POST", "/scale"), api.bodies("PUT", "/env-vars")
+					if len(scales) != 1 || len(vars) != 1 {
 						return fmt.Errorf("want one scale and one env-var call")
+					}
+					if scales[0]["spherelets"] != float64(2) || scales[0]["skip_redeploy"] != true || len(scales[0]) != 2 {
+						return fmt.Errorf("scale body = %v, want spherelets 2 and skip_redeploy", scales[0])
+					}
+					// Only the changed map is sent; the unchanged secrets are left as they are.
+					if _, ok := vars[0]["secret_vars"]; ok || vars[0]["skip_redeploy"] != true {
+						return fmt.Errorf("env-var body = %v, want env_vars only, with skip_redeploy", vars[0])
+					}
+					// Every change is saved without a rollout; one deploy rolls them all out.
+					if n := api.count("POST", "/deploy"); n != 1 {
+						return fmt.Errorf("want exactly one deploy for the apply, got %d", n)
 					}
 					if api.count("POST", "/deployments") != 0 || api.count("DELETE", "") != 0 {
 						return fmt.Errorf("an in-place change created or deleted a deployment")
@@ -174,7 +189,7 @@ resource "computesphere_worker" "jobs" {
 					}
 					checkClosed(t, "worker change", p[0], changeKeys["background-worker"])
 					img, _ := p[0]["image"].(map[string]any)
-					if img["name"] != "acme/worker:2" || len(p[0]) != 2 {
+					if img["name"] != "acme/worker:2" || len(p[0]) != 3 || p[0]["skip_redeploy"] != true {
 						return fmt.Errorf("change body = %v", p[0])
 					}
 					return nil
@@ -198,7 +213,7 @@ resource "computesphere_worker" "jobs" {
 					}
 					checkClosed(t, "worker change", p[0], changeKeys["background-worker"])
 					bc, _ := p[0]["build_config"].(map[string]any)
-					if len(p[0]) != 2 || len(bc) != 1 || bc["run_command"] != "bin/worker --fast" {
+					if len(p[0]) != 3 || p[0]["skip_redeploy"] != true || len(bc) != 1 || bc["run_command"] != "bin/worker --fast" {
 						return fmt.Errorf("change body = %v, want {type, build_config:{run_command}}", p[0])
 					}
 					if api.count("POST", "/deployments") != 0 || api.count("DELETE", "") != 0 {

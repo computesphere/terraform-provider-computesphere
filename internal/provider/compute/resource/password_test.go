@@ -131,7 +131,7 @@ func TestPasswordRotatesInPlace_workerAndCron(t *testing.T) {
 									return fmt.Errorf("want 1 change, got %v", p)
 								}
 								checkClosed(t, tc.res+" change", p[0], changeKeys[tc.apiType])
-								if len(p[0]) != 2 {
+								if len(p[0]) != 3 || p[0]["skip_redeploy"] != true {
 									return fmt.Errorf("change body = %v, want only type and image", p[0])
 								}
 								img, _ := p[0]["image"].(map[string]any)
@@ -232,7 +232,7 @@ func TestCronJob_registryChangeSendsPassword(t *testing.T) {
 				},
 				Check: func(_ *terraformState) error {
 					p := api.bodies("PATCH", "")
-					if len(p) != 1 || len(p[0]) != 2 {
+					if len(p) != 1 || len(p[0]) != 3 || p[0]["skip_redeploy"] != true {
 						return fmt.Errorf("change = %v, want {type, image}", p)
 					}
 					img, _ := p[0]["image"].(map[string]any)

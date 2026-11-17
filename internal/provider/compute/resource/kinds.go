@@ -98,8 +98,8 @@ var (
 		noun:    "web service",
 		summary: "Manages a web service in an environment: a service with a public address, deployed from a " +
 			"container image or built from a git repository.",
-		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "predeploy_command",
-			"health_check", "autoscaling", "network_access", "url", "internal_url"}),
+		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "instance_type",
+			"predeploy_command", "health_check", "autoscaling", "network_access", "url", "internal_url"}),
 		replace: []string{"predeploy_command"},
 	}
 	privateService = kind{
@@ -107,8 +107,8 @@ var (
 		noun: "private service",
 		summary: "Manages a private service in an environment: a web service with no public address, reachable " +
 			"only by other services in the environment.",
-		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "predeploy_command",
-			"health_check", "autoscaling", "internal_url"}),
+		attrs: join(imageAttrs, gitAttrs, []string{"port", "sphere_count", "instance_type",
+			"predeploy_command", "health_check", "autoscaling", "internal_url"}),
 		replace: []string{"predeploy_command"},
 	}
 	worker = kind{
@@ -116,7 +116,7 @@ var (
 		noun: "background worker",
 		summary: "Manages a background worker in an environment: a long-running process with no port, health " +
 			"check or address, run from a container image or built from a git repository.",
-		attrs: join(imageAttrs, gitAttrs, []string{"command", "sphere_count", "autoscaling"}),
+		attrs: join(imageAttrs, gitAttrs, []string{"command", "sphere_count", "instance_type", "autoscaling"}),
 		// The change body takes image, autoscaling and build settings, and
 		// the start command (git) or the command an image worker runs, both
 		// as build_config.run_command, so nothing forces a new worker.
@@ -127,7 +127,7 @@ var (
 		noun:    "cron job",
 		summary: "Manages a cron job in an environment: a command run on a schedule, from a container image or " +
 			"a git build.",
-		attrs: join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command"}),
+		attrs: join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command", "instance_type"}),
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",

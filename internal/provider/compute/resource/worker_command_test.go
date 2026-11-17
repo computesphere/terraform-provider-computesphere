@@ -45,8 +45,14 @@ func changeBodyIs(t *testing.T, before, after string, want map[string]any) {
 						return fmt.Errorf("want 1 change, got %v", p)
 					}
 					checkClosed(t, "worker change", p[0], changeKeys["background-worker"])
+					// Every change is saved without a rollout; the one deploy
+					// after it rolls the change out.
+					want["skip_redeploy"] = true
 					if fmt.Sprint(p[0]) != fmt.Sprint(want) {
 						return fmt.Errorf("change body = %v, want %v", p[0], want)
+					}
+					if n := api.count("POST", "/deploy"); n != 1 {
+						return fmt.Errorf("want one deploy after the change, got %d", n)
 					}
 					return nil
 				},

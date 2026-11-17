@@ -66,6 +66,9 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// resource must never surface.
 			d["outputs"] = map[string]any{"internal_url": "app-private.example.test:8080", "url": "https://leak.example.test"}
 		}
+		if it, ok := body["instance_type"].(string); ok {
+			d["raw"].(map[string]any)["instance_type"] = resolveSize(it)
+		}
 		f.deps[id] = d
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(d)
@@ -100,7 +103,13 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_ = json.NewEncoder(w).Encode(d)
-	case r.Method == http.MethodPost && (action == "deploy" || action == "scale"):
+	case r.Method == http.MethodPost && action == "scale":
+		if it, ok := body["instance_type"].(string); ok {
+			d["raw"].(map[string]any)["instance_type"] = resolveSize(it)
+		}
+		w.WriteHeader(http.StatusAccepted)
+		_ = json.NewEncoder(w).Encode(d)
+	case r.Method == http.MethodPost && action == "deploy":
 		w.WriteHeader(http.StatusAccepted)
 		_ = json.NewEncoder(w).Encode(d)
 	case r.Method == http.MethodPut && action == "env-vars":
@@ -111,6 +120,14 @@ func (f *fakeDeploymentsAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusNotFound)
 	}
+}
+
+// resolveSize stores a size alias as its code, as the API does.
+func resolveSize(v string) string {
+	if v == "FLX" {
+		return "sl-0.5c-512m"
+	}
+	return v
 }
 
 // seed adds a deployment the API already has (as for an import) and
@@ -164,10 +181,10 @@ func (f *fakeDeploymentsAPI) reset() {
 // never send are checked separately.
 var (
 	createKeys = map[string]string{
-		"web-service":       "type name project_id environment_id env_id service_id plan_id plan port sphere_count spherelets image image_type image_provider image_username image_password image_url image_name image_pending build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config predeploy_command pipeline_tier health_check health_check_path health_check_port health_check_delay health_check_period health_check_timeout health_check_readiness_failures env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target network_access whitelist_ips custom_domain stor environment_spherestor",
-		"private-service":   "type name project_id environment_id env_id service_id plan_id plan port sphere_count spherelets image image_type image_provider image_username image_password image_url image_name image_pending build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config predeploy_command pipeline_tier health_check health_check_path health_check_port health_check_delay health_check_period health_check_timeout health_check_readiness_failures env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target stor environment_spherestor",
-		"background-worker": "type name project_id environment_id env_id service_id plan_id plan sphere_count spherelets image image_type image_provider image_username image_password image_url image_name command build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target stor environment_spherestor",
-		"cron-job":          "type name project_id environment_id env_id service_id plan_id plan schedule command image image_type image_provider image_username image_password image_url image_name build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config env_vars secret_vars environment_variables secret_variables",
+		"web-service":       "type name project_id environment_id env_id service_id plan_id plan instance_type port sphere_count spherelets image image_type image_provider image_username image_password image_url image_name image_pending build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config predeploy_command pipeline_tier health_check health_check_path health_check_port health_check_delay health_check_period health_check_timeout health_check_readiness_failures env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target network_access whitelist_ips custom_domain stor environment_spherestor",
+		"private-service":   "type name project_id environment_id env_id service_id plan_id plan instance_type port sphere_count spherelets image image_type image_provider image_username image_password image_url image_name image_pending build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config predeploy_command pipeline_tier health_check health_check_path health_check_port health_check_delay health_check_period health_check_timeout health_check_readiness_failures env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target stor environment_spherestor",
+		"background-worker": "type name project_id environment_id env_id service_id plan_id plan instance_type sphere_count spherelets image image_type image_provider image_username image_password image_url image_name command build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config env_vars secret_vars environment_variables secret_variables auto_scaling_config autoscaling_enabled autoscaling_min autoscaling_max autoscaling_cpu_target stor environment_spherestor",
+		"cron-job":          "type name project_id environment_id env_id service_id plan_id plan instance_type schedule command image image_type image_provider image_username image_password image_url image_name build_source runtime_type language version build_command start_command dockerfile context git_url branch git_connection_id root_dir root_directory watch_paths build_args ci_config env_vars secret_vars environment_variables secret_variables",
 		"static-site":       "type name project_id environment_id env_id service_id plan_id plan build_source git_url branch git_connection_id root_directory root_dir install_command build_command publish_directory spa ci_config env_vars secret_vars environment_variables secret_variables custom_domain",
 	}
 	changeKeys = map[string]string{

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	csv2 "github.com/computesphere/computesphere-go"
+	"github.com/computesphere/terraform-provider-computesphere/internal/provider/spherelet"
 	cstypes "github.com/computesphere/terraform-provider-computesphere/internal/provider/types"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -269,13 +270,19 @@ func settleUnknowns(m *model) {
 	if m.GitRepoID.IsUnknown() {
 		m.GitRepoID = types.StringNull()
 	}
+	if m.InstanceType.IsUnknown() {
+		m.InstanceType = types.StringNull()
+	}
 }
 
 func waitFor(m model) bool { return m.WaitForReady.IsNull() || m.WaitForReady.ValueBool() }
 
-// patch sends a change body with the kind's type discriminator.
+// patch sends a change body with the kind's type discriminator. It never
+// rolls out on its own: the one deploy at the end of Create and Update rolls
+// out every saved change together.
 func (r *computeResource) patch(ctx context.Context, id uuid.UUID, body map[string]any, diags *diag.Diagnostics) bool {
 	body["type"] = r.kind.apiType
+	body["skip_redeploy"] = true
 	rdr, err := jsonBody(body)
 	if err != nil {
 		diags.AddError("Error updating "+r.kind.noun, err.Error())
@@ -306,22 +313,22 @@ func (r *computeResource) deploy(ctx context.Context, id uuid.UUID, diags *diag.
 	return true
 }
 
-func (r *computeResource) setEnvVars(ctx context.Context, id uuid.UUID, plan model, diags *diag.Diagnostics) bool {
-	var req csv2.SetEnvVarsRequest
-	for _, f := range []struct {
-		v   types.Map
-		dst **map[string]string
-	}{{plan.EnvVars, &req.EnvVars}, {plan.SecretVars, &req.SecretVars}} {
-		out := map[string]string{}
-		if !f.v.IsNull() && !f.v.IsUnknown() {
-			diags.Append(f.v.ElementsAs(ctx, &out, false)...)
-		}
-		*f.dst = &out
+// setEnvVars writes the variable maps that changed, each as the whole set
+// (replace=true): a map left out is kept as it is, and an empty one clears
+// it, so a key or map removed from the configuration is removed.
+func (r *computeResource) setEnvVars(ctx context.Context, id uuid.UUID, plan, state model, diags *diag.Diagnostics) bool {
+	skip := true
+	req := csv2.SetEnvVarsRequest{SkipRedeploy: &skip}
+	if !plan.EnvVars.Equal(state.EnvVars) {
+		req.EnvVars = cstypes.MapOrEmpty(ctx, plan.EnvVars, diags)
+	}
+	if !plan.SecretVars.Equal(state.SecretVars) {
+		req.SecretVars = cstypes.MapOrEmpty(ctx, plan.SecretVars, diags)
 	}
 	if diags.HasError() {
 		return false
 	}
-	resp, err := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, req)
+	resp, err := r.client.ReplaceDeploymentEnvVarsWithResponse(ctx, id, req, cstypes.WholeSet)
 	if err != nil {
 		diags.AddError("Error setting environment variables", err.Error())
 		return false
@@ -333,14 +340,24 @@ func (r *computeResource) setEnvVars(ctx context.Context, id uuid.UUID, plan mod
 	return true
 }
 
-func (r *computeResource) scale(ctx context.Context, id uuid.UUID, count int64, diags *diag.Diagnostics) bool {
-	resp, err := r.client.ScaleDeploymentWithResponse(ctx, id, csv2.ScaleRequest{Spherelets: int(count)})
+// scale changes the spherelet count, the size, or both, through
+// POST /deployments/{id}/scale, sending only what changed. The SDK's request
+// type always sends spherelets and has no instance_type, so the body is raw.
+func (r *computeResource) scale(ctx context.Context, id uuid.UUID, count types.Int64, size types.String, diags *diag.Diagnostics) bool {
+	body := map[string]any{"skip_redeploy": true}
+	if present(count) {
+		body["spherelets"] = count.ValueInt64()
+	}
+	if present(size) && size.ValueString() != "" {
+		body[spherelet.FieldType] = size.ValueString()
+	}
+	status, raw, err := cstypes.DoJSON(ctx, r.client, http.MethodPost, "/deployments/"+id.String()+"/scale", nil, body, nil)
 	if err != nil {
 		diags.AddError("Error scaling "+r.kind.noun, err.Error())
 		return false
 	}
-	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusAccepted {
-		diags.AddError("Error scaling "+r.kind.noun, cstypes.ProblemSummary(resp.Body, resp.StatusCode()))
+	if status != http.StatusOK && status != http.StatusAccepted {
+		diags.AddError("Error scaling "+r.kind.noun, cstypes.ProblemSummary(raw, status))
 		return false
 	}
 	return true
@@ -461,6 +478,13 @@ func (r *computeResource) refresh(ctx context.Context, id uuid.UUID, m *model, d
 		fill(&m.EnvironmentID, "environment_id")
 		fill(&m.ProjectID, "project_id")
 	}
+	if r.kind.has("instance_type") {
+		// A configured alias (FLX, MAX, PWR) the API resolved to its code
+		// stays as written, so it never shows a diff.
+		f := spherelet.ReadDeploymentFields(got.Body)
+		m.InstanceType = spherelet.Value(m.InstanceType, f.InstanceType, f.InstanceTypePresent,
+			spherelet.AliasLookup(ctx, r.client))
+	}
 	if st, err := r.client.GetDeploymentStatusWithResponse(ctx, id); err == nil && st.StatusCode() == http.StatusOK && st.JSON200 != nil {
 		m.Status = types.StringValue(st.JSON200.Status)
 	}
@@ -509,27 +533,47 @@ func (r *computeResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	rolled := false // a step that already rolls the change out ran
+	if r.kind.has("instance_type") && plan.InstanceType.IsUnknown() {
+		// Not configured and not known before: keep what state has; the read
+		// after the deploy fills it in.
+		plan.InstanceType = state.InstanceType
+	}
+
+	// Every write saves its change without rolling it out (skip_redeploy);
+	// one deploy at the end rolls out everything this apply changed.
+	wrote := false
 	if body := changeBody(ctx, r.kind, plan, state, &resp.Diagnostics); len(body) > 0 {
 		if resp.Diagnostics.HasError() || !r.patch(ctx, id, body, &resp.Diagnostics) {
 			return
 		}
-		rolled = true
-	}
-	if r.kind.has("sphere_count") && present(plan.SphereCount) && !plan.SphereCount.Equal(state.SphereCount) {
-		if !r.scale(ctx, id, plan.SphereCount.ValueInt64(), &resp.Diagnostics) {
-			return
-		}
-		rolled = true
+		wrote = true
 	}
 	if !plan.EnvVars.Equal(state.EnvVars) || !plan.SecretVars.Equal(state.SecretVars) {
-		if !r.setEnvVars(ctx, id, plan, &resp.Diagnostics) {
+		if !r.setEnvVars(ctx, id, plan, state, &resp.Diagnostics) {
 			return
 		}
-		rolled = true
+		wrote = true
 	}
-	if rolled && waitFor(plan) && !r.waitForReady(ctx, id, &resp.Diagnostics) {
-		return
+	count, size := types.Int64Null(), types.StringNull()
+	if r.kind.has("sphere_count") && present(plan.SphereCount) && !plan.SphereCount.Equal(state.SphereCount) {
+		count = plan.SphereCount
+	}
+	if r.kind.has("instance_type") && present(plan.InstanceType) && !plan.InstanceType.Equal(state.InstanceType) {
+		size = plan.InstanceType
+	}
+	if !count.IsNull() || !size.IsNull() {
+		if !r.scale(ctx, id, count, size, &resp.Diagnostics) {
+			return
+		}
+		wrote = true
+	}
+	if wrote {
+		if !r.deploy(ctx, id, &resp.Diagnostics) {
+			return
+		}
+		if waitFor(plan) && !r.waitForReady(ctx, id, &resp.Diagnostics) {
+			return
+		}
 	}
 	r.refresh(ctx, id, &plan, &resp.Diagnostics)
 	r.setModel(ctx, resp.State.Set, plan, &resp.Diagnostics)
