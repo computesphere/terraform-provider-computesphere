@@ -15,6 +15,7 @@ type kind struct {
 	summary  string   // resource description
 	attrs    []string // configurable and computed attributes beyond the common ones
 	replace  []string // attributes the change body doesn't take
+	required []string // attributes the create body requires
 }
 
 func (k kind) has(attr string) bool {
@@ -22,6 +23,15 @@ func (k kind) has(attr string) bool {
 		return true
 	}
 	for _, a := range k.attrs {
+		if a == attr {
+			return true
+		}
+	}
+	return false
+}
+
+func (k kind) requires(attr string) bool {
+	for _, a := range k.required {
 		if a == attr {
 			return true
 		}
@@ -127,7 +137,8 @@ var (
 		noun:    "cron job",
 		summary: "Manages a cron job in an environment: a command run on a schedule, from a container image or " +
 			"a git build.",
-		attrs: join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command", "instance_type"}),
+		attrs:    join(imageAttrs, without(gitAttrs, "start_command"), []string{"schedule", "command", "instance_type"}),
+		required: []string{"schedule", "command"},
 	}
 	staticSite = kind{
 		apiType: "static-site", typeName: "computesphere_static_site",
@@ -136,6 +147,7 @@ var (
 			"the directory the build emits.",
 		attrs: []string{"git_url", "branch", "git_connection_id", "git_repo_id", "root_directory", "install_command",
 			"build_command", "publish_directory", "spa", "network_access", "url"},
+		required: []string{"git_url", "build_command"},
 	}
 )
 

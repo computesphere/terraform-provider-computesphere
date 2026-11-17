@@ -247,7 +247,9 @@ var attrDefs = map[string]attrDef{
 				"whitelisted_ips": schema.ListAttribute{Optional: true, ElementType: types.StringType,
 					Description: "Addresses or CIDR ranges allowed in when `type` is `restricted_access`."},
 				"default_url_disabled": schema.BoolAttribute{Optional: true,
-					Description: "Turn off the default ComputeSphere address. Needs a verified custom domain that is serving."},
+					Description: "Turn off the default ComputeSphere address. Needs a custom domain that is verified " +
+						"and serving, so it can't be set when the " + k.noun + " is created: add the domain first, then " +
+						"set this."},
 			},
 		}
 	},
@@ -263,7 +265,12 @@ func Schema(k kind) schema.Schema {
 	attrs := map[string]schema.Attribute{}
 	for name, def := range attrDefs {
 		if k.has(name) {
-			attrs[name] = def(k, k.forcesReplace(name))
+			a := def(k, k.forcesReplace(name))
+			if s, ok := a.(schema.StringAttribute); ok && k.requires(name) {
+				s.Optional, s.Required = false, true
+				a = s
+			}
+			attrs[name] = a
 		}
 	}
 	return schema.Schema{Description: k.summary, Attributes: attrs}

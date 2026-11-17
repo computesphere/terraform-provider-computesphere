@@ -171,32 +171,21 @@ func createBody(ctx context.Context, k kind, m model, diags *diag.Diagnostics) m
 	if k.has("autoscaling") && present(m.Autoscaling) {
 		b["auto_scaling_config"] = autoscalingBody(ctx, m.Autoscaling, diags)
 	}
-	// A static site takes network access only on change; it's applied
-	// right after create.
-	if k.is(webService) && present(m.NetworkAccess) {
+	// default_url_disabled isn't in the create body; it can't be true on a
+	// new service anyway (ModifyPlan refuses it).
+	if k.has("network_access") && present(m.NetworkAccess) {
 		b["network_access"] = networkBody(ctx, m.NetworkAccess, false, diags)
 	}
 	return b
 }
 
 // postCreateBody renders the settings only the change body takes, applied
-// right after create: the deploy settings, and network access on a static
-// site (and the default-address switch on a web service).
-func postCreateBody(ctx context.Context, k kind, plan model, diags *diag.Diagnostics) map[string]any {
+// right after create: the deploy settings.
+func postCreateBody(plan model) map[string]any {
 	b := map[string]any{}
 	setString(b, "deploy_policy", plan.DeployPolicy)
 	setString(b, "trigger_on", plan.TriggerOn)
 	setString(b, "tag_pattern", plan.TagPattern)
-	if present(plan.NetworkAccess) {
-		var na networkAccessModel
-		diags.Append(plan.NetworkAccess.As(ctx, &na, basetypes.ObjectAsOptions{})...)
-		switch {
-		case k.is(staticSite):
-			b["networking"] = networkBody(ctx, plan.NetworkAccess, true, diags)
-		case k.is(webService) && present(na.DefaultURLDisabled):
-			b["networking"] = map[string]any{"default_url_disabled": na.DefaultURLDisabled.ValueBool()}
-		}
-	}
 	return b
 }
 
@@ -258,8 +247,15 @@ func changeBody(ctx context.Context, k kind, plan, state model, diags *diag.Diag
 			b["autoscaling"] = map[string]any{"enabled": false}
 		}
 	}
-	if (k.is(webService) || k.is(staticSite)) && present(plan.NetworkAccess) && !plan.NetworkAccess.Equal(state.NetworkAccess) {
-		b["networking"] = networkBody(ctx, plan.NetworkAccess, true, diags)
+	if k.has("network_access") {
+		switch {
+		case present(plan.NetworkAccess) && !plan.NetworkAccess.Equal(state.NetworkAccess):
+			b["networking"] = networkBody(ctx, plan.NetworkAccess, true, diags)
+		case plan.NetworkAccess.IsNull() && present(state.NetworkAccess):
+			// Removing the block opens the service to everyone again and
+			// brings back the default address.
+			b["networking"] = map[string]any{"type": "public_access", "default_url_disabled": false}
+		}
 	}
 	if k.is(cronJob) {
 		sched := map[string]any{}

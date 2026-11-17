@@ -278,9 +278,8 @@ resource "computesphere_cron_job" "nightly" {
 	})
 }
 
-// A static site is always built from git; network access, which only its
-// change body takes, is applied right after create, and spa changes in
-// place through build_config.
+// A static site is always built from git; its network access goes in the
+// create body, and spa changes in place through build_config.
 func TestStaticSite_lifecycle(t *testing.T) {
 	api := newFakeDeploymentsAPI(t)
 	cfg := func(spa bool) string {
@@ -312,11 +311,13 @@ resource "computesphere_static_site" "docs" {
 						if c["build_source"] != "git" || c["git_url"] != "acme/docs" {
 							return fmt.Errorf("create body = %v", c)
 						}
-						p := api.bodies("PATCH", "")
-						if len(p) != 1 || p[0]["networking"] == nil {
-							return fmt.Errorf("post-create change = %v, want networking", p)
+						na, _ := c["network_access"].(map[string]any)
+						if na["type"] != "public_access" {
+							return fmt.Errorf("create body = %v, want network_access", c)
 						}
-						checkClosed(t, "static site change", p[0], changeKeys["static-site"])
+						if p := api.bodies("PATCH", ""); len(p) != 0 {
+							return fmt.Errorf("post-create change = %v, want none", p)
+						}
 						return nil
 					},
 				),

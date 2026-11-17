@@ -110,11 +110,34 @@ func (r *computeResource) ValidateConfig(ctx context.Context, req resource.Valid
 // has, which the API can't change, instead of replacing a running service
 // for it. A first value over null in state is only recorded.
 func (r *computeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if req.State.Raw.IsNull() {
+		r.refuseDefaultURLOffAtCreate(ctx, req.Plan, &resp.Diagnostics)
 		return
 	}
 	r.refuseGitRepoIDChange(ctx, req.Plan, req.State, &resp.Diagnostics)
 	r.refuseGitToImage(ctx, req.Plan, req.State, &resp.Diagnostics)
+}
+
+// refuseDefaultURLOffAtCreate refuses default_url_disabled = true on a new
+// service: the API turns the default address off only once a custom domain
+// is verified and serving, which a service that doesn't exist yet can't have.
+func (r *computeResource) refuseDefaultURLOffAtCreate(ctx context.Context, plan attrGetter, diags *diag.Diagnostics) {
+	if !r.kind.has("network_access") {
+		return
+	}
+	p := path.Root("network_access").AtName("default_url_disabled")
+	var off types.Bool
+	diags.Append(plan.GetAttribute(ctx, p, &off)...)
+	if diags.HasError() || !off.ValueBool() {
+		return
+	}
+	diags.AddAttributeError(p, "Can't turn the default address off on a new "+r.kind.noun,
+		fmt.Sprintf("The default address can be turned off only once the %s has a custom domain that is verified "+
+			"and serving. Create the %s without default_url_disabled, add its custom domain "+
+			"(computesphere_custom_domain), then set default_url_disabled = true.", r.kind.noun, r.kind.noun))
 }
 
 // refuseGitToImage refuses switching a git-built service to an image in
@@ -176,6 +199,30 @@ func (r *computeResource) setModel(ctx context.Context, set func(context.Context
 	diags.Append(set(ctx, obj)...)
 }
 
+// apiWarnings shows the `warnings` of a create or change response as
+// Terraform warnings: a field the API didn't use, a size it chose
+// (instance_type_fallback), a variable that looks like a credential. None
+// of them refused the request.
+func apiWarnings(body []byte, what string, diags *diag.Diagnostics) {
+	var out struct {
+		Warnings []struct {
+			Code    string `json:"code"`
+			Field   string `json:"field"`
+			Message string `json:"message"`
+		} `json:"warnings"`
+	}
+	if json.Unmarshal(body, &out) != nil {
+		return
+	}
+	for _, w := range out.Warnings {
+		summary := "The API warned about " + what
+		if w.Field != "" {
+			summary += ": " + w.Field
+		}
+		diags.AddWarning(summary, fmt.Sprintf("%s (%s)", w.Message, w.Code))
+	}
+}
+
 func jsonBody(v any) (*bytes.Reader, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -220,6 +267,7 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 		resp.Diagnostics.AddError("Error creating "+r.kind.noun, cstypes.ProblemSummary(created.Body, created.StatusCode()))
 		return
 	}
+	apiWarnings(created.Body, "the new "+r.kind.noun, &resp.Diagnostics)
 	id, err := uuid.Parse(created.JSON201.Id)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating "+r.kind.noun, "the API returned an unparseable deployment id")
@@ -237,7 +285,7 @@ func (r *computeResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	if extra := postCreateBody(ctx, r.kind, plan, &resp.Diagnostics); len(extra) > 0 {
+	if extra := postCreateBody(plan); len(extra) > 0 {
 		if !r.patch(ctx, id, extra, &resp.Diagnostics) {
 			return
 		}
@@ -297,6 +345,7 @@ func (r *computeResource) patch(ctx context.Context, id uuid.UUID, body map[stri
 		diags.AddError("Error updating "+r.kind.noun, cstypes.ProblemSummary(resp.Body, resp.StatusCode()))
 		return false
 	}
+	apiWarnings(resp.Body, "the "+r.kind.noun+"'s change", diags)
 	return true
 }
 
@@ -337,6 +386,7 @@ func (r *computeResource) setEnvVars(ctx context.Context, id uuid.UUID, plan, st
 		diags.AddError("Error setting environment variables", cstypes.ProblemSummary(resp.Body, resp.StatusCode()))
 		return false
 	}
+	apiWarnings(resp.Body, "the "+r.kind.noun+"'s variables", diags)
 	return true
 }
 
